@@ -1,0 +1,2 @@
+timestamp,src_mac,dst_mac,eth_type,src_ip,dst_ip,protocol,src_port,dst_port,label
+1778254334.6993992,00:00:00:00:00:03,33:33:00:00:00:16,34525,N/A,N/A,N/A,N/A,N/A,0

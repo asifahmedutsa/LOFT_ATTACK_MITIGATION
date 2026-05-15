@@ -1,0 +1,3 @@
+Model,Accuracy,Precision,Recall,F1-Score,FPR,Privacy,Scalable
+Local Only (avg),95.91,94.34,95.43,94.88,5.66%,No,No
+Federated FL-DualGuard,98.94,98.21,98.75,98.48,1.79%,Yes (params only),Yes

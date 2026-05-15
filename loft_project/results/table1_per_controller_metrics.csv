@@ -1,0 +1,4 @@
+Controller,Samples,Accuracy,Precision,Recall,F1-Score
+Controller 1,1066,96.71,95.24,96.33,95.78
+Controller 2,1066,95.89,94.12,95.51,94.81
+Controller 3,1068,95.12,93.67,94.44,94.05

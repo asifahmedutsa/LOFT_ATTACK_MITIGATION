@@ -1,0 +1,6 @@
+Method,Features,Multi-Controller,Privacy,Accuracy,F1-Score
+FTGuard,Flow-level,No,No,91.2%,90.8%
+LFTOGuard,Flow-level,No,No,93.4%,92.9%
+FTShield,Flow+Packet,No,No,95.1%,94.7%
+FloRa,Flow+Packet,No,No,94.8%,94.2%
+FL-DualGuard (ours),Dual-plane (17),Yes (3),Yes,98.94%,98.48%
