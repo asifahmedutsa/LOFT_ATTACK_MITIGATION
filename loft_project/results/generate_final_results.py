@@ -12,6 +12,16 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.svm import SVC
 from scipy.interpolate import PchipInterpolator
 
+# Safety guard: this script contains hardcoded/demo values and must not be
+# used for legitimate evaluation claims unless explicitly acknowledged.
+if os.environ.get("ALLOW_DEMO_RESULTS") != "1":
+    raise SystemExit(
+        "Blocked: generate_final_results.py is demo-only and includes hardcoded "
+        "or synthesized reporting values. Use loft_project/eval/run_audited_eval.py "
+        "for reproducible evaluation. If you intentionally want demo artifacts, "
+        "rerun with ALLOW_DEMO_RESULTS=1."
+    )
+
 def encode_ip(ip):
     try:
         p=ip.split('.'); return int(p[0])*16777216+int(p[1])*65536+int(p[2])*256+int(p[3])
