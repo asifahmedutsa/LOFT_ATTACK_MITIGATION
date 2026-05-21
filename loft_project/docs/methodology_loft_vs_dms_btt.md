@@ -176,6 +176,24 @@ For full parity with DMS-BTT methodology:
 5. Train/evaluate with 5:1 split for offline modules.
 6. Run 600s online mitigation runs and report paper-aligned metrics.
 
+## 5.8 Run DMS-BTT-style offline CatBoost baseline (new scaffold)
+
+If you already prepared two CSV files:
+- state CSV with `FN`, `APIT`, and optional `state_label`,
+- flow CSV with `Numb`, `PIT`, `Sizep`, `label`,
+
+run:
+
+```bash
+python -m pip install catboost
+python loft_project/eval/run_dms_btt_offline_baseline.py \
+  --state-csv path/to/state_dataset.csv \
+  --flow-csv path/to/flow_dataset.csv
+```
+
+Expected output:
+- `loft_project/results/dms_btt/offline/dms_btt_offline_metrics.json`
+
 ## 6) Reporting Guidance
 
 When reporting performance:

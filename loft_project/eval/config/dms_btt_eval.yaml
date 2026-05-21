@@ -1,0 +1,44 @@
+simulation:
+  flow_table_size: 3500
+  idle_timeout_s: 10
+  sampling_interval_s: 1
+  offline_window_duration_s: 150
+  online_duration_s: 600
+  attack_start_s: 50
+  defense_activation_s: 100
+  background_pps: 300
+  deploy_switch: "s1"
+
+thresholds:
+  det_h2_ratio: 0.75
+  det_h1_ratio: 0.90
+  elephant_percentile: 90
+
+attack_params:
+  - id: 1
+    t1_range: [5.0, 8.5]
+    step_s: 75
+    max_packets_m: 1700
+    avg_overflow_time_t2: 68.5
+  - id: 2
+    t1_range: [5.5, 9.0]
+    step_s: 100
+    max_packets_m: 1700
+    avg_overflow_time_t2: 43.5
+  - id: 3
+    t1_range: [6.0, 9.5]
+    step_s: 125
+    max_packets_m: 1700
+    avg_overflow_time_t2: 41.0
+
+split:
+  train_ratio: 5
+  test_ratio: 1
+  random_seed: 42
+  group_columns: ["run_id", "attack_param_id"]
+
+outputs:
+  root_dir: "loft_project/results/dms_btt"
+  offline_dir: "offline"
+  online_dir: "online"
+
