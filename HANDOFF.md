@@ -2,6 +2,41 @@
 
 Prepared: 18 October 2026.
 
+## 0. Update — 25 October 2026 (v2)
+
+The §7 blockers are addressed in the simulation track. The text below §0 is the
+original handoff, kept for history.
+
+| §7 blocker | Status |
+|---|---|
+| 1. Federation does not update predictors | **Fixed.** `loftbench/models.py`: NumPy MLP with real FedAvg/FedProx weight exchange, federated normalization, byte accounting. A unit test checks that weights are applied. |
+| 2. Feature schemas disagree | **Fixed.** One extractor (`loftbench/features.py`, 17 features) is used by the simulator and the Ryu app. |
+| 3. Controller does not grow the table | **Fixed** in the simulator (reactive per-5-tuple install, bounded table, idle timeout, TABLE_FULL) and in `testbed/loft_ryu_app.py` (not yet run). |
+| 4. `~/loft_project` paths | New code uses CLI and relative paths only. Legacy scripts are unchanged. |
+| 5. Synthetic shortcuts | **Replaced.** Traffic is generated packet by packet, and labels come from provenance; features never depend on labels. |
+| 6. Circular DMS-BTT labels | **Fixed.** State labels come from attack timing plus observed table-full events. |
+| 7. Paper settings not wired | **Wired.** `loftbench/config.py` and `experiment.py`; splits are run-disjoint (unit-tested). |
+| 8. Topology differs from the paper | **Fixed** in `testbed/run_testbed.py`: 6 user hosts including 2 attackers, plus a server, per domain. |
+
+**Headline result (simulation; 210 paired attack episodes per defense):**
+
+- **Benign flows impacted:** FL-DualGuard 5.5 %, DMS-BTT reimplementation 12.0 %,
+  local detectors 19.3 %, no defense 42.3 %.
+- **On an attack variant no controller trained on:** FL-DualGuard 3.9 %, DMS-BTT 17.9 %.
+
+Negative findings and remaining work are in `loft_project/docs/results_v2.md` §5–§7.
+
+**Next actions, in priority order:**
+
+1. Run the Mininet acceptance runs in `loft_project/testbed/README.md`; this needs sudo.
+2. Select the v2.1 configuration on validation seeds only, then test it once on fresh
+   seeds (results §6).
+3. Verify the DMS-BTT reimplementation against the paper.
+4. Write the related-work section.
+
+Environment: `~/.venvs/loft` (Python 3.12, `loft_project/requirements.txt`).
+`~/ryu-env` (Python 3.8, Ryu 4.34) is used for the testbed.
+
 ## 1. What you are taking over
 
 This is a research prototype for detecting and mitigating low-rate flow-table overflow attacks (LOFT/LFTO) in software-defined networks (SDN). The proposed approach is named **FL-DualGuard**: packet/flow features, an SVM–Random Forest ensemble, and intended collaboration across multiple SDN controllers using federated learning.

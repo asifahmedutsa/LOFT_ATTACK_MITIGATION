@@ -1,0 +1,174 @@
+# FL-DualGuard v2 — results (simulation track)
+
+Run: `results/v2/` (see `manifest.json` for package versions, splits, and
+configuration). `manifest.json` records base commit 4843620 with a dirty tree, because
+the run was made before this code was committed. The code that produced it is the
+commit that adds this file. The only edit after the online run is the figure-scaling and
+layout fix in `report.py`, which does not change any numbers. Generated 25 October 2026 on Ubuntu 24.04 (4 CPU cores) with Python 3.12.3.
+Methodology: `docs/methodology_v2.md`. Every number below can be regenerated with the
+commands in methodology §8.
+
+**Scope of these results.** They come from the LOFT-Bench discrete-time simulator
+(bounded OpenFlow tables, reactive install, idle timeouts, 1 s stats polling). They are
+not yet confirmed on Mininet/OVS; see §7. Each online condition was run on 10
+independent seeds (4000–4009) × 3 domains. Brackets give 95 % bootstrap CIs over
+episodes. p-values come from paired Wilcoxon tests on identical traffic, Holm-corrected
+(`tables/paired_tests.csv`).
+
+## 1. Sanity: the attack is real and the no-defense baseline is honest
+
+- **Benign-only, no defense:**
+  - Peak occupancy (seed 4000): 46 % (D1) and 64 % (D2), plus 75 % during a D3
+    flash crowd.
+  - No TABLE_FULL events in any of the 30 benign-only episodes.
+- **DMS-BTT parameter sets (A1–A3), no defense:**
+  - The table overflows 39–108 s after onset.
+  - 45–54 % of benign flows are refused admission at least once.
+- **Reimplemented DMS-BTT state classifier:**
+  - Three-state accuracy is 88–96 % and attack detection rate (ADR) is 92–97 %
+    (`offline_dms_state.csv`), the same range as the paper's 86.89 % / 94 %.
+  - This supports the reimplementation without proving equivalence.
+- **Calibration:**
+  - A 1 % benign flag-rate budget fixed on validation runs gave 1.0–1.1 % FPR on
+    held-out test runs.
+
+## 2. Offline detection: federation transfers attack knowledge across controllers
+
+Per-entry ROC AUC on offline-test runs, averaged over domains, grouped by whether the
+evaluating controller saw the variant in training (`tables/table_offline_by_exposure.csv`,
+Fig. 3):
+
+| Detector | Seen locally | Seen only by other controllers | Unseen by all (A6) |
+|---|---|---|---|
+| DMS-BTT flow classifier (local CatBoost) | 0.995 | 0.884 | 0.620 |
+| Local MLP | 1.000 | 0.884 | 0.681 |
+| Local SVM-RF (legacy FL-DualGuard) | 1.000 | 0.973 | 0.958 |
+| FedAvg MLP | 1.000 | 0.999 | 0.980 |
+| **FedProx MLP (FL-DualGuard)** | 1.000 | 0.999 | 0.972 |
+| Pooled raw data (oracle) | 1.000 | 1.000 | 0.986 |
+
+At the calibrated threshold, TPR on A6 is 0.57 (FedProx) and 0.68 (FedAvg), compared
+with 0.30 (local MLP) and 0.17 (DMS-BTT).
+
+**Communication.** Federation needs 30 rounds × 3 clients with a 2,436-byte model, plus
+normalization statistics: **439 KB in total** for the whole training. Validation AUC
+reaches 0.999 by about round 15 (Fig. 4).
+
+## 3. Online defense: main comparison (attacked episodes, n = 210 per defense)
+
+`tables/table_main_attack.csv`, Fig. 2:
+
+| Defense | Benign flows impacted (%) | Malicious occupancy after onset (%) | Overflow (s / 300 s) | Decision loop (ms) |
+|---|---|---|---|---|
+| No defense | 42.27 [40.34, 44.23] | 53.31 | 147.3 | 0.07 |
+| OVS evict | 58.78 [56.71, 60.87] | 51.04 | 158.2 | 0.07 |
+| Threshold-LRU | 36.24 [34.66, 37.93] | 40.79 | 17.1 | 0.16 |
+| DMS-BTT (reimpl.) | 11.96 [9.90, 14.12] | 24.93 | 13.3 | 4.21 |
+| Local SVM-RF + DG policy | 8.14 [6.53, 9.94] | 21.87 | 4.3 | 84.36 |
+| Local MLP + DG policy | 19.25 [16.83, 21.84] | 25.73 | 4.1 | 2.93 |
+| FedAvg + DG policy | 4.65 [3.85, 5.57] | 15.08 | 3.1 | 2.59 |
+| **FL-DualGuard (FedProx)** | **5.51 [4.57, 6.57]** | **14.96** | **3.0** | **2.55** |
+| Centralized pooled (oracle) | 4.85 [3.97, 5.84] | 13.84 | 2.4 | 2.51 |
+
+**Compared with DMS-BTT**, FL-DualGuard impacts 2.2× fewer benign flows: −6.5 points,
+better in 160 of 210 paired episodes, p_Holm < 1e-4. It also leaves 1.7× less malicious
+occupancy (200 of 210 wins). On the three DMS-BTT parameter sets and the
+fixed-size variants (A1–A3, A5, A7), the two are close (2–5 % vs 4–5 %). The gap
+comes from mimicry (A4: 17.7 % vs 41.9 %) and the unseen slow-fill variant
+(A6: 3.9 % vs 17.9 %), where DMS-BTT is worse than no defense (12.2 %) because it
+evicts benign flows.
+
+**Compared with local learning**, the same policy with a local MLP impacts 19.3 %, which
+federation cuts by 3.5×. By exposure group (online):
+
+| Exposure | Local MLP | FL-DualGuard | Pooled oracle |
+|---|---|---|---|
+| Seen locally | 11.2 % | 4.3 % | 4.1 % |
+| Seen only by others | 25.1 % | 6.5 % | 5.4 % |
+| Unseen by all (A6) | 12.0 % | 3.9 % | 4.2 % |
+
+**Compared with the oracle**, federation reaches within about 0.7 points of centralized
+pooled training without moving any flow records.
+
+**Hardest case.** Mimicry (A4) remains the hardest for every method, including the
+oracle (16–18 % benign impact).
+
+## 4. Ablation (`tables/table_ablation.csv`, Fig. 5)
+
+| Variant | Benign impacted (%) | Malicious occ. (%) | Overflow (s) |
+|---|---|---|---|
+| FL-DualGuard (full) | 5.51 | 14.96 | 3.0 |
+| w/o soft demotion (hard delete only) | 8.87 | 28.54 | 9.6 |
+| w/o hard overflow guard | **2.44** | 14.45 | 4.7 |
+| w/o budget calibration (τ = 0.5) | 5.22 | 16.21 | 3.6 |
+| w/o source features | 4.79 | 15.08 | 2.8 |
+| w/o context features | **3.75** | **12.96** | 2.2 |
+
+What the ablation shows:
+
+- **Soft demotion is the essential mitigation primitive.** Without it, malicious
+  occupancy doubles and overflow time triples (210 of 210 paired wins for the full
+  method).
+- **Calibration** mainly lowers malicious occupancy (207 of 210 wins). Benign impact
+  is comparable either way.
+- **Source features** are not needed: the federated detector works without them, which
+  matters because spoofing defeats them.
+
+## 5. Negative and mixed findings (report these in the paper)
+
+1. **FedProx did not beat FedAvg.** FedProx was pre-declared as the proposed optimizer,
+   but FedAvg impacted fewer benign flows (4.65 % vs 5.51 %; FedProx lost 146 of 210
+   pairs, p_Holm < 1e-4). Malicious occupancy was equal (p = 0.09). With three clients
+   and moderate heterogeneity, the proximal term gives no measurable benefit.
+2. **The hard overflow guard costs more than it saves at the current settings.**
+   Removing it lowers benign impact from 5.5 % to 2.4 %, but overflow time rises from
+   3.0 s to 4.7 s. The guard trades benign evictions for overflow seconds, and the
+   operator should be able to choose that trade-off. Its h_crit/target values were not
+   tuned.
+3. **Context features (occupancy, install rate, table APIT) hurt.** The detector is
+   trained on undefended runs, where attack phases coincide with near-full tables. A
+   defended table stays at about 60–80 % occupancy, so these features shift between
+   training and deployment. Dropping them improves every metric.
+4. **The legacy SVM-RF detector is competitive on benign impact but costly.** It is not
+   significantly different from FL-DualGuard on benign impact (8.1 % vs 5.5 %,
+   p = 0.65), but leaves more malicious occupancy (21.9 % vs 15.0 %) and its decision
+   loop is 33× slower (84 ms mean). Federation still needs a weight-sharing model.
+5. **Overheads.**
+   - Demotion raises Packet-In volume by 24.9 % relative to no defense, since demoted
+     flows reinstall.
+   - On benign-only runs, FL-DualGuard demotes 0.52 % of benign flows and rejects
+     none.
+   - The p99 decision loop is 6.4 ms, well within the 1 s poll interval.
+
+Findings 2 and 3 were observed on **test** data. The configuration must not be changed
+based on them and then re-reported on the same seeds. The correct next step is §6.
+
+## 6. Recommended next experiment (pre-declare before running)
+
+Make the following candidate changes, and select among them on **validation seeds
+only** with `loftbench.tune`:
+
+- Drop context features.
+- Make the hard guard optional, or tune h_crit ∈ {0.9, 0.95, 1.0} on validation.
+- Use FedAvg as the optimizer.
+
+Then evaluate the selected configuration once on **fresh** online seeds (e.g. 5000–5009)
+and report both runs.
+
+Add robustness checks:
+
+- More controllers (5–10) with Dirichlet-skewed exposure.
+- Replay of real benign traces (bigFlows.pcap, CAIDA).
+- An adaptive attacker that knows the demotion timeout.
+
+## 7. What is still missing before submission
+
+1. **Emulation confirmation (sudo needed).** Run `testbed/README.md` acceptance runs
+   1–4 on Mininet/OVS. Report whether the no-defense overflow and the FL-DualGuard
+   occupancy reduction reproduce. This is the largest gap.
+2. **DMS-BTT fidelity check.** Check the reimplementation against Section 4 of the
+   paper (the PDF was not in the workspace).
+3. **Related work.** Cite adaptive and dynamic idle-timeout prior art, and position soft
+   demotion relative to it.
+4. **Legacy results.** The legacy `results/*.png` and `paper_results_section.md`
+   (98 % accuracy on synthetic shortcut data) must not be used.
