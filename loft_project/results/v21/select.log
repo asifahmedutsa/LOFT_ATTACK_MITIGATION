@@ -1,0 +1,34 @@
+  [select] 200/1728 episodes, 124s
+  [select] 400/1728 episodes, 245s
+  [select] 600/1728 episodes, 354s
+  [select] 800/1728 episodes, 464s
+  [select] 1000/1728 episodes, 600s
+  [select] 1200/1728 episodes, 736s
+  [select] 1400/1728 episodes, 883s
+  [select] 1600/1728 episodes, 1025s
+ cfg_detector cfg_hard  cfg_rho  cfg_t_short  benign_flows_impacted_frac  avg_attack_occ_post  overflow_seconds_post_attack  benign_only_impacted  feasible
+       fedavg    h0.90      0.5          1.0                      0.0685               0.1256                        2.3571                0.0374     False
+       fedavg    h0.90      0.7          1.0                      0.0451               0.1513                        2.9810                0.0031     False
+       fedavg    h0.95      0.5          1.0                      0.0652               0.1246                        2.5905                0.0374     False
+       fedavg    h0.95      0.7          1.0                      0.0407               0.1499                        3.2825                0.0031      True
+       fedavg      off      0.5          1.0                      0.0443               0.1207                        3.9762                0.0374     False
+       fedavg      off      0.7          1.0                      0.0192               0.1447                        4.5524                0.0031      True
+ fedavg_noctx    h0.90      0.5          1.0                      0.0416               0.1096                        1.7651                0.0207     False
+ fedavg_noctx    h0.90      0.7          1.0                      0.0318               0.1307                        2.2571                0.0018      True
+ fedavg_noctx    h0.95      0.5          1.0                      0.0400               0.1095                        1.8619                0.0207     False
+ fedavg_noctx    h0.95      0.7          1.0                      0.0296               0.1305                        2.3651                0.0018      True
+ fedavg_noctx      off      0.5          1.0                      0.0366               0.1093                        2.0952                0.0207     False
+ fedavg_noctx      off      0.7          1.0                      0.0262               0.1304                        2.5873                0.0018      True
+      fedprox    h0.90      0.5          1.0                      0.0805               0.1244                        2.3825                0.0404     False
+      fedprox    h0.90      0.7          1.0                      0.0542               0.1496                        2.9921                0.0044      True
+      fedprox    h0.95      0.5          1.0                      0.0753               0.1239                        2.6460                0.0404     False
+      fedprox    h0.95      0.7          1.0                      0.0484               0.1489                        3.3667                0.0044      True
+      fedprox      off      0.5          1.0                      0.0531               0.1208                        4.2857                0.0404     False
+      fedprox      off      0.7          1.0                      0.0230               0.1443                        4.8794                0.0044      True
+fedprox_noctx    h0.90      0.5          1.0                      0.0457               0.1095                        1.6429                0.0209     False
+fedprox_noctx    h0.90      0.7          1.0                      0.0359               0.1306                        2.1683                0.0015      True
+fedprox_noctx    h0.95      0.5          1.0                      0.0432               0.1091                        1.7381                0.0209     False
+fedprox_noctx    h0.95      0.7          1.0                      0.0329               0.1302                        2.2746                0.0015      True
+fedprox_noctx      off      0.5          1.0                      0.0369               0.1086                        2.0175                0.0209     False
+fedprox_noctx      off      0.7          1.0                      0.0261               0.1297                        2.5571                0.0015      True
+SELECTED {'detector': 'fedavg', 'hard': 'off', 'rho': 0.7, 't_short': 1.0}
