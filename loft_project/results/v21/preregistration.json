@@ -1,0 +1,61 @@
+{
+  "created_utc": "2026-10-25T05:13:03.215941+00:00",
+  "candidates": {
+    "detector": [
+      "fedprox",
+      "fedavg",
+      "fedprox_noctx",
+      "fedavg_noctx"
+    ],
+    "hard": [
+      "h0.90",
+      "h0.95",
+      "off"
+    ],
+    "rho": [
+      0.5,
+      0.7
+    ],
+    "t_short": [
+      1.0
+    ]
+  },
+  "rule": {
+    "objective": "minimize mean benign_flows_impacted_frac over attacked validation episodes",
+    "constraints": {
+      "avg_attack_occ_post_max": 0.15,
+      "overflow_seconds_post_attack_max": 5.0,
+      "benign_only_impacted_max": 0.01
+    },
+    "tie_break": "prefer hard=off, then *_noctx, then fedavg (simpler)",
+    "fallback": "if no candidate is feasible, minimize overflow_seconds_post_attack"
+  },
+  "validation_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "fresh_test_seeds": [
+    5000,
+    5001,
+    5002,
+    5003,
+    5004,
+    5005,
+    5006,
+    5007,
+    5008,
+    5009
+  ],
+  "test_defenses": [
+    "none",
+    "dms-btt",
+    "dg-local",
+    "dg-local-noctx",
+    "v2",
+    "v2.1",
+    "dg-pooled"
+  ],
+  "calibration_budget": 0.01,
+  "note": "Motivated by v2 test-set ablations (results_v2.md section 5); selection uses validation seeds only and the test runs once on unseen seeds."
+}
