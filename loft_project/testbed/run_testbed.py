@@ -51,7 +51,9 @@ def main():
     ap.add_argument("--variant", default="A2")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", choices=["none", "dualguard"], default="none")
-    ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v2", "exported"))
+    ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
+    ap.add_argument("--model-prefix", default="v21",
+                    help="model file prefix: v21 (results/v21/exported) or fedprox (results/v2/exported)")
     ap.add_argument("--capacity", type=int, default=3500)
     ap.add_argument("--duration", type=float, default=300)
     ap.add_argument("--attack-start", type=float, default=50)
@@ -69,7 +71,7 @@ def main():
     for dm in doms:
         env = dict(os.environ, LOFT_DPID=str(dm["dpid"]), LOFT_DEFENSE=a.defense,
                    LOFT_CAPACITY=str(a.capacity),
-                   LOFT_MODEL=os.path.join(a.model_dir, f"fedprox_{dm['name']}.json"),
+                   LOFT_MODEL=os.path.join(a.model_dir, f"{a.model_prefix}_{dm['name']}.json"),
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),
                    PYTHONPATH=ROOT)
         ctrl.append(subprocess.Popen(

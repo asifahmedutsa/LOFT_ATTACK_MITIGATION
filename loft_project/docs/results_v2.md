@@ -143,7 +143,7 @@ What the ablation shows:
 Findings 2 and 3 were observed on **test** data. The configuration must not be changed
 based on them and then re-reported on the same seeds. The correct next step is §6.
 
-## 6. Recommended next experiment (pre-declare before running)
+## 6. Recommended next experiment (pre-declare before running) — done, see §8
 
 Make the following candidate changes, and select among them on **validation seeds
 only** with `loftbench.tune`:
@@ -172,3 +172,91 @@ Add robustness checks:
    demotion relative to it.
 4. **Legacy results.** The legacy `results/*.png` and `paper_results_section.md`
    (98 % accuracy on synthetic shortcut data) must not be used.
+
+## 8. v2.1 — validation-selected configuration, one-shot test on fresh seeds
+
+Protocol (`loftbench/v21.py`, artifacts in `results/v21/`):
+
+1. **Pre-registration.** The candidate set, selection rule, and fresh test seeds were
+   written to `preregistration.json` and committed (`39e36af`) before any v2.1
+   episode ran.
+   - **Candidates (24):** detector ∈ {FedProx, FedAvg, FedProx without context
+     features, FedAvg without context features} × hard guard ∈ {0.90, 0.95, off} ×
+     ρ ∈ {0.5, 0.7}, with t_short = 1 s.
+   - **Rule:** minimize benign flows impacted on attacked validation episodes, subject
+     to malicious occupancy ≤ 15 %, overflow ≤ 5 s, and benign-only impact ≤ 1 %.
+2. **Selection** on validation seeds 2000–2002 only (1,728 episodes,
+   `selection_table.csv`). It chose **FedAvg, hard guard off, ρ = 0.7, t_short = 1 s**,
+   with validation benign impact 1.92 %, malicious occupancy 14.5 %, and overflow
+   4.55 s. The choice was committed (`51df171`) before testing.
+3. **One-shot test** on fresh seeds 5000–5009, which no earlier stage touched. The
+   script refuses to rerun it. All 7 defenses ran on identical traffic: 210 attacked
+   plus 30 benign-only episodes each.
+
+### 8.1 Main result (attacked episodes, n = 210)
+
+| Defense | Benign flows impacted (%) | Malicious occ. (%) | Overflow (s) | Decision p99 (ms) |
+|---|---|---|---|---|
+| No defense | 42.77 [40.96, 44.61] | 53.45 | 147.4 | 0.7 |
+| DMS-BTT (reimpl.) | 12.09 [9.96, 14.28] | 24.93 | 13.3 | 14.3 |
+| Local MLP + v2 policy | 19.61 [17.20, 22.11] | 25.89 | 4.2 | 10.8 |
+| Local MLP (no ctx) + v2.1 policy | 8.95 [7.13, 10.91] | 20.74 | 24.7 | 10.5 |
+| FL-DualGuard v2 | 5.91 [4.96, 6.94] | 14.97 | 3.2 | 9.9 |
+| **FL-DualGuard v2.1** | **2.24 [1.99, 2.51]** | **14.43** | **4.9** | **7.5** |
+| Pooled oracle (v2 policy) | 5.30 [4.37, 6.30] | 13.93 | 2.5 | 8.1 |
+
+Paired Wilcoxon tests, Holm-corrected (`results/v21/tables/paired_tests.csv`), for
+benign flows impacted:
+
+| v2.1 vs | Mean difference | Paired wins / losses | p_Holm |
+|---|---|---|---|
+| DMS-BTT | −9.9 points (5.4× fewer) | 160 / 50 | < 1e-4 |
+| Local no-ctx, same policy | −6.7 points (4.0× fewer) | 183 / 27 | < 1e-4 |
+| v2 | −3.7 points | 210 / 0 | < 1e-4 |
+
+**The federation effect under identical policy and features** is the v2.1 versus
+local no-ctx row: 2.24 % vs 8.95 % benign impact. Local training also leaves overflow
+at 24.7 s against 4.9 s, because local detectors miss variants seen only elsewhere.
+The occupancy difference against local no-ctx is not significant by paired test
+(p = 0.78). Its mean gap of −6.3 points comes from a minority of episodes where
+local detectors fail badly, so report the means *and* the paired counts.
+
+**Per variant** (benign impacted %, `table_test_by_variant.csv`, Fig. 7):
+
+| Defense | A1 | A2 | A3 | A4 | A5 | A6 (unseen) | A7 |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT | 4.9 | 5.1 | 5.1 | 42.2 | 4.9 | 18.1 | 4.3 |
+| v2 | 4.6 | 2.5 | 4.7 | 17.8 | 4.1 | 5.5 | 2.4 |
+| **v2.1** | **2.0** | **1.9** | **2.1** | **3.9** | **2.0** | **1.9** | **1.9** |
+
+Mimicry (A4), the hardest case in v2, falls from 17.8 % to 3.9 %. Most of the v2
+damage on A4 came from the hard guard evicting benign entries.
+
+### 8.2 Costs and caveats
+
+- **Overflow time rises.** It goes from 3.2 s (v2) to 4.9 s (v2.1), losing 177 of 210
+  pairs, p_Holm < 1e-4. This is the declared trade-off of dropping the hard guard, and
+  it is within the pre-registered 5 s limit. v2.1 is still 8.4 s better than DMS-BTT.
+- **The comparison with the pooled oracle is not like-for-like.** The oracle row uses
+  the v2 policy, so "v2.1 beats pooled" must not be claimed. A pooled model under the
+  v2.1 policy was not part of the pre-registered test set.
+- **Benign-only cost.** v2.1 demotes 0.45 % of benign flows on benign-only seeds, with
+  no rejections. One fresh D3 benign-only seed shows 0.07 s of overflow under *every*
+  defense, from a flash crowd that briefly reaches capacity.
+- **Packet-In** is +23.7 % relative to no defense, about the same as v2.
+- **Testbed.** The v2.1 model is exported for the testbed as
+  `results/v21/exported/v21_<D>.json`. It reproduces the Python model exactly (max
+  difference 0), and `run_testbed.py` now uses it by default.
+
+### 8.3 What the paper should claim
+
+FL-DualGuard v2.1 is the proposed configuration, and v2 serves as the pre-declared
+first design, with its ablation evidence. The claims supported in simulation:
+
+1. Federated detectors with soft demotion reduce benign disruption by 5.4× relative
+   to a DMS-BTT reimplementation, and by 4× relative to local training under the
+   identical policy.
+2. The gain is largest on mimicry and never-seen variants.
+3. These claims hold on a pre-registered, one-shot test.
+
+Emulation confirmation (§7.1) remains the main open item.

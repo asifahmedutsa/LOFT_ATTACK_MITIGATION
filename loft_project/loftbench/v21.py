@@ -203,6 +203,24 @@ def stage_test(src, out, workers):
         pickle.dump(series, f)
 
 
+def stage_export(out):
+    """Export the selected v2.1 model and knobs for the Ryu testbed."""
+    models, taus = pickle.load(open(os.path.join(out, "models.pkl"), "rb"))
+    sel = json.load(open(os.path.join(out, "selected.json")))["selected"]
+    m = models[sel["detector"]]
+    idx = m.idx if isinstance(m, SubsetModel) else None
+    base = m.m if isinstance(m, SubsetModel) else m
+    pol = _policy(sel)
+    ed = os.path.join(out, "exported")
+    os.makedirs(ed, exist_ok=True)
+    for d in DOMAINS:
+        _dump(ed, f"v21_{d}.json", dict(
+            weights=[w.tolist() for w in base.get_weights()], mean=base.scaler.mean.tolist(),
+            std=base.scaler.std.tolist(), tau=taus[f"{sel['detector']}/{d}"],
+            feature_idx=idx, features=FEATURE_NAMES, rho=pol["rho"], t_short=int(pol["t_short"]),
+            h_crit=pol["h_crit"] if pol["hard"] else 2.0, target=0.80))
+
+
 def stage_report(out):
     from . import report as R
     R.LABEL.update({"v2": "FL-DualGuard v2", "v2.1": "FL-DualGuard v2.1 (ours)",
@@ -224,8 +242,33 @@ def stage_report(out):
     tests.to_csv(os.path.join(tdir, "paired_tests.csv"), index=False)
     (att.pivot_table(index="defense", columns="variant", values="benign_flows_impacted_frac") * 100) \
         .round(2).to_csv(os.path.join(tdir, "table_test_by_variant.csv"))
+    _figure(out, att, R)
     print(R.summarize(df, TEST_DEFENSES)[cols].to_string(index=False))
     print(tests.round(4).to_string(index=False))
+
+
+def _figure(out, att, R):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    R._style(plt)
+    os.makedirs(os.path.join(out, "figures"), exist_ok=True)
+    variants = sorted(att.variant.unique())
+    show = (("dms-btt", R.AQUA), ("dg-local-noctx", R.ORANGE), ("v2", R.GRAY), ("v2.1", R.BLUE))
+    g = att.pivot_table(index="defense", columns="variant", values="benign_flows_impacted_frac") * 100
+    fig, ax = plt.subplots(figsize=(8, 2.9))
+    w = 0.2
+    for i, (d, col) in enumerate(show):
+        ax.bar(np.arange(len(variants)) + (i - 1.5) * w, g.loc[d, variants], width=w - 0.03,
+               color=col, label=R.LABEL[d])
+    ax.set_xticks(range(len(variants)), variants)
+    ax.set_ylabel("Benign flows impacted (%)")
+    ax.set_title("Fresh seeds 5000-5009 (one-shot test)", fontsize=9, loc="left")
+    ax.grid(axis="x", visible=False)
+    ax.legend(fontsize=7.5, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.12))
+    for ext in ("png", "pdf"):
+        fig.savefig(os.path.join(out, "figures", f"fig7_v21_per_variant.{ext}"))
+    plt.close(fig)
 
 
 def main():
@@ -245,6 +288,8 @@ def main():
         stage_select(a.src, a.out, a.workers)
     if "test" in st:
         stage_test(a.src, a.out, a.workers)
+    if "export" in st:
+        stage_export(a.out)
     if "report" in st:
         stage_report(a.out)
 

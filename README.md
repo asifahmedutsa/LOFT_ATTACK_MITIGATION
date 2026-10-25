@@ -12,6 +12,10 @@ attacks across multiple SDN controllers.
 All of it is implemented and evaluated in simulation. A Mininet/OVS/Ryu harness is
 written but **has not yet been run**, because it needs sudo.
 
+Headline result from the pre-registered, one-shot test on fresh seeds (v2.1): 2.2 % of
+benign flows impacted, against 12.1 % for a DMS-BTT reimplementation and 42.8 % with no
+defense.
+
 | Read | For |
 |---|---|
 | [loft_project/docs/results_v2.md](loft_project/docs/results_v2.md) | Results, including negative findings and what is missing before submission |
@@ -30,6 +34,8 @@ python -m pytest -q tests
 python -m loftbench.experiment --out results/v2 --stages collect,train,offline,export
 python -m loftbench.tune --out results/v2
 python -m loftbench.experiment --out results/v2 --stages online,report
+# v2.1: pre-registered validation-only selection, then a one-shot fresh-seed test
+python -m loftbench.v21 --src results/v2 --out results/v21 --stages prereg,train,select,test,export,report
 ```
 
 ## Layout
@@ -39,7 +45,8 @@ loft_project/
   loftbench/     simulator, traffic/attacks, features, models + FL, defenses, pipeline, report
   tests/         unit tests for table semantics, labels, federation, calibration, splits
   testbed/       Mininet/OVS/Ryu harness that shares the loftbench feature extractor
-  results/v2/    tables, figures, CSVs, manifest (large pickles are git-ignored)
+  results/v2/    v2 tables, figures, CSVs, manifest (large pickles are git-ignored)
+  results/v21/   v2.1 pre-registration, validation selection, one-shot test, exported model
   docs/          methodology, results, paper draft, earlier audits
   (legacy)       attack/, data/, federated/, models/, topology/, eval/, results/*.png
 ```

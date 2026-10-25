@@ -18,20 +18,32 @@ original handoff, kept for history.
 | 7. Paper settings not wired | **Wired.** `loftbench/config.py` and `experiment.py`; splits are run-disjoint (unit-tested). |
 | 8. Topology differs from the paper | **Fixed** in `testbed/run_testbed.py`: 6 user hosts including 2 attackers, plus a server, per domain. |
 
-**Headline result (simulation; 210 paired attack episodes per defense):**
+**Headline result (simulation, pre-registered one-shot test on fresh seeds; 210 paired
+attack episodes per defense):** FL-DualGuard v2.1 (FedAvg, soft demotion, no hard guard).
 
-- **Benign flows impacted:** FL-DualGuard 5.5 %, DMS-BTT reimplementation 12.0 %,
-  local detectors 19.3 %, no defense 42.3 %.
-- **On an attack variant no controller trained on:** FL-DualGuard 3.9 %, DMS-BTT 17.9 %.
+- **Benign flows impacted:** v2.1 2.24 %, DMS-BTT reimplementation 12.09 %, local
+  training under the same policy 8.95 %, no defense 42.77 %.
+- **On the never-seen attack variant A6:** v2.1 1.9 %, DMS-BTT 18.1 %.
 
-Negative findings and remaining work are in `loft_project/docs/results_v2.md` §5–§7.
+The protocol, negative findings, and remaining work are in
+`loft_project/docs/results_v2.md` §5–§8.
+
+**Commits** on branch `loft-v2` (pushed to origin):
+
+| Commit | Content |
+|---|---|
+| `f79bb0c` | v2 |
+| `39e36af` | v2.1 pre-registration |
+| `51df171` | v2.1 selection |
+| next commit | v2.1 test and docs |
 
 **Next actions, in priority order:**
 
-1. Run the Mininet acceptance runs in `loft_project/testbed/README.md`; this needs sudo.
-2. Select the v2.1 configuration on validation seeds only, then test it once on fresh
-   seeds (results §6).
-3. Verify the DMS-BTT reimplementation against the paper.
+1. Run the Mininet acceptance runs in `loft_project/testbed/README.md`. This needs
+   sudo. The runs use the v2.1 model by default.
+2. Verify the DMS-BTT reimplementation against the paper.
+3. Run the robustness checks: more controllers, trace replay, and an adaptive attacker
+   (results §6).
 4. Write the related-work section.
 
 Environment: `~/.venvs/loft` (Python 3.12, `loft_project/requirements.txt`).

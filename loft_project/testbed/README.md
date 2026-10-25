@@ -9,7 +9,11 @@ before submission.
 
 - Mininet 2.3.0, Open vSwitch 3.3.x (`systemctl is-active openvswitch-switch`)
 - `~/ryu-env` (Python 3.8, Ryu 4.34, NumPy, scapy)
-- Exported models: `python -m loftbench.experiment --out results/v2 --stages export`
+- Exported models:
+  - **v2.1 (default):** `python -m loftbench.v21 --out results/v21 --stages export`,
+    which writes `results/v21/exported/v21_<D>.json`. Parity with the Python model has
+    been checked: max difference 0.
+  - **v2:** `--model-prefix fedprox --model-dir results/v2/exported`.
 
 ## Acceptance runs (do these first, in order)
 
