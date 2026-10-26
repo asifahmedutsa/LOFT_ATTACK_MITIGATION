@@ -1,0 +1,28 @@
+  [select] 300/6912 episodes, 216s
+  [select] 600/6912 episodes, 422s
+  [select] 900/6912 episodes, 642s
+  [select] 1200/6912 episodes, 847s
+  [select] 1500/6912 episodes, 1057s
+  [select] 1800/6912 episodes, 1262s
+  [select] 2100/6912 episodes, 1473s
+  [select] 2400/6912 episodes, 1679s
+  [select] 2700/6912 episodes, 1888s
+  [select] 3000/6912 episodes, 2091s
+  [select] 3300/6912 episodes, 2299s
+  [select] 3600/6912 episodes, 2508s
+  [select] 3900/6912 episodes, 2723s
+  [select] 4200/6912 episodes, 2942s
+  [select] 4500/6912 episodes, 3158s
+  [select] 4800/6912 episodes, 3366s
+  [select] 5100/6912 episodes, 3586s
+  [select] 5400/6912 episodes, 3812s
+  [select] 5700/6912 episodes, 4014s
+  [select] 6000/6912 episodes, 4201s
+  [select] 6300/6912 episodes, 4389s
+  [select] 6600/6912 episodes, 4583s
+  [select] 6900/6912 episodes, 4775s
+family A: family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes  feasible=False impacted=0.1210 occ=0.2180 ovf=10.93
+family B: family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60  feasible=True impacted=0.0810 occ=0.1394 ovf=3.85
+family C: family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes  feasible=False impacted=0.0871 occ=0.1841 ovf=2.61
+family D: family=D,h2=0.6,h1=0.9,p=0.3,numb=bytes  feasible=False impacted=0.1231 occ=0.2191 ovf=11.60
+family E: family=E,rho=0.7,numb=bytes  feasible=False impacted=0.1041 occ=0.2193 ovf=31.29

@@ -1,0 +1,43 @@
+{
+  "selected": {
+    "A": {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes"
+    },
+    "B": {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60"
+    },
+    "C": {
+      "family": "C",
+      "rho": 0.7,
+      "gate": false,
+      "hard": "h0.90",
+      "numb": "bytes",
+      "id": "family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes"
+    },
+    "D": {
+      "family": "D",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=D,h2=0.6,h1=0.9,p=0.3,numb=bytes"
+    },
+    "E": {
+      "family": "E",
+      "rho": 0.7,
+      "numb": "bytes",
+      "id": "family=E,rho=0.7,numb=bytes"
+    }
+  }
+}
