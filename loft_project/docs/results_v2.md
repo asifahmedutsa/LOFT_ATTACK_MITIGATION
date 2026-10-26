@@ -524,3 +524,120 @@ per-(entry, poll) rate of 1 % (about 5 % per flow), or per-flow calibration.
 - **Overflow.** Drop any claim of significantly lower mean overflow than DMS-BTT.
 - **Still unmeasured.** Goodput and latency need the controller service model
   (plan P0-2 part 2) or the testbed.
+
+## 11. Revision step 2 — a fair DMS-BTT comparison (review item 4)
+
+Code: `loftbench/revision2.py`. Artifacts: `results/revision2/`.
+
+**Protocol:**
+
+1. **Pre-registration** (`0b7ede6`), committed before any selection episode: 96
+   DMS-BTT candidates in five families, against v2.1's 24.
+2. **Selection.** Each family was selected on validation seeds 2000–2002 using v2.1's
+   rule (`7a1b1c1`). v2.1 never needed its fallback; the fallback here (least
+   constraint violation, then the objective) applies only to DMS-BTT families that
+   have no feasible candidate.
+3. **One-shot test** on seeds 5000–5009. These seeds were never used to tune any
+   DMS-BTT configuration. The v2.1, local, and no-defense rows are the deterministic
+   re-measurement from §10, paired on identical traffic.
+4. **Statistics:** cluster-bootstrap CIs and cluster-level Wilcoxon tests (Holm),
+   with 30 (domain, seed) clusters.
+
+**Families:**
+
+| Family | What it is |
+|---|---|
+| A | DMS-BTT tuned: H2, H1, flow threshold, and Numb ∈ {bytes, packets} |
+| B | A plus a blocklist: flows deleted as malicious are refused re-admission for T s, and their packets are dropped at the controller |
+| C | DMS-BTT detector with the DualGuard policy (soft demotion), with an optional state gate |
+| D | Federated DMS-BTT: a FedAvg MLP over (Numb, PIT, Sizep) with the two-level policy |
+| E | Federated DMS features with the v2.1 policy |
+
+**Validation selection** (`selection_table.csv`). Only family B has a configuration
+that satisfies all of v2.1's limits.
+
+| Family | Selected | Feasible | Val. impacted | Val. malicious occ. | Val. overflow |
+|---|---|---|---|---|---|
+| A | H2 = 0.6, H1 = 0.85, p = 0.7, bytes | no | 12.1 % | 21.8 % | 10.9 s |
+| B | H2 = 0.6, H1 = 0.9, p = 0.7, bytes, T = 60 s | **yes** | 8.1 % | 13.9 % | 3.9 s |
+| C | ρ = 0.7, no gate, hard guard 0.90, bytes | no | 8.7 % | 18.4 % | 2.6 s |
+| D | H2 = 0.6, H1 = 0.9, p = 0.3 | no | 12.3 % | 21.9 % | 11.6 s |
+| E | ρ = 0.7 | no | 10.4 % | 21.9 % | 31.3 s |
+
+### 11.1 Test results (attacked episodes, n = 210 per defense)
+
+| Defense | Harmed (%) | Malicious occ. (%) | Overflow mean / p90 (s) | > 5 s |
+|---|---|---|---|---|
+| No defense | 42.77 [41.63, 43.90] | 53.45 | 147.4 / 186.0 | 100 % |
+| DMS-BTT, original knobs | 7.92 [6.57, 9.32] | 24.93 | 13.3 / 33.1 | 56 % |
+| A: DMS-BTT tuned | 7.86 [6.38, 9.37] | 21.90 | 11.6 / 32.6 | 36 % |
+| **B: DMS-BTT tuned + blocklist** | **4.71 [3.65, 5.73]** | **13.83 [12.60, 15.08]** | **4.1 / 6.7** | **12 %** |
+| C: DMS-BTT detector + DualGuard policy | 4.13 [3.15, 5.17] | 18.25 | 2.8 / 5.5 | 11 % |
+| D: DMS-BTT federated | 7.43 [5.93, 8.94] | 21.97 | 12.4 / 32.9 | 42 % |
+| E: federated DMS features + v2.1 policy | 9.59 [8.94, 10.25] | 21.91 | 31.4 / 159.2 | 32 % |
+| Local MLP (no ctx) + v2.1 policy | 7.61 [6.59, 8.62] | 20.74 | 24.7 / 104.3 | 33 % |
+| **FL-DualGuard v2.1** | **1.73 [1.27, 2.18]** | 14.43 [13.90, 14.94] | 4.9 / 8.8 | 41 % |
+
+**v2.1 against the strongest fair baseline (B).** Cluster-level Holm-corrected tests,
+from `cluster_paired_tests.csv`:
+
+| Metric | v2.1 vs B | Cluster wins | p_Holm | Verdict |
+|---|---|---|---|---|
+| Benign flows harmed | 1.73 % vs 4.71 % (2.7× fewer) | 30/30 | 1.5e-8 | v2.1 better |
+| Malicious occupancy | 14.4 % vs 13.8 % | 11/30 | 0.12 | no difference |
+| Mean overflow | 4.9 s vs 4.1 s | 10/30 | 1.0 | no difference |
+
+B has better overflow tails: 12 % of episodes exceed 5 s, against 41 % for v2.1.
+
+**Harmed % by variant** (`table_harmed_by_variant.csv`):
+
+| Defense | A1 | A2 | A3 | A4 | A5 | A6 | A7 |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT, original | 4.51 | 4.71 | 4.70 | 24.29 | 4.52 | 8.70 | 3.99 |
+| B: tuned + blocklist | **0.46** | **0.41** | **0.30** | 21.74 | **0.44** | 9.25 | **0.33** |
+| C: DMS detector + DG policy | 1.40 | 1.41 | 1.45 | 15.60 | 1.40 | 6.38 | 1.26 |
+| E: fed DMS features + v2.1 policy | 1.24 | 1.22 | 1.25 | 50.36 | 1.23 | 10.77 | 1.08 |
+| **v2.1** | 1.66 | 1.46 | 1.66 | **3.17** | 1.58 | **1.10** | 1.44 |
+
+### 11.2 What this changes
+
+1. **The DMS-BTT baseline in the paper must be the tuned-plus-blocklist variant (B).**
+   - Against B, v2.1 harms **2.7×** fewer benign flows. The earlier figure, against the
+     untuned DMS-BTT, was 4.6×.
+   - v2.1 contains the attack **no better** than B: occupancy and mean overflow are not
+     significantly different, and B's overflow tail is better.
+   - Tuning DMS-BTT's thresholds alone barely helps (7.92 % → 7.86 %). The blocklist
+     is what helps.
+2. **On DMS-BTT's own attack settings, B beats v2.1 on benign harm.**
+   - On A1–A3, A5 and A7, B harms 0.3–0.5 % of benign flows, against 1.4–1.7 % for
+     v2.1.
+   - v2.1's entire advantage comes from mimicry (A4: 3.2 % vs 21.7 %) and the
+     variant unseen by any controller (A6: 1.1 % vs 9.3 %).
+   - The paper's claim must therefore be **robustness to attack variants a controller
+     has not seen, or that mimic benign traffic**, not general superiority.
+3. **Decomposing the gain over DMS-BTT** (harmed %):
+
+   | Step | Change | Harmed |
+   |---|---|---|
+   | DMS-BTT | — | 7.9 % |
+   | C | Replace its policy with soft demotion | 4.1 % |
+   | v2.1 | Our 17 features and federation | 1.7 % |
+
+   Federating DMS-BTT's own 3 features barely helps (D: 7.4 %). With the v2.1 policy
+   they fail badly on A4 (E: 50 %). Federation transfers cross-variant knowledge only
+   with sufficiently rich features. This also previews step 3: the federation benefit
+   is conditional, and it has to be shown against a shared-attack-library baseline.
+4. **The Numb definition barely matters.** On validation (bytes vs packets), the best
+   configuration's impacted % moves 12.1 → 13.2 (A), 8.1 → 8.8 (B), and
+   8.7 → 9.5 (C). Feasibility is unchanged
+   (`table_numb_sensitivity_validation.csv`). Whichever definition the paper uses, the
+   conclusions hold. Report the paper's definition as primary once it is checked.
+5. **Implication for step 4 (adaptive attacker).**
+   - The blocklist's refuse-re-admission mechanism directly addresses the
+     fast-refresh attacker: demotion only removes flows that refresh more slowly than
+     t_short.
+   - Combining DualGuard's calibrated scoring with a blocklist for repeatedly demoted
+     flows is the obvious step-4 candidate.
+   - It must be pre-registered and tested on seeds 6000+.
+   - Note the blocklist's cost: it drops benign flows outright (0.30 % of benign flows
+     were blocked in B), whereas demotion only slow-paths them.

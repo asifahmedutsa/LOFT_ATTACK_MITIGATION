@@ -11,3 +11,4 @@ loft_project/results/v2*/*_timeseries.pkl
 .pytest_cache/
 catboost_info/
 loft_project/catboost_info/
+loft_project/results/revision*/models.pkl

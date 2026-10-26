@@ -302,7 +302,7 @@ is the realistic hard case and worth a paragraph.
 | Step | Work | Gate before continuing |
 |---|---|---|
 | 1 ✅ | P0-2 metric fix (sim) + P1-2 tails/cluster CIs + P1-1 per-flow calibration | **Done 26 Oct** (`results_v2.md` §10). Rankings hold: harmed 1.73 % vs 7.92 % for DMS-BTT. The overflow advantage over DMS-BTT is not significant at the cluster level. Per-flow calibration fails the occupancy and overflow limits on validation and is carried into step 4. The controller service model (goodput/latency) is still open. |
-| 2 | P0-4 DMS-BTT fairness (needs the PDF) | DMS-BTT tuned/blocklist numbers known |
+| 2 ✅ | P0-4 DMS-BTT fairness (needs the PDF) | **Done 26 Oct** (`results_v2.md` §11). Strongest fair baseline: tuned DMS-BTT + blocklist, 4.71 % harmed vs 1.73 % for v2.1 (30/30 clusters). Attack containment is equal, B has better overflow tails, and B wins on A1–A3/A5/A7. v2.1's advantage comes from A4 and A6. Numb (bytes vs packets) is insensitive; still to do: check the paper's definition and the remaining Section 4 details. |
 | 3 | P0-5 comparators + leave-one-variant-out + α sweep | Federation gain survives the shared-library comparator, or the claim is changed |
 | 4 | P0-1 adaptive attacker mechanism, pre-registered, fresh seeds 6000+ and held-out D4 | Attacker-budget curve shows a bounded cost |
 | 5 | P0-3 testbed (sudo): acceptance, recalibration, reduced matrix, sim-vs-emu figure | Trends reproduce |

@@ -35,13 +35,19 @@ online evaluation.
 
 Across 210 attack episodes per defense (30 independent traffic clusters),
 FL-DualGuard harms 1.7 % of benign flows. Here, harm means the flow was refused a
-table entry, or was evicted while still active. The alternatives harm 7.9 % (a
-reimplementation of DMS-BTT), 7.6 % (locally trained detectors under the identical
-policy) and 42.8 % (no defense). It holds the attacker to 14.4 % of the table, against
-24.9 % for DMS-BTT, and adds the fewest controller Packet-Ins of any defense. On a
-mimicry variant, it harms 3.2 % of benign flows but still lets the attacker occupy
-22 % of the table. **[TODO: rewrite after step 4; the adaptive attacker that
-refreshes faster than 1 s is not yet handled.]**
+table entry, or was evicted while still active.
+
+The strongest baseline is DMS-BTT given the same tuning budget plus a blocklist. It
+harms 4.7 %, which is 2.7× more, and contains the attack equally well (14 % malicious
+occupancy for both). On DMS-BTT's own attack settings, the tuned blocklist variant is
+better (about 0.4 % vs 1.6 %). FL-DualGuard's advantage comes from attack variants
+that a controller has not seen, or that mimic benign traffic: 1.1–3.2 % against
+9–22 %.
+
+An ablation attributes the gain to the soft-demotion policy (7.9 → 4.1 %) and to
+federated training over richer flow features (4.1 → 1.7 %). Federating DMS-BTT's
+three features alone does not help. **[TODO: rewrite after steps 3–4: the shared
+attack-library comparator, and the adaptive attacker that refreshes faster than 1 s.]**
 
 We also report where the first design fell short. Its pre-declared FedProx optimizer
 and hard overflow guard both hurt benign traffic, and removing the guard costs about

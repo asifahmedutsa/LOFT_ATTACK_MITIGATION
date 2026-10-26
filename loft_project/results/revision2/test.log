@@ -1,0 +1,60 @@
+  [test] 300/1200 episodes, 225s
+  [test] 600/1200 episodes, 429s
+  [test] 900/1200 episodes, 627s
+  [test] 1200/1200 episodes, 809s
+== cluster_paired_tests.csv
+                      metric                             baseline  mean_cluster_diff  v21_cluster_wins  v21_cluster_losses            p       p_holm
+    benign_flows_harmed_frac                           No defense          -0.410447                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac             DMS-BTT (original knobs)          -0.061919                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac                        DMS-BTT tuned          -0.061295                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac            DMS-BTT tuned + blocklist          -0.029795                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac  DMS-BTT detector + DualGuard policy          -0.024027                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac              DMS-BTT federated (MLP)          -0.057017                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac Federated DMS features + v2.1 policy          -0.078680                30                   0 1.862645e-09 1.490116e-08
+    benign_flows_harmed_frac     Local MLP (no ctx) + v2.1 policy          -0.058809                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post                           No defense          -0.390251                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post             DMS-BTT (original knobs)          -0.105047                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post                        DMS-BTT tuned          -0.074675                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post            DMS-BTT tuned + blocklist           0.006030                11                  19 1.190766e-01 1.190766e-01
+         avg_attack_occ_post  DMS-BTT detector + DualGuard policy          -0.038172                20                  10 9.902567e-05 1.980513e-04
+         avg_attack_occ_post              DMS-BTT federated (MLP)          -0.075380                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post Federated DMS features + v2.1 policy          -0.074816                30                   0 1.862645e-09 1.490116e-08
+         avg_attack_occ_post     Local MLP (no ctx) + v2.1 policy          -0.063164                30                   0 1.862645e-09 1.490116e-08
+overflow_seconds_post_attack                           No defense        -142.490952                30                   0 1.733307e-06 1.039984e-05
+overflow_seconds_post_attack             DMS-BTT (original knobs)          -8.386667                20                  10 1.094321e-01 4.377282e-01
+overflow_seconds_post_attack                        DMS-BTT tuned          -6.747619                10                  20 6.554384e-01 1.000000e+00
+overflow_seconds_post_attack            DMS-BTT tuned + blocklist           0.785238                10                  20 6.959309e-01 1.000000e+00
+overflow_seconds_post_attack  DMS-BTT detector + DualGuard policy           2.126667                 0                  30 1.733307e-06 1.039984e-05
+overflow_seconds_post_attack              DMS-BTT federated (MLP)          -7.557619                10                  20 6.554384e-01 1.000000e+00
+overflow_seconds_post_attack Federated DMS features + v2.1 policy         -26.527143                30                   0 1.862645e-09 1.490116e-08
+overflow_seconds_post_attack     Local MLP (no ctx) + v2.1 policy         -19.794286                30                   0 1.862645e-09 1.490116e-08
+== table_dms_fair.csv
+                             defense                                            config           harmed (%)         impacted (%)          mal_occ (%)  overflow_mean  overflow_p90  share_gt_5s  benign_only_harmed_pct  blocked_benign_pct
+                          No defense                                               NaN 42.77 [41.63, 43.90] 42.77 [41.63, 43.90] 53.45 [52.25, 54.62]         147.38        186.01        1.000                   0.058               0.000
+            DMS-BTT (original knobs)                                               NaN    7.92 [6.57, 9.32] 12.09 [10.38, 13.77] 24.93 [23.16, 26.78]          13.27         33.06        0.557                   0.058               0.000
+                       DMS-BTT tuned          family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes    7.86 [6.38, 9.37] 12.86 [11.04, 14.63] 21.90 [19.87, 24.00]          11.63         32.63        0.357                   0.058               0.000
+           DMS-BTT tuned + blocklist  family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60    4.71 [3.65, 5.73]   8.50 [6.54, 10.37] 13.83 [12.60, 15.08]           4.10          6.71        0.119                   0.058               0.304
+ DMS-BTT detector + DualGuard policy family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes    4.13 [3.15, 5.17]   9.06 [7.16, 10.95] 18.25 [17.28, 19.19]           2.76          5.54        0.114                   0.071               0.000
+             DMS-BTT federated (MLP)           family=D,h2=0.6,h1=0.9,p=0.3,numb=bytes    7.43 [5.93, 8.94] 13.06 [11.95, 14.23] 21.97 [20.07, 23.93]          12.44         32.92        0.419                   0.101               0.000
+Federated DMS features + v2.1 policy                       family=E,rho=0.7,numb=bytes   9.59 [8.94, 10.25] 10.88 [10.17, 11.59] 21.91 [21.39, 22.41]          31.41        159.21        0.324                   0.058               0.000
+    Local MLP (no ctx) + v2.1 policy                                               NaN    7.61 [6.59, 8.62]    8.95 [7.93, 9.96] 20.74 [20.28, 21.22]          24.68        104.34        0.333                   0.056               0.000
+                   FL-DualGuard v2.1                                               NaN    1.73 [1.27, 2.18]    2.24 [1.67, 2.81] 14.43 [13.90, 14.94]           4.89          8.81        0.414                   0.115               0.000
+== table_harmed_by_variant.csv
+                             defense    A1    A2    A3    A4    A5    A6    A7
+                          No defense 45.40 51.32 53.62 51.81 51.13 13.41 32.71
+            DMS-BTT (original knobs)  4.51  4.71  4.70 24.29  4.52  8.70  3.99
+                       DMS-BTT tuned  3.78  3.91  3.94 25.04  3.83 11.11  3.38
+           DMS-BTT tuned + blocklist  0.46  0.41  0.30 21.74  0.44  9.25  0.33
+ DMS-BTT detector + DualGuard policy  1.40  1.41  1.45 15.60  1.40  6.38  1.26
+             DMS-BTT federated (MLP)  4.06  4.17  4.24 22.71  4.17  9.05  3.60
+Federated DMS features + v2.1 policy  1.24  1.22  1.25 50.36  1.23 10.77  1.08
+    Local MLP (no ctx) + v2.1 policy  1.33  2.50  1.34 32.64  1.30  6.29  7.85
+                   FL-DualGuard v2.1  1.66  1.46  1.66  3.17  1.58  1.10  1.44
+== table_numb_sensitivity_validation.csv
+                             family    numb                                                cfg  feasible  val_impacted  val_harmed  val_mal_occ  val_overflow
+                      DMS-BTT tuned   bytes           family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes     False         12.10        7.11        21.80         10.93
+                      DMS-BTT tuned packets         family=A,h2=0.6,h1=0.85,p=0.5,numb=packets     False         13.22        7.49        22.06         11.02
+          DMS-BTT tuned + blocklist   bytes   family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60      True          8.10        4.41        13.94          3.85
+          DMS-BTT tuned + blocklist packets family=B,h2=0.6,h1=0.9,p=0.7,numb=packets,block=60      True          8.83        4.46        14.18          3.77
+DMS-BTT detector + DualGuard policy   bytes  family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes     False          8.71        3.98        18.41          2.61
+DMS-BTT detector + DualGuard policy packets family=C,rho=0.5,gate=True,hard=h0.90,numb=packets     False          9.51        4.78        17.84          5.27

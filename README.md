@@ -13,9 +13,10 @@ All of it is implemented and evaluated in simulation. A Mininet/OVS/Ryu harness 
 written but **has not yet been run**, because it needs sudo.
 
 Headline result (v2.1, fresh seeds, cluster-bootstrap CIs): 1.7 % of benign flows
-harmed, meaning refused an entry or evicted while still active. The comparison
-figures are 7.9 % for a DMS-BTT reimplementation, and 42.8 % refused an entry with no
-defense. The independent review (`docs/results_v2.md` §9) identified open problems,
+harmed, meaning refused an entry or evicted while still active. The strongest fair
+baseline, DMS-BTT tuned on the same budget plus a blocklist, harms 4.7 %, and 42.8 % of
+flows are refused an entry with no defense. The advantage comes from unseen and
+mimicry attack variants; on DMS-BTT's own settings the tuned baseline is better. The independent review (`docs/results_v2.md` §9) identified open problems,
 most importantly a faster-refreshing adaptive attacker. Work on them follows
 `loft_project/docs/submission_revision_plan.md`.
 
