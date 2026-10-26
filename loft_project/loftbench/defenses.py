@@ -4,6 +4,22 @@ import numpy as np
 from .sim import Defense
 
 
+def dms_transform(X, numb_mode="bytes"):
+    """DMS-BTT flow features (Numb, PIT, Sizep). numb_mode="packets" replaces the
+    byte count with the packet count (bytes / Sizep); the paper's definition must
+    be checked against its Section 4."""
+    if numb_mode == "bytes":
+        return X
+    X = X.copy()
+    X[:, 0] = X[:, 0] / np.maximum(X[:, 2], 1e-6)
+    return X
+
+
+def _proba(model, X):
+    p = model.predict_proba(X)
+    return p[:, 1] if p.ndim == 2 else p
+
+
 def _elephants(byts, pct=90):
     if len(byts) == 0:
         return np.zeros(0, bool)
@@ -51,13 +67,28 @@ class DMSBTT(Defense):
     occupancy >= H2, delete entries classified malicious; if occupancy is
     still >= H1, delete further entries in decreasing malicious probability
     until occupancy < H2. Elephant flows (top 10% bytes) are protected.
+
+    Revision knobs (defaults reproduce the original reimplementation):
+    p_thresh is the flow-classifier decision threshold; numb_mode selects the
+    Numb definition; blocklist_s > 0 refuses re-admission of flows deleted as
+    malicious for that many seconds (their packets are dropped at the controller).
     """
     name = "dms-btt"
     needs_features = True
 
-    def __init__(self, state_model, flow_model, h1=0.90, h2=0.75):
+    def __init__(self, state_model, flow_model, h1=0.90, h2=0.75, p_thresh=0.5,
+                 numb_mode="bytes", blocklist_s=0.0):
         self.state_model, self.flow_model = state_model, flow_model
         self.h1, self.h2 = h1, h2
+        self.p_thresh, self.numb_mode, self.blocklist_s = p_thresh, numb_mode, blocklist_s
+        if blocklist_s > 0:
+            self.admit_filter = self._admit
+
+    def reset(self, ctx):
+        self.blocked_until = np.zeros(ctx["n_flows"])
+
+    def _admit(self, fids, now):
+        return self.blocked_until[fids] <= now
 
     def on_poll(self, t, obs):
         cap, n = obs["capacity"], obs["count"]
@@ -68,9 +99,11 @@ class DMSBTT(Defense):
         occ = n / cap
         if st == 0 or occ < self.h2:
             return None, None
-        p = self.flow_model.predict_proba(obs["dms"])[:, 1]
+        p = _proba(self.flow_model, dms_transform(obs["dms"], self.numb_mode))
         eleph = _elephants(obs["bytes"])
-        dels = (p >= 0.5) & ~eleph
+        dels = (p >= self.p_thresh) & ~eleph
+        if self.blocklist_s > 0:
+            self.blocked_until[obs["fids"][dels]] = t + self.blocklist_s
         n_after = n - int(dels.sum())
         if n_after / cap >= self.h1:
             extra = np.flatnonzero(~dels & ~eleph)
@@ -97,12 +130,16 @@ class DualGuard(Defense):
     needs_features = True
 
     def __init__(self, model, tau_soft, name="dualguard", soft=True, hard=True,
-                 rho=0.5, h_crit=0.90, target=0.80, t_short=1.0, feature_idx=None):
+                 rho=0.5, h_crit=0.90, target=0.80, t_short=1.0, feature_idx=None,
+                 inputs="X", numb_mode="bytes", state_model=None):
         self.model, self.tau = model, tau_soft
         self.name = name
         self.soft, self.hard = soft, hard
         self.rho, self.h_crit, self.target, self.t_short = rho, h_crit, target, t_short
         self.feature_idx = feature_idx
+        # inputs="dms" scores DMS-BTT's (Numb, PIT, Sizep) features instead of ours;
+        # state_model (DMS-BTT state classifier) optionally gates all actions.
+        self.inputs, self.numb_mode, self.state_model = inputs, numb_mode, state_model
 
     def reset(self, ctx):
         self.demoted = np.zeros(ctx["n_flows"], bool)
@@ -114,8 +151,14 @@ class DualGuard(Defense):
         cap, n = obs["capacity"], obs["count"]
         if n == 0 or n / cap < self.rho:
             return None, None
-        X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
-        s = self.model.predict_proba(X)
+        if self.state_model is not None and int(np.ravel(self.state_model.predict(
+                np.array([[obs["state"]["FN"], obs["state"]["APIT"]]])))[0]) == 0:
+            return None, None
+        if self.inputs == "dms":
+            s = _proba(self.model, dms_transform(obs["dms"], self.numb_mode))
+        else:
+            X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
+            s = self.model.predict_proba(X)
         flag = s >= self.tau
         dems = obs["fids"][flag]
         if self.soft:

@@ -195,3 +195,18 @@ class _DMSFlowAdapter:
 
     def predict_proba(self, X):
         return self.m.predict_proba(X)[:, 1]
+
+
+class DMSFeatureMLP:
+    """MLP over DMS-BTT's (Numb, PIT, Sizep) features, for federating DMS-BTT's
+    flow classifier (CatBoost cannot be averaged)."""
+
+    def __init__(self, m):
+        self.m = m
+
+    @staticmethod
+    def features(X):
+        return np.column_stack([np.log1p(X[:, 0]), np.log1p(X[:, 1]), X[:, 2] / 1500.0]).astype(np.float32)
+
+    def predict_proba(self, X):
+        return self.m.predict_proba(self.features(X))

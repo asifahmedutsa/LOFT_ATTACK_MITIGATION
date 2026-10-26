@@ -22,6 +22,7 @@ class Defense:
     name = "none"
     needs_features = False
     evict_on_full = None   # optional callable(n_needed, installed_fids, last_seen, idle_to, now)
+    admit_filter = None    # optional callable(fids, now) -> bool mask of flows allowed an entry
 
     def reset(self, ctx):
         pass
@@ -71,6 +72,7 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
     evict_pending = np.zeros(n, bool)
     evict_deadline = np.zeros(n)
     benign_flow_active_harm = np.zeros(n, bool)
+    benign_flow_blocked = np.zeros(n, bool)
 
     def mark_removed(arr):
         b = arr[~is_att[arr]]
@@ -80,7 +82,8 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
     tot = dict(packet_in=0, table_full=0, benign_pkts=0, benign_rejected_pkts=0,
                benign_packet_in=0, attack_pkts=0, deletes=0, demotes=0,
                benign_deletes=0, benign_demotes=0, attack_deletes=0, attack_demotes=0,
-               installs=0, evictions=0, benign_evictions=0, benign_evict_repackets=0)
+               installs=0, evictions=0, benign_evictions=0, benign_evict_repackets=0,
+               blocked_pkts=0, benign_blocked_pkts=0)
     full_ticks = 0
     first_full = None
     full_ticks_post = 0
@@ -132,6 +135,25 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                     benign_flow_active_harm[pu[hit]] = True
                     tot["benign_evict_repackets"] += int(hit.sum())
                     evict_pending[pu] = False
+                blocked_pk = None
+                admit_filter = getattr(defense, "admit_filter", None)
+                if admit_filter is not None:
+                    # Controller blocklist: refused flows get no entry and their
+                    # packets are dropped at the controller (no TABLE_FULL).
+                    ok = admit_filter(u, now)
+                    if not ok.all():
+                        blk = u[~ok]
+                        u, first = u[ok], first[ok]
+                        blocked_pk = np.isin(mf, blk)
+                        nb = int(blocked_pk.sum())
+                        bb = blocked_pk & ~is_att[mf]
+                        tot["packet_in"] += nb
+                        sec_pi += nb
+                        tot["blocked_pkts"] += nb
+                        tot["benign_blocked_pkts"] += int(bb.sum())
+                        tot["benign_packet_in"] += int(bb.sum())
+                        benign_flow_blocked[mf[bb]] = True
+                        benign_flow_rejected[mf[bb]] = True
                 free = max(cap - count, 0)
                 if len(u) > free and defense.evict_on_full is not None:
                     # Switch-side eviction (OVS overflow_policy=evict).
@@ -163,6 +185,8 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                 # Packet-In: first packet of each admitted flow, every packet
                 # of a rejected flow (each retried and refused with TABLE_FULL).
                 rej_mask = ~installed[mf]
+                if blocked_pk is not None:
+                    rej_mask &= ~blocked_pk
                 n_pi = len(adm) + int(rej_mask.sum())
                 tot["packet_in"] += n_pi
                 tot["table_full"] += int(rej_mask.sum())
@@ -237,6 +261,7 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
         benign_flows_active_evicted_frac=float(benign_flow_active_harm.sum() / max(nb_seen, 1)),
         benign_flows_stale_evicted_frac=float((benign_flow_evicted & ~benign_flow_active_harm).sum()
                                               / max(nb_seen, 1)),
+        benign_flows_blocked_frac=float(benign_flow_blocked.sum() / max(nb_seen, 1)),
         benign_flows_harmed_frac=float((benign_flow_active_harm | benign_flow_rejected).sum()
                                        / max(nb_seen, 1)),
         overflow_seconds=full_ticks * cfg.dt,

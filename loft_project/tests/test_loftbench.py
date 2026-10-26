@@ -181,3 +181,40 @@ def test_cluster_bootstrap():
     df["m"] = [0, 0, 0, 0, 1, 1, 1, 1]          # clusters differ: CI must widen
     mu, lo, hi = cluster_boot(df, "m", n=2000)
     assert mu == 0.5 and lo < 0.5 < hi
+
+
+def test_blocklist_refuses_readmission_until_expiry():
+    from loftbench.defenses import DMSBTT
+
+    class State:
+        def predict(self, X):
+            return np.array([1])
+
+    class Flow:
+        def predict_proba(self, X):
+            return np.ones(len(X))
+
+    cfg = SimConfig(capacity=10, infra_rules=1, duration=40.0)
+    # One attack flow refreshing every 4 s; table forced above H2 by 8 idle benign flows.
+    # Benign flows send 5 packets each, so the 1-packet attack flow is not an elephant.
+    pk = [(0.2 + 4 * k, 0) for k in range(10)] + [(0.1 + 0.01 * i + 0.05 * j, 1 + i)
+                                                  for i in range(8) for j in range(5)]
+    att = [True] + [False] * 8
+    d = DMSBTT(State(), Flow(), h1=0.99, h2=0.5, blocklist_s=20.0)
+    s = run_episode(make_traffic(pk, 9, attack=att), cfg, d).summary
+    # Deleted at the first poll, blocked for 20 s: refreshes at 4..20 s are dropped.
+    assert s["blocked_pkts"] >= 4 and s["benign_blocked_pkts"] == 0
+
+
+def test_default_knobs_reproduce_stored_episodes():
+    import json, pickle
+    import pandas as pd
+    from loftbench import v21
+    sel = json.load(open("results/v21/selected.json"))["selected"]
+    v21._load_ctx("results/v2", "results/v21", sel)
+    stored = pd.read_csv("results/v21/test_episodes.csv").set_index(["defense", "domain", "variant", "seed"])
+    for name in ("dms-btt", "v2.1"):
+        row, _ = v21._episode((name, None, "D2", "A4", 5001, False))
+        ref = stored.loc[(name, "D2", "A4", 5001)]
+        for k in ("benign_flows_impacted_frac", "avg_attack_occ_post", "overflow_seconds_post_attack"):
+            assert abs(row[k] - ref[k]) < 1e-12, (name, k)
