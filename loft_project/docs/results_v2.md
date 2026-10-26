@@ -259,4 +259,122 @@ first design, with its ablation evidence. The claims supported in simulation:
 2. The gain is largest on mimicry and never-seen variants.
 3. These claims hold on a pre-registered, one-shot test.
 
-Emulation confirmation (§7.1) remains the main open item.
+Emulation confirmation (§7.1) remains the main open item. An independent review
+(§9) qualifies claims 1–3; read it before using them.
+
+## 9. Independent review findings (26 October 2026)
+
+A critical review of the v2/v2.1 artifacts. Two probes were added and run on fresh
+test seeds. They report only and change no configuration:
+`loftbench/probe_harm.py` and `loftbench/probe_adaptive.py`, with outputs in
+`results/review/`.
+
+### 9.1 What was verified
+
+- Every §8.1 number recomputes from `results/v21/test_episodes.csv`.
+- `preregistration.json` matches `preregistration.sha256`. After the test, the only
+  changes to `v21.py` are the export and figure code; selection and test logic are
+  unchanged.
+- The exported v2.1 model matches the Python model (max difference 0, identical τ).
+- **Clustering does not change significance.** The 210 attacked episodes share benign
+  traffic across the 7 variants of each (domain, seed), so they are not independent.
+  Averaging within the 30 (domain, seed) clusters, v2.1 still wins 30/30 against
+  every comparator (Wilcoxon p ≈ 2e-9).
+
+### 9.2 Problems, most serious first
+
+1. **An adaptive attacker defeats soft demotion.** Demotion removes a flow only if
+   its refresh gap exceeds t_short = 1 s. Every variant A1–A7 refreshes every
+   5–10 s. Attackers that refresh every 0.8–0.95 s use about 8× the packet rate
+   (3.8k–7.5k pps). This is still small against a 250 Mbps link.
+
+   `probe_adaptive.csv`: 3 seeds × 3 domains, means.
+
+   | Variant | Defense | Benign impacted (%) | Malicious occ. (%) | Overflow (s) |
+   |---|---|---|---|---|
+   | fast-refresh (3.8k pps) | No defense | 78.8 | 86.9 | 240.4 |
+   | | DMS-BTT | 75.6 | 84.8 | 160.5 |
+   | | v2.1 | 75.4 | 84.7 | 203.1 |
+   | fast-mimic (7.5k pps) | No defense | 79.6 | 88.8 | 240.4 |
+   | | DMS-BTT | 79.2 | 88.3 | 169.8 |
+   | | v2.1 | 79.4 | 87.1 | 215.7 |
+
+   DMS-BTT fails too, so the relative claim survives. However, the claim that
+   demotion "defeats the low-rate premise" holds only for attackers slower than
+   t_short. The paper needs a bounded threat model and an occupancy-versus-attacker
+   packet-budget curve.
+
+2. **"Benign flows impacted" overstates harm.** The metric counts a benign flow
+   once its entry is deleted or demoted, even if the flow never sends again.
+
+   `probe_harm.csv`: A1/A4/A6 × 3 domains × 2 seeds. Only 44 % (DMS-BTT), 55 % (v2)
+   and 49 % (v2.1) of the benign flows acted on had any later packet. The rest were
+   stale entries, and removing them cost nothing.
+
+   "Rejected" flows are still forwarded through the controller slow path. No goodput
+   or latency is measured. The ranking is unaffected, but the absolute numbers are
+   proxies, not lost service. For example, "42.8 % with no defense" should be
+   worded as admission failures.
+
+3. **The one-shot test is weaker than "pre-registered" suggests.** The v2.1
+   candidate set was designed from v2 *test-set* ablations (§5). The fresh seeds are
+   new draws from the same generator, so design knowledge from the test set carries
+   over.
+
+   The pre-registration, selection and test commits are self-authored and 50 minutes
+   apart. The rerun guard only checks whether a file exists. Describe it as "design
+   informed by an earlier test run; seeds fresh", not as independent confirmation.
+
+4. **The DMS-BTT baseline is disadvantaged.**
+   - DualGuard's knobs were tuned on validation (9 policy settings, then
+     24 candidates); DMS-BTT's H1/H2 = 0.90/0.75 were not tuned.
+   - DMS-BTT has no memory: a deleted attack flow reinstalls with the full 10 s
+     timeout on its next refresh, while DualGuard remembers demoted flows.
+   - `Numb` is computed from the byte count (`features.py`, the `dms` matrix). Check
+     against the paper whether it should be the packet count.
+   - An ADR "in the paper's range" from simulated data does not establish fidelity.
+   - The 5.4× gap is concentrated in A4 and A6. On A1–A3, A5 and A7 it is
+     4.88 % vs 1.97 % (2.5×).
+
+5. **The federation gain is a training-coverage effect by construction.** Each
+   domain trains on only 2 of the 7 variants, so local models miss the others.
+   - No pooled model was run under the v2.1 policy.
+   - A6 recombines existing traits: A4's benign sizes, A5's spoofing, and slower
+     timing.
+   - The missing comparator is a local model trained on a shared public library of
+     attack variants. If it matches federation, the contribution is attack coverage,
+     not federated learning.
+
+6. **The 1 % budget is per entry-poll, not per flow.** τ is calibrated on sampled
+   (entry, poll) rows. A benign flow is scored at every poll while installed, so its
+   chance of being flagged at some point is higher.
+   - With ρ = 0.5, benign-only impact is 3.7 % (`results/v21/selection_table.csv`).
+   - v2.1's 0.45 % benign-only cost comes mainly from the ρ = 0.7 gate: benign-only
+     occupancy peaks at 46–64 % in D1/D2, so the policy rarely acts there.
+
+7. **The overflow limit is met only on the mean.**
+   - 41 % of v2.1 attacked episodes exceed 5 s of overflow (maximum 27.7 s).
+   - The CI [4.25, 5.60] straddles the limit.
+   - On A4, v2.1 averages 12.5 s of overflow and 22 % malicious occupancy, above the
+     15 % limit.
+
+8. **Results vary by domain and are simulation-only.**
+   - v2.1 impacts 0.58 % (D1), 4.00 % (D2) and 2.13 % (D3) of benign flows; report
+     per domain.
+   - Decision-loop times are Python timings inside the simulator.
+   - The exported τ was calibrated on simulated benign traffic and will need
+     recalibration on Mininet traffic.
+
+### 9.3 What to change before submission
+
+- Add the adaptive attacker (refresh gap ≤ t_short) to the threat-model section and
+  report its result.
+- Report goodput/latency on the testbed, and count only harm to flows that are still
+  active.
+- Tune DMS-BTT's thresholds on the same validation budget, and give it a
+  blocklist/memory variant.
+- Add a "local + shared attack library" comparator, and a pooled model under the
+  v2.1 policy.
+- State the budget as a per-poll rate, and report per-flow flag rates.
+- Report overflow tails (median, p90, share > 5 s) and per-domain tables.
+- Reword §8.3 claim 3 as in item 3 above.
