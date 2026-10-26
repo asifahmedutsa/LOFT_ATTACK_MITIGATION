@@ -12,9 +12,12 @@ attacks across multiple SDN controllers.
 All of it is implemented and evaluated in simulation. A Mininet/OVS/Ryu harness is
 written but **has not yet been run**, because it needs sudo.
 
-Headline result from the pre-registered, one-shot test on fresh seeds (v2.1): 2.2 % of
-benign flows impacted, against 12.1 % for a DMS-BTT reimplementation and 42.8 % with no
-defense.
+Headline result (v2.1, fresh seeds, cluster-bootstrap CIs): 1.7 % of benign flows
+harmed, meaning refused an entry or evicted while still active. The comparison
+figures are 7.9 % for a DMS-BTT reimplementation, and 42.8 % refused an entry with no
+defense. The independent review (`docs/results_v2.md` §9) identified open problems,
+most importantly a faster-refreshing adaptive attacker. Work on them follows
+`loft_project/docs/submission_revision_plan.md`.
 
 | Read | For |
 |---|---|

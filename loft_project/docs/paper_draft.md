@@ -1,7 +1,8 @@
 # Paper draft — FL-DualGuard: Federated, Budget-Calibrated Soft Mitigation of Low-Rate Flow-Table Overflow Attacks Across SDN Controllers
 
-> Draft of 25 October 2026. The headline numbers come from the pre-registered,
-> one-shot v2.1 test (`results/v21`, `docs/results_v2.md` §8). The v2 results
+> Draft of 26 October 2026. The headline numbers come from the v2.1 configuration,
+> re-measured with the service-level harm metric and cluster-bootstrap CIs
+> (`results/revision1`, `docs/results_v2.md` §10; earlier §8). The v2 results
 > (`results/v2`) serve as the first design and the ablation study.
 > Text marked **[TODO]** needs the emulation run, citations, or author decisions before
 > submission. Keep the negative findings: reviewers will reproduce the benchmark.
@@ -32,14 +33,15 @@ three heterogeneous domains, seven attack variants (including the DMS-BTT parame
 sets, mimicry, spoofing, slow-fill and pulsing), run-disjoint splits, and paired
 online evaluation.
 
-Across 210 paired attack episodes per defense, FL-DualGuard impacts 2.2 % of benign
-flows. The alternatives impact 12.1 % (a reimplementation of DMS-BTT), 9.0 % (locally
-trained detectors under the identical policy) and 42.8 % (no defense). It keeps
-malicious table occupancy at 14.4 %, against 24.9 % for DMS-BTT. On an attack variant
-no controller saw in training, it impacts 1.9 % of benign flows, while DMS-BTT impacts
-18.1 %. On a mimicry attack, the figures are 3.9 % against 42.2 %. Federated training
-costs 439 KB of communication. The decision loop takes 7.5 ms at p99 per one-second
-poll.
+Across 210 attack episodes per defense (30 independent traffic clusters),
+FL-DualGuard harms 1.7 % of benign flows. Here, harm means the flow was refused a
+table entry, or was evicted while still active. The alternatives harm 7.9 % (a
+reimplementation of DMS-BTT), 7.6 % (locally trained detectors under the identical
+policy) and 42.8 % (no defense). It holds the attacker to 14.4 % of the table, against
+24.9 % for DMS-BTT, and adds the fewest controller Packet-Ins of any defense. On a
+mimicry variant, it harms 3.2 % of benign flows but still lets the attacker occupy
+22 % of the table. **[TODO: rewrite after step 4; the adaptive attacker that
+refreshes faster than 1 s is not yet handled.]**
 
 We also report where the first design fell short. Its pre-declared FedProx optimizer
 and hard overflow guard both hurt benign traffic, and removing the guard costs about

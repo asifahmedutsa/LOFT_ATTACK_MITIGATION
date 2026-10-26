@@ -66,10 +66,21 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
     benign_flow_rejected = np.zeros(n, bool)
     benign_flow_seen = np.zeros(n, bool)
     benign_flow_evicted = np.zeros(n, bool)
+    # A removed benign entry harms its flow only if the flow sends again before
+    # the entry would have idled out on its own; otherwise the entry was stale.
+    evict_pending = np.zeros(n, bool)
+    evict_deadline = np.zeros(n)
+    benign_flow_active_harm = np.zeros(n, bool)
+
+    def mark_removed(arr):
+        b = arr[~is_att[arr]]
+        benign_flow_evicted[b] = True
+        evict_pending[b] = True
+        evict_deadline[b] = last_seen[b] + idle_to[b]
     tot = dict(packet_in=0, table_full=0, benign_pkts=0, benign_rejected_pkts=0,
                benign_packet_in=0, attack_pkts=0, deletes=0, demotes=0,
                benign_deletes=0, benign_demotes=0, attack_deletes=0, attack_demotes=0,
-               installs=0, evictions=0, benign_evictions=0)
+               installs=0, evictions=0, benign_evictions=0, benign_evict_repackets=0)
     full_ticks = 0
     first_full = None
     full_ticks_post = 0
@@ -114,6 +125,13 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                 u, first = np.unique(mf, return_index=True)
                 order = np.argsort(first, kind="stable")
                 u, first = u[order], first[order]
+                pend = evict_pending[u]
+                if pend.any():
+                    pu = u[pend]
+                    hit = mt[first[pend]] < evict_deadline[pu]
+                    benign_flow_active_harm[pu[hit]] = True
+                    tot["benign_evict_repackets"] += int(hit.sum())
+                    evict_pending[pu] = False
                 free = max(cap - count, 0)
                 if len(u) > free and defense.evict_on_full is not None:
                     # Switch-side eviction (OVS overflow_policy=evict).
@@ -124,7 +142,7 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                         count -= len(ev)
                         tot["evictions"] += len(ev)
                         tot["benign_evictions"] += int((~is_att[ev]).sum())
-                        benign_flow_evicted[ev[~is_att[ev]]] = True
+                        mark_removed(ev)
                         free = max(cap - count, 0)
                 adm, rej = u[:free], u[free:]
                 if len(adm):
@@ -188,7 +206,7 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                     na = int(is_att[arr].sum())
                     tot["attack_" + kind] += na
                     tot["benign_" + kind] += len(arr) - na
-                    benign_flow_evicted[arr[~is_att[arr]]] = True
+                    mark_removed(arr)
             n_att = int(is_att[fids].sum())
             att_occ = n_att / cfg.capacity
             att_occ_sum += att_occ
@@ -215,6 +233,12 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
         benign_flows_evicted_frac=float(benign_flow_evicted.sum() / max(nb_seen, 1)),
         benign_flows_impacted_frac=float((benign_flow_evicted | benign_flow_rejected).sum()
                                          / max(nb_seen, 1)),
+        # Service-level harm: refused an entry (slow path), or evicted while active.
+        benign_flows_active_evicted_frac=float(benign_flow_active_harm.sum() / max(nb_seen, 1)),
+        benign_flows_stale_evicted_frac=float((benign_flow_evicted & ~benign_flow_active_harm).sum()
+                                              / max(nb_seen, 1)),
+        benign_flows_harmed_frac=float((benign_flow_active_harm | benign_flow_rejected).sum()
+                                       / max(nb_seen, 1)),
         overflow_seconds=full_ticks * cfg.dt,
         overflow_seconds_post_attack=full_ticks_post * cfg.dt,
         first_overflow_s=first_full,

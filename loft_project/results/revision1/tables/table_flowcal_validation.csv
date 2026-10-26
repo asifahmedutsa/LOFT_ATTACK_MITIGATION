@@ -1,0 +1,5 @@
+defense,scope,episodes,harmed,acted_on,mal_occ,overflow_mean,overflow_p90,flow_flag_rate
+FL-DualGuard v2.1,attacked,63,"1.45 [0.69, 2.32]","1.11 [0.45, 1.89]","14.47 [13.45, 15.38]",4.55,9.4,0.0571
+FL-DualGuard v2.1,benign-only,9,"0.04 [0.00, 0.10]","0.31 [0.00, 0.74]","0.00 [0.00, 0.00]",0.0,0.0,0.0528
+"v2.1, per-flow calibrated",attacked,63,"1.38 [0.70, 2.17]","0.25 [0.07, 0.45]","16.11 [15.37, 16.84]",6.81,12.38,0.013
+"v2.1, per-flow calibrated",benign-only,9,"0.00 [0.00, 0.00]","0.01 [0.00, 0.02]","0.00 [0.00, 0.00]",0.0,0.0,0.0091

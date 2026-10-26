@@ -126,3 +126,58 @@ def test_ovs_evict_never_rejects():
 def test_splits_are_disjoint():
     seeds = [set(v) for v in SPLITS.values()] + [set(ONLINE_SEEDS)]
     assert sum(len(s) for s in seeds) == len(set().union(*seeds))
+
+
+class _DeleteAllOnce:
+    """Test defense: delete every entry at the first poll at or after t_del."""
+    name = "delete-once"
+    needs_features = False
+    evict_on_full = None
+
+    def __init__(self, t_del):
+        self.t_del, self.done = t_del, False
+
+    def reset(self, ctx):
+        pass
+
+    def admit_timeouts(self, fids, now, default):
+        return np.full(len(fids), default)
+
+    def on_poll(self, t, obs):
+        if not self.done and t >= self.t_del:
+            self.done = True
+            return obs["fids"], None
+        return None, None
+
+
+def test_active_vs_stale_eviction_harm():
+    cfg = SimConfig(capacity=100, duration=20.0, idle_timeout=10.0)
+    # flow 0 sends again 3 s after the deletion (entry would still be alive): harmed.
+    # flow 1 never sends again: its entry was stale, deleting it costs nothing.
+    # flow 2 sends again 12 s after its last packet (entry would have expired): not harmed.
+    pk = [(0.5, 0), (5.0, 0), (0.5, 1), (0.5, 2), (12.6, 2)]
+    s = run_episode(make_traffic(pk, 3), cfg, _DeleteAllOnce(2.0)).summary
+    assert s["benign_flows_evicted_frac"] == 1.0
+    assert abs(s["benign_flows_active_evicted_frac"] - 1 / 3) < 1e-9
+    assert abs(s["benign_flows_stale_evicted_frac"] - 2 / 3) < 1e-9
+    assert abs(s["benign_flows_harmed_frac"] - 1 / 3) < 1e-9
+    assert s["benign_evict_repackets"] == 1
+
+
+def test_rejection_counts_as_harm():
+    cfg = SimConfig(capacity=3, infra_rules=1, duration=2.0)
+    tr = make_traffic([(0.05 + 0.01 * i, i) for i in range(4)], 4)
+    s = run_episode(tr, cfg).summary
+    assert s["benign_flows_harmed_frac"] == 0.5 and s["benign_flows_active_evicted_frac"] == 0
+
+
+def test_cluster_bootstrap():
+    import pandas as pd
+    from loftbench.revision1 import cluster_boot
+    df = pd.DataFrame(dict(domain=["D1"] * 4 + ["D2"] * 4, seed=[1, 1, 2, 2] * 2,
+                           m=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
+    mu, lo, hi = cluster_boot(df, "m")
+    assert mu == lo == hi == 1.0
+    df["m"] = [0, 0, 0, 0, 1, 1, 1, 1]          # clusters differ: CI must widen
+    mu, lo, hi = cluster_boot(df, "m", n=2000)
+    assert mu == 0.5 and lo < 0.5 < hi

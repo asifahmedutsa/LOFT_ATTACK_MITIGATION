@@ -378,3 +378,149 @@ test seeds. They report only and change no configuration:
 - State the budget as a per-poll rate, and report per-flow flag rates.
 - Report overflow tails (median, p90, share > 5 s) and per-domain tables.
 - Reword §8.3 claim 3 as in item 3 above.
+
+## 10. Revision step 1 — service-level harm, tails, cluster CIs, per-flow calibration
+
+These changes respond to review items 2, 6, 7 and 8.
+
+- Code: `loftbench/revision1.py`, plus the harm accounting in `loftbench/sim.py`.
+- Tables: `results/revision1/tables/`.
+- **No configuration was selected or changed.** The v2.1 test configuration was
+  re-measured on the same seeds (5000–5009) with the extra metrics. All 1,680 episodes
+  reproduce every original metric exactly (`determinism_check.json`).
+- The per-flow-calibrated variant was evaluated on **validation seeds only**, so seeds
+  6000+ remain unused.
+
+### 10.1 New harm metric
+
+A benign flow is **harmed** in either of two cases:
+
+1. It was refused a table entry at least once, which puts it on the controller slow
+   path.
+2. Its entry was removed while the flow was still active, meaning its next packet
+   arrived before the entry would have idled out.
+
+Removing a stale entry is counted separately and is not harm. Extra Packet-In is
+measured against the same benign traffic with no attack and no defense, paired on
+(domain, seed). Unit tests: `test_active_vs_stale_eviction_harm` and
+`test_rejection_counts_as_harm`.
+
+**Confidence intervals and tests from here on resample whole (domain, seed)
+clusters**: 30 clusters of 7 attacked episodes each, which share benign traffic.
+Tests are cluster-level Wilcoxon with Holm correction (`cluster_paired_tests.csv`).
+
+| Defense | Harmed (%) | Refused (%) | Evicted while active (%) | Stale removed (%) | Old "impacted" (%) | Extra Packet-In / 1k benign pkts | Malicious occ. (%) |
+|---|---|---|---|---|---|---|---|
+| No defense | 42.77 [41.63, 43.90] | 42.77 | 0.00 | 0.00 | 42.77 | 132.7 | 53.45 |
+| DMS-BTT | 7.92 [6.57, 9.32] | 4.73 | 3.80 | 4.33 | 12.09 | 21.1 | 24.93 |
+| Local MLP + v2 policy | 11.19 [8.57, 13.96] | 2.04 | 10.29 | 8.50 | 19.61 | 54.5 | 25.89 |
+| Local MLP (no ctx) + v2.1 policy | 7.61 [6.59, 8.62] | 7.13 | 0.65 | 1.38 | 8.95 | 23.3 | 20.74 |
+| FL-DualGuard v2 | 3.63 [2.60, 4.72] | 0.94 | 2.92 | 2.30 | 5.91 | 10.6 | 14.97 |
+| **FL-DualGuard v2.1** | **1.73 [1.27, 2.18]** | 1.20 | 0.61 | 0.52 | 2.24 | **5.4** | **14.43** |
+| Pooled oracle (v2 policy) | 2.81 [1.98, 3.70] | 0.75 | 2.21 | 2.51 | 5.30 | 10.9 | 13.93 |
+
+**v2.1 compared with each baseline on harmed flows** (cluster level):
+
+| Baseline | Cluster wins | p_Holm | Ratio |
+|---|---|---|---|
+| DMS-BTT | 30/30 | 1e-8 | 4.6× fewer harmed flows, down from 5.4× under the old metric |
+| Local no-ctx, same policy | 30/30 | 1e-8 | 4.4× |
+| v2 | 28/30 | 7e-8 | |
+| Pooled (v2 policy) | 27/30 | 6e-5 | |
+
+The ranking is unchanged. The gap to DMS-BTT narrows because more of DMS-BTT's
+removals were stale entries.
+
+### 10.2 Overflow tails (`table_overflow_tails.csv`)
+
+| Defense | Mean [cluster CI] | Median | p90 | p99 | Max | > 5 s | > 10 s |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT | 13.27 [8.93, 17.75] | 5.8 | 33.1 | 72.2 | 77.2 | 55.7 % | 35.7 % |
+| Local no-ctx, same policy | 24.68 [21.97, 27.43] | 3.3 | 104.3 | 179.6 | 181.6 | 33.3 % | 26.7 % |
+| FL-DualGuard v2 | 3.18 [2.48, 3.90] | 2.4 | 6.9 | 12.8 | 14.8 | 21.4 % | 3.8 % |
+| **FL-DualGuard v2.1** | 4.89 [3.94, 5.85] | 3.9 | 8.8 | 26.2 | 27.7 | 41.4 % | 7.6 % |
+| Pooled (v2 policy) | 2.47 [2.12, 2.83] | 2.2 | 4.7 | 10.3 | 13.4 | 7.1 % | 1.4 % |
+
+**Corrections to earlier claims:**
+
+1. **Overflow compared with DMS-BTT.** The improvement is **not significant at the
+   cluster level**: −8.4 s mean, 20/30 cluster wins, p_Holm = 0.13. The earlier
+   episode-level test (§8.2) overstated this. Report v2.1's tails as better (p90 8.8 s
+   vs 33.1 s) but do not claim a significant mean difference.
+2. **Overflow compared with v2 and pooled.** v2.1 is significantly worse (0/30 cluster
+   wins). This is the price of dropping the hard guard.
+3. **The 5 s overflow limit holds on the mean only.** Its CI is [3.94, 5.85], and
+   41 % of episodes exceed it.
+4. **Malicious occupancy compared with v2** is not significantly different
+   (p_Holm = 0.26).
+
+### 10.3 Per variant (v2.1, `table_v21_by_variant.csv`)
+
+| | A1 | A2 | A3 | A4 | A5 | A6 | A7 |
+|---|---|---|---|---|---|---|---|
+| Harmed (%) | 1.66 | 1.46 | 1.66 | 3.17 | 1.58 | 1.10 | 1.44 |
+| Malicious occ. (%) | 14.2 | 13.0 | 13.4 | **22.1** | 13.7 | 12.4 | 12.3 |
+| Overflow mean / p90 (s) | 4.9 / 8.3 | 3.5 / 6.9 | 4.8 / 8.4 | **12.5 / 22.4** | 4.5 / 7.9 | 1.0 / 3.2 | 3.0 / 5.8 |
+
+Against mimicry (A4), v2.1 exceeds both the occupancy limit and the overflow limit: it
+keeps benign harm low but lets the attacker hold a larger share of the table. State
+this in the main text.
+
+### 10.4 Per domain (harmed %, cluster CIs, `table_harm_by_domain.csv`)
+
+| Defense | D1 | D2 (IoT) | D3 (cloud) |
+|---|---|---|---|
+| DMS-BTT | 3.60 | 8.10 | 12.05 |
+| Local no-ctx, same policy | 4.08 | 10.29 | 8.45 |
+| **v2.1** | **0.47** | **3.09** | **1.61 [0.87, 2.45]** |
+
+D2 is the hard domain: its periodic IoT telemetry flows resemble LFTO refreshes.
+
+### 10.5 Per-flow calibration (review item 6; `table_flow_calibration.csv`)
+
+The v2.1 threshold τ was calibrated per (entry, poll). Re-measuring it as a per-flow
+quantity, meaning the fraction of benign flows that ever score ≥ τ while installed,
+gives:
+
+| Domain | τ per poll | τ per flow | Validation flows ≥ τ_poll | Test flows ≥ τ_poll (attacked / benign-only) | Test flows ≥ τ_flow (attacked / benign-only) |
+|---|---|---|---|---|---|
+| D1 | 0.0070 | 0.132 | 4.7 % | 2.6 % / 2.6 % | 0.7 % / 0.6 % |
+| D2 | 0.0030 | 0.473 | 5.0 % | 6.3 % / 3.6 % | 1.5 % / 0.7 % |
+| D3 | 0.0031 | 0.136 | 5.0 % | 4.0 % / 6.9 % | 0.6 % / 0.8 % |
+
+**What this shows:**
+
+- The declared "1 % budget" was in fact about 5 % per flow. Per-flow calibration holds
+  1 % on validation, and 0.6–1.5 % on test runs. The D2 attacked case slightly exceeds
+  the budget, because attack traffic shifts the score distribution.
+- Under v2.1, the realized benign *action* rate on benign-only runs is 0–1.2 %. That
+  is lower than the flag rate because the ρ = 0.7 occupancy gate keeps the policy idle.
+
+**Validation-only comparison** (`table_flowcal_validation.csv`; 63 attacked plus 9
+benign-only episodes):
+
+| Variant | Harmed (%) | Benign flows acted on (%) | Malicious occ. (%) | Overflow mean / p90 (s) |
+|---|---|---|---|---|
+| v2.1 (τ per poll) | 1.45 [0.69, 2.32] | 1.11 | 14.47 | 4.55 / 9.4 |
+| v2.1 (τ per flow) | 1.38 [0.70, 2.17] | 0.25 | 16.11 | 6.81 / 12.4 |
+
+Per-flow calibration acts on 4× fewer benign flows at the same harm. However, it
+breaks the pre-registered limits for malicious occupancy (≤ 15 %) and overflow (≤ 5 s).
+Under the v2.1 rule it would not have been selected, so it is **not adopted here**.
+Carry it as a candidate into the step-4 pre-registration, together with the
+adaptive-attacker mechanism. The paper must state the budget correctly: either a
+per-(entry, poll) rate of 1 % (about 5 % per flow), or per-flow calibration.
+
+### 10.6 Wording changes required in the paper
+
+- **No defense.** "42.8 % of benign flows impacted with no defense" becomes "42.8 % of
+  benign flows were refused a table entry at least once". These flows were
+  slow-pathed, not dropped.
+- **Headline metric.** Use *harmed* (1.73 % for v2.1). Keep "impacted" only as a
+  secondary column.
+- **Ratios.** Use 4.6× fewer harmed flows than DMS-BTT and 4.4× fewer than local
+  training under the identical policy. The earlier ratios were 5.4× and 4.0×.
+- **Intervals and tests.** All CIs and tests become cluster-level.
+- **Overflow.** Drop any claim of significantly lower mean overflow than DMS-BTT.
+- **Still unmeasured.** Goodput and latency need the controller service model
+  (plan P0-2 part 2) or the testbed.
