@@ -218,3 +218,25 @@ def test_default_knobs_reproduce_stored_episodes():
         ref = stored.loc[(name, "D2", "A4", 5001)]
         for k in ("benign_flows_impacted_frac", "avg_attack_occ_post", "overflow_seconds_post_attack"):
             assert abs(row[k] - ref[k]) < 1e-12, (name, k)
+
+
+def test_lovo_exposure_holds_out_variant_and_covers_rest():
+    from loftbench.config import EXPOSURE
+    from loftbench.revision3 import ALL_V, lovo_exposure
+    for h in ALL_V:
+        e = lovo_exposure(h)
+        seen = [v for vs in e.values() for v in vs]
+        assert h not in seen and sorted(seen) == sorted(v for v in ALL_V if v != h)
+    assert {d: tuple(v) for d, v in EXPOSURE.items()} == lovo_exposure("A6")
+
+
+def test_ensemble_averages_members():
+    from loftbench.models import EnsembleModel
+
+    class C:
+        def __init__(self, c):
+            self.c = c
+
+        def predict_proba(self, X):
+            return np.full(len(X), self.c)
+    assert np.allclose(EnsembleModel([C(0.2), C(0.6)]).predict_proba(np.zeros((3, 2))), 0.4)

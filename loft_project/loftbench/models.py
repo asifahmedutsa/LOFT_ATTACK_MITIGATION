@@ -210,3 +210,14 @@ class DMSFeatureMLP:
 
     def predict_proba(self, X):
         return self.m.predict_proba(self.features(X))
+
+
+class EnsembleModel:
+    """Average of other controllers' trained models: one-shot model sharing,
+    no training rounds (collaboration baseline cheaper than federation)."""
+
+    def __init__(self, members):
+        self.members = members
+
+    def predict_proba(self, X):
+        return np.mean([m.predict_proba(X) for m in self.members], axis=0)
