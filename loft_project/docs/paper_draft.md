@@ -163,7 +163,11 @@ Summarize methodology §3 and §5:
 
 - **Methods** (methodology §6). DMS-BTT is reimplemented with CatBoost state and flow
   classifiers, two-level thresholds 0.75 / 0.90, and elephant protection.
-  **[TODO]** Verify against the original Section 4.
+  Checked against the paper's Algorithms 1–2: features (Numb = cumulative bytes, PIT,
+  Sizep, FN, APIT), thresholds and attack settings match. State the two deviations
+  in the above-90 % branch (state gating; eviction to below 75 % instead of a fixed
+  Pe) and the single-feature elephant rule (results §13). **[TODO]** Add the
+  paper-faithful Pe variant if it is run.
 - **Metrics:** benign flows impacted (primary), malicious occupancy, overflow time,
   Packet-In, and decision time.
 - **Statistics:** 95 % bootstrap CIs; paired Wilcoxon tests with Holm correction.

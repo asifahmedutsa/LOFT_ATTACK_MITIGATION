@@ -787,3 +787,42 @@ every controller sees every variant. FPR stays at 0.8–1.2 % throughout.
    counter-example.
 5. **Equivalence with the pooled oracle is now like-for-like** (same v2.1 policy):
    FedAvg matches pooled on harm, with slightly worse occupancy and overflow.
+
+## 13. DMS-BTT fidelity check against the paper (review item 4)
+
+Source: Tang et al., "DMS-BTT", Expert Systems with Applications 293 (2025) 128685,
+§4.1–4.2, Table 1, Algorithms 1–2 and §5 (PDF supplied by the authors of this work).
+
+**Numb is the cumulative byte count** (Table 1: "Cumulative number of bytes";
+§4.2.1). Our primary configuration (`numb_mode="bytes"`, `features.py`) is therefore
+the paper's definition, and every DMS-BTT number in §3, §8, §11 and §12 stands. The
+packet-count variant from step 2 is only a sensitivity check (it moved validation
+harm by under 1 point).
+
+| Detail | Paper | Ours | Status |
+|---|---|---|---|
+| Numb | Cumulative bytes | Bytes | Matches |
+| PIT | Duration / packets; duration if no packets (Alg. 1, l. 9–13) | Duration / max(packets, 1) | Matches |
+| Sizep | Bytes / packets; 0 if no packets | Bytes / max(packets, 1) | Matches |
+| State features | FN and APIT = mean PIT; three classes | Same | Matches |
+| Thresholds | H2 = 75 %, H1 = 90 % of the table | 0.75 / 0.90 | Matches |
+| Table, idle timeout, polling | 3,500, 10 s, 1 s | Same | Matches |
+| Attack settings | Table 2: T1 ∈ [5, 8.5], [5.5, 9], [6, 9.5]; S = 75, 100, 125; M = 1,700 | A1–A3 | Matches |
+| Between H2 and H1 | State classifier; if attack, evict flows labelled malicious | Same | Matches |
+| Above H1 | No state check; evict top Pe × FN by probability (Pe ∈ 15–30 %, value for Table 6 not stated) | State check required; evict labelled + descending probability until below H2 | **Deviation** |
+| Elephant protection | Keep if Numb, PIT and Sizep all exceed their 90th percentile (Alg. 2; text says "or") | Keep if Numb ≥ 90th percentile | **Deviation** |
+| CatBoost settings | Not reported | 300 iterations, default depth; flow threshold tuned in step 2 | Unspecified |
+
+**Assessment.**
+
+- The two deviations are both in the overflow-prevention branch above 90 %
+  occupancy. Our gating can only make DMS-BTT act *less* often above H1. Our
+  eviction amount (to below 75 %, about 15–17 % of entries) is comparable to the
+  paper's smallest Pe.
+- The step-2 baseline (tuned + blocklist) already searched thresholds on validation,
+  so DMS-BTT was not handicapped by an untuned operating point.
+- To close the question for reviewers, add a paper-faithful mode (no gating above H1,
+  Pe ∈ {15, 20, 25, 30} %, three-feature elephant rule), select Pe on validation seeds
+  only, and test it once on fresh seeds alongside v2.1. Until then, describe our
+  baseline as "a reimplementation following Algorithms 1–2, with the two deviations
+  listed".

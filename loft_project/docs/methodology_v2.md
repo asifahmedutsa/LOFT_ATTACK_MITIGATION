@@ -159,15 +159,27 @@ same per-domain calibration budget (1 % benign flag rate), so detector differenc
 are isolated from policy differences. The ablations remove soft demotion, the hard
 guard, calibration (τ = 0.5), source features, or context features.
 
-**DMS-BTT deviations.** The paper PDF was not available in this workspace, so the
-reimplementation follows the summary in `novelty_feasibility_and_research_next_steps.md`:
+**DMS-BTT fidelity (checked against Tang et al., ESWA 293 (2025) 128685, §4 and
+Algorithms 1–2; details in `results_v2.md` §13).** Matching the paper: Numb is the
+cumulative **byte** count (Table 1, §4.2.1); PIT = duration / packets (duration when no
+packets); Sizep = bytes / packets; APIT = mean PIT over the table; state classifier on
+(FN, APIT) with three classes; thresholds H2 = 75 % and H1 = 90 % of a 3,500-entry
+table; 10 s idle timeout; 1 s polling; elephant protection at the 90th percentile.
 
-- CatBoost with 300 iterations and default depth.
-- The flow classifier uses a 0.5 threshold.
-- Overflow-stage eviction proceeds in descending malicious probability until
-  occupancy falls below H2.
+Deviations that remain:
 
-Check these choices against Section 4 of the paper before submission.
+- **Gating above H1.** The paper skips state detection above H1 and always runs
+  overflow prevention; ours requires the state classifier to report an attack.
+- **Eviction amount above H1.** The paper evicts the top Pe × FN entries by
+  malicious probability, with Pe a fixed setting (15–30 % studied; the value used for
+  Table 6 is not stated). Ours evicts entries labelled malicious, then continues in
+  descending probability until occupancy falls below H2, which removes about 15–17 %
+  of entries from 90 % occupancy (comparable to Pe = 15 %).
+- **Elephant rule.** The paper protects a flow when its Numb, PIT and Sizep all
+  exceed their 90th percentiles (Algorithm 2, line 11; the text says "or"). Ours
+  protects on Numb alone.
+- **CatBoost settings** are not reported in the paper; we use 300 iterations, default
+  depth and a 0.5 threshold (tuned in revision step 2).
 
 ## 7. Metrics and statistics
 
