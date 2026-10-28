@@ -23,6 +23,11 @@ detector given the published DMS-BTT attack settings harms 5.8 % of benign flows
 1.5 % for FedAvg. A one-shot ensemble of the local models matches FedAvg on harm, and the
 gain appears only when controllers see different attack variants (`results_v2.md` §12).
 
+Against an adaptive attacker refreshing faster than once a second, every learned
+defense fails (revision step 4). A per-port fair-share guard (PortGuard) bounds harm at
+about 6 % when attackers have their own ports; combining it with DualGuard is still open
+(`results_v2.md` §14).
+
 The independent review (`docs/results_v2.md` §9) identified open problems,
 most importantly a faster-refreshing adaptive attacker. Work on them follows
 `loft_project/docs/submission_revision_plan.md`.

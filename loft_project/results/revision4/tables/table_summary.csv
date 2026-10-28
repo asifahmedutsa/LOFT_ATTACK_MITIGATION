@@ -1,0 +1,55 @@
+scenario,attacks,method,harmed (%),mal_occ (%),overflow_s,packet_in_per_s
+dedicated,standard,No defense,"42.11 [41.09, 43.13]",53.4,147.12,259.2
+dedicated,standard,DMS-BTT tuned + blocklist,"4.46 [3.43, 5.48]",14.04,3.73,326.0
+dedicated,standard,FL-DualGuard v2.1,"1.49 [1.07, 1.93]",14.53,4.63,327.5
+dedicated,standard,PortGuard alone,"5.95 [4.18, 7.80]",40.2,3.97,216.5
+dedicated,standard,v2.1 + PortGuard,"1.67 [1.14, 2.23]",14.26,2.88,330.1
+dedicated,standard,DMS-BTT tuned + blocklist + PortGuard,"3.74 [2.74, 4.82]",13.91,1.23,323.8
+dedicated,fast,No defense,"80.63 [80.14, 81.07]",89.8,243.37,927.6
+dedicated,fast,DMS-BTT tuned + blocklist,"61.80 [56.54, 67.07]",87.48,159.06,1466.9
+dedicated,fast,FL-DualGuard v2.1,"72.43 [71.37, 73.52]",88.39,223.25,969.1
+dedicated,fast,PortGuard alone,"6.18 [3.79, 8.68]",49.29,0.18,3025.1
+dedicated,fast,v2.1 + PortGuard,"35.60 [34.79, 36.27]",77.85,59.7,1123.1
+dedicated,fast,DMS-BTT tuned + blocklist + PortGuard,"35.76 [27.27, 44.08]",75.97,78.22,2001.9
+dedicated,gaps,No defense,"71.99 [71.51, 72.47]",80.76,223.02,712.6
+dedicated,gaps,DMS-BTT tuned + blocklist,"47.71 [42.82, 52.41]",71.07,112.97,1062.4
+dedicated,gaps,FL-DualGuard v2.1,"55.49 [53.86, 57.18]",74.25,179.94,716.7
+dedicated,gaps,PortGuard alone,"6.40 [4.14, 8.77]",47.51,1.57,1911.4
+dedicated,gaps,v2.1 + PortGuard,"23.57 [22.93, 24.28]",64.85,37.42,816.3
+dedicated,gaps,DMS-BTT tuned + blocklist + PortGuard,"28.73 [22.52, 34.85]",63.02,53.78,1365.7
+distributed,standard,No defense,"41.84 [40.56, 43.17]",53.43,147.14,257.4
+distributed,standard,DMS-BTT tuned + blocklist,"4.41 [2.94, 5.82]",14.05,3.66,325.4
+distributed,standard,FL-DualGuard v2.1,"1.43 [0.90, 2.05]",14.49,4.45,327.2
+distributed,standard,PortGuard alone,"45.06 [43.55, 46.69]",52.57,0.14,328.4
+distributed,standard,v2.1 + PortGuard,"2.82 [2.05, 3.69]",14.44,2.97,331.3
+distributed,standard,DMS-BTT tuned + blocklist + PortGuard,"4.37 [2.92, 5.79]",14.0,0.61,327.4
+distributed,fast,No defense,"80.79 [80.37, 81.25]",89.75,243.4,927.4
+distributed,fast,DMS-BTT tuned + blocklist,"61.97 [54.30, 69.53]",87.47,158.93,1465.3
+distributed,fast,FL-DualGuard v2.1,"72.61 [71.29, 74.06]",88.43,223.19,967.0
+distributed,fast,PortGuard alone,"82.00 [81.57, 82.44]",87.48,0.45,1158.2
+distributed,fast,v2.1 + PortGuard,"75.32 [74.04, 76.68]",84.63,1.56,1250.2
+distributed,fast,DMS-BTT tuned + blocklist + PortGuard,"62.28 [54.30, 70.07]",86.68,78.13,1561.8
+distributed,gaps,No defense,"72.00 [71.60, 72.43]",80.67,223.05,711.5
+distributed,gaps,DMS-BTT tuned + blocklist,"47.75 [40.83, 54.53]",70.97,112.72,1060.8
+distributed,gaps,FL-DualGuard v2.1,"55.42 [53.35, 57.70]",74.22,180.07,715.0
+distributed,gaps,PortGuard alone,"73.79 [73.31, 74.26]",78.82,0.26,884.1
+distributed,gaps,v2.1 + PortGuard,"58.50 [56.91, 60.31]",70.92,3.8,911.8
+distributed,gaps,DMS-BTT tuned + blocklist + PortGuard,"47.94 [40.93, 54.82]",70.36,52.51,1125.9
+shared,standard,No defense,"41.84 [40.56, 43.17]",53.43,147.14,257.4
+shared,standard,DMS-BTT tuned + blocklist,"4.41 [2.94, 5.82]",14.05,3.66,325.4
+shared,standard,FL-DualGuard v2.1,"1.43 [0.90, 2.05]",14.49,4.45,327.2
+shared,standard,PortGuard alone,"14.09 [10.39, 18.22]",43.27,0.7,235.3
+shared,standard,v2.1 + PortGuard,"2.05 [1.28, 2.94]",14.24,2.79,330.5
+shared,standard,DMS-BTT tuned + blocklist + PortGuard,"3.92 [2.49, 5.36]",13.98,1.06,324.8
+shared,fast,No defense,"80.79 [80.37, 81.25]",89.75,243.4,927.4
+shared,fast,DMS-BTT tuned + blocklist,"61.97 [54.30, 69.53]",87.47,158.93,1465.3
+shared,fast,FL-DualGuard v2.1,"72.61 [71.29, 74.06]",88.43,223.19,967.0
+shared,fast,PortGuard alone,"26.06 [20.63, 32.07]",62.33,0.2,2358.5
+shared,fast,v2.1 + PortGuard,"49.72 [45.29, 54.80]",84.51,48.1,882.3
+shared,fast,DMS-BTT tuned + blocklist + PortGuard,"42.01 [34.10, 49.54]",78.89,78.09,1877.5
+shared,gaps,No defense,"72.00 [71.60, 72.43]",80.67,223.05,711.5
+shared,gaps,DMS-BTT tuned + blocklist,"47.75 [40.83, 54.53]",70.97,112.72,1060.8
+shared,gaps,FL-DualGuard v2.1,"55.42 [53.35, 57.70]",74.22,180.07,715.0
+shared,gaps,PortGuard alone,"23.24 [18.21, 28.73]",57.7,0.28,1532.1
+shared,gaps,v2.1 + PortGuard,"35.72 [31.64, 40.53]",69.87,30.18,679.0
+shared,gaps,DMS-BTT tuned + blocklist + PortGuard,"33.25 [27.56, 39.43]",64.96,53.49,1296.9

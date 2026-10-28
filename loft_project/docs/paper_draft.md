@@ -54,8 +54,10 @@ federation (28 of 30 clusters). Federation matches pooling the raw data. The ben
 comes from sharing what each controller has learned: a one-shot ensemble of the local
 models does as well on harm, while FedAvg keeps occupancy and overflow lower. The gain
 appears only when controllers see different attack variants, and vanishes when every
-controller sees all of them. **[TODO: rewrite after step 4: the adaptive attacker that
-refreshes faster than 1 s.]**
+controller sees all of them. Against an adaptive attacker that refreshes faster than once a second, every learned
+defense fails (15–81 % harmed). A per-port fair-share guard bounds harm at about 6 % when
+attackers are isolated on their own ports, but not when they control every port.
+**[TODO: update after step 4b, the composition of DualGuard and PortGuard.]**
 
 We also report where the first design fell short. Its pre-declared FedProx optimizer
 and hard overflow guard both hurt benign traffic, and removing the guard costs about

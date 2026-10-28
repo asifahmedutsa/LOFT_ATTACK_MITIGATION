@@ -826,3 +826,123 @@ harm by under 1 point).
   only, and test it once on fresh seeds alongside v2.1. Until then, describe our
   baseline as "a reimplementation following Algorithms 1–2, with the two deviations
   listed".
+
+## 14. Revision step 4 — the adaptive fast-refresh attacker (review item 1)
+
+Pre-registered in `results/revision4/preregistration.json` (commit `e0fc2ff`) before any
+run. Code: `loftbench/revision4.py`, `defenses.PortGuard`, `ports.py`. Tables:
+`results/revision4/tables/`.
+
+**Why v2.1 fails.** Against an attacker refreshing every 0.8–0.95 s, the v2.1 detector
+flags about 2 % of attack entries while flagging 8–16 % of benign entries under pressure
+(diagnostic on a training seed). Fast-refresh entries look like busy benign flows, so
+demotion never reaches them. A detection-only fix would invite the next variant.
+
+**Mechanism: PortGuard.** In the DMS-BTT topology every host has its own access port, and
+spoofing does not change the port. Under table pressure, each ingress port gets a max-min
+fair share of a target occupancy q · capacity, enforced at admission (the controller
+counts its own installs between polls); ports above the level are trimmed (highest
+detector score first, or lowest packet rate without a detector) and refused new entries.
+A refused port's demand is treated as unbounded. Guarantee: every honest port keeps
+min(demand, q · C / n_ports) entries whatever the attacker's rate, sizes or addresses.
+
+**Port scenarios** (`ports.py`): *dedicated* (4 benign ports, each attacker on its own
+port: the DMS-BTT topology, main), *shared* (benign clients also behind the attacker
+ports), *distributed* (attack flows enter on every port).
+
+**Attacker-budget sweep.** Spoofing, size-mimicking attackers with refresh gap
+g ∈ {0.25, 0.5, 0.8, 1, 2, 5, 9} s. Attack rate needed (two attackers, 1,700 flows each):
+
+| Gap (s) | 0.25 | 0.5 | 0.8 | 1 | 2 | 5 | 9 |
+|---|---|---|---|---|---|---|---|
+| Attack packets/s | 14,203 | 7,045 | 4,360 | 3,464 | 1,676 | 604 | 287 |
+
+### 14.1 Selection (validation seeds 2000–2002, dedicated ports)
+
+Twelve candidates: q ∈ {0.85, 0.90, 0.95} × trigger ρ_q ∈ {q, q − 0.05} × hold
+∈ {10, 30} s. Only q = 0.95 met the pre-registered constraint (harm on A1–A7 at most
+0.5 points above v2.1's 1.45 %). q = 0.90 protected better against gaps ≤ 0.5 s (22–25 %
+vs 46–56 % harmed) but cost 2.16 % on A1–A7 and was infeasible. Selected:
+**q = 0.95, ρ_q = 0.90, hold 30 s** (`selection_table.csv`).
+
+### 14.2 One-shot test (fresh seeds 6000–6009 dedicated; 6000–6004 shared, distributed)
+
+Benign flows harmed, % [95 % cluster CI] (`table_summary.csv`):
+
+| Dedicated ports | A1–A7 | Fast (gap ≤ 1 s) | All gaps | Overflow s (fast) | Packet-In/s (fast) |
+|---|---|---|---|---|---|
+| No defense | 42.11 [41.09, 43.13] | 80.63 | 71.99 | 243.4 | 928 |
+| DMS-BTT tuned + blocklist | 4.46 [3.43, 5.48] | 61.80 | 47.71 | 159.1 | 1,467 |
+| FL-DualGuard v2.1 | **1.49** [1.07, 1.93] | 72.43 | 55.49 | 223.3 | 969 |
+| PortGuard alone | 5.95 [4.18, 7.80] | **6.18** [3.79, 8.68] | **6.40** | 0.2 | 3,025 |
+| **v2.1 + PortGuard (pre-registered)** | 1.67 [1.14, 2.23] | 35.60 [34.79, 36.27] | 23.57 | 59.7 | 1,123 |
+| DMS-BTT + blocklist + PortGuard | 3.74 [2.74, 4.82] | 35.76 | 28.73 | 78.2 | 2,002 |
+
+Attacker-budget curve, dedicated ports, harmed % (`table_budget_curve_harm.csv`):
+
+| Gap (s) | No defense | DMS-BTT + bl. | v2.1 | PortGuard alone | v2.1 + PortGuard |
+|---|---|---|---|---|---|
+| 0.25 | 82.3 | 74.9 | 81.2 | 6.2 | 58.7 |
+| 0.5 | 81.2 | 66.8 | 76.9 | 6.2 | 47.0 |
+| 0.8 | 79.9 | 55.6 | 66.7 | 6.2 | 20.0 |
+| 1 | 79.1 | 49.9 | 64.9 | 6.1 | 16.7 |
+| 2 | 74.9 | 49.3 | 52.2 | 6.1 | 10.5 |
+| 5 | 61.7 | 22.7 | 30.8 | 7.5 | 7.3 |
+| 9 | 44.9 | 14.7 | 15.7 | 6.5 | 4.8 |
+
+Other scenarios (harmed %, A1–A7 / fast):
+
+| | Shared | Distributed |
+|---|---|---|
+| v2.1 | 1.43 / 72.6 | 1.43 / 72.6 |
+| PortGuard alone | 14.09 / 26.1 | **45.06** / 82.0 |
+| v2.1 + PortGuard | 2.05 / 49.7 | 2.82 / 75.3 |
+
+### 14.3 Pre-registered hypotheses (`hypothesis_tests.csv`, `outcomes.json`)
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | Dedicated, gaps ≤ 1 s: v2.1 + PortGuard harms fewer than v2.1 | **Supported** (−36.8 points, 30 / 30, Holm p = 9 × 10⁻⁹) |
+| H2 | Dedicated, A1–A7: non-inferior to v2.1 (≤ 0.5 points) | **Supported** (+0.18 points) |
+| H3 | Dedicated, A1–A7: v2.1 + PortGuard harms fewer than PortGuard alone | **Supported** (−4.3 points, 30 / 30) |
+| H4 | Dedicated, all attacks: fewer than DMS-BTT + blocklist + PortGuard | **Not supported** (−3.6 points, 20 / 10, Holm p = 0.11) |
+| H5 | Dedicated: harm ≤ 3 % at every gap | **Not supported** (58.7 % at 0.25 s; 4.8 % even at 9 s) |
+| H6 | Distributed, fast: no reduction vs v2.1 (expected negative) | **Confirmed** (PortGuard adds 2.7 points, 0 / 15) |
+
+### 14.4 Why the combination underperforms PortGuard alone (post hoc, exploratory)
+
+Traced on one validation episode (D1, gap 1 s, seed 2000):
+
+- PortGuard alone: 0 % harmed, attackers held at about 900 entries each, no overflow.
+- v2.1 + PortGuard: 12.9 % harmed, attackers at about 1,250 each, and **26,082 benign
+  demotions** in the episode.
+- Mechanism: PortGuard holds the table at 95 %, so DualGuard's pressure trigger (ρ = 0.7)
+  never releases. Under sustained high occupancy the context features push benign scores
+  over τ, and DualGuard demotes many benign entries every second. Those demotions harm
+  active flows directly, and the slots they free are handed by water-filling to the
+  attacker ports, whose demand is unbounded.
+
+This is a composition failure, not an implementation bug: each component behaves as
+specified. It was not anticipated in the pre-registration.
+
+### 14.5 What this means
+
+1. **The adaptive attacker is bounded only by port isolation.** PortGuard alone holds
+   harm at 6–7.5 % at every refresh gap from 0.25 s to 9 s in the DMS-BTT topology,
+   against 15–81 % for every learned or threshold defense. This is the first mechanism in
+   the project whose harm does not grow with the attacker's rate.
+2. **No single configuration wins everywhere.** v2.1 is best on the standard and mimicry
+   variants (1.5 %), PortGuard alone on fast attackers (6 %). The pre-registered
+   combination sits in between and should not be presented as the solution.
+3. **PortGuard has clear limits.** It is harmful when attackers are on every port
+   (45 % on A1–A7 alone, worse than no defense) and costly when attackers share ports with
+   users (14 %). It also turns refused attack packets into Packet-Ins (about 3,000/s);
+   hardware deployment needs a per-port meter for table misses.
+4. **Next (step 4b, needs a new pre-registration and fresh seeds 8000+):** compose the two
+   so that they do not fight. Candidates: DualGuard acts only while PortGuard is inactive,
+   or only inside over-quota ports; demoted entries keep their port's quota; DualGuard's
+   trigger set above PortGuard's target. Choose on validation, test once.
+5. **Paper framing until then.** State the adaptive attacker as a measured limitation of
+   learned defenses; show the attacker-budget curve; present PortGuard as a bounded-harm
+   guard for port-isolated attackers, with the distributed and shared cases as its
+   limits. Do not claim the combination solves the fast attacker.
