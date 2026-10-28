@@ -57,7 +57,8 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
     is_att = traffic.flow_attack
 
     tracker = FeatureTracker(n, traffic.flow_src, cfg.capacity, cfg.poll_interval)
-    defense.reset({"cfg": cfg, "n_flows": n, "flow_src": traffic.flow_src})
+    defense.reset({"cfg": cfg, "n_flows": n, "flow_src": traffic.flow_src,
+                   "flow_port": traffic.flow_port})
 
     ticks = int(round(cfg.duration / cfg.dt))
     bounds = np.searchsorted(traffic.pkt_t, np.arange(ticks + 1) * cfg.dt)

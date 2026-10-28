@@ -172,3 +172,124 @@ class DualGuard(Defense):
             k = n_after - int(self.target * cap)
             dels = obs["fids"][rest[:k]]
         return dels, dems
+
+
+def water_level(demands, target):
+    """Max-min fair level L with sum(min(demands, L)) == target (inf if all fit).
+
+    Demands may be inf (a port that is being refused has unknown demand)."""
+    d = np.asarray(demands, float)
+    if np.isfinite(d).all() and d.sum() <= target:
+        return np.inf
+    lo, hi = 0.0, float(target)
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if np.minimum(d, mid).sum() > target:
+            hi = mid
+        else:
+            lo = mid
+    return lo
+
+
+class PortGuard(Defense):
+    """Per-ingress-port max-min fair share under table pressure (revision step 4).
+
+    Wraps another defense (or none). Once occupancy reaches rho_q, enforcement
+    stays on for hold_s seconds after the last such poll. While it is on, the
+    table is held at target = q * capacity: every port gets a quota equal to the
+    max-min fair level L, ports above L are trimmed to it (highest detector
+    score first, or lowest packet rate when there is no detector), and new
+    entries are admitted only while the port's count (at the last poll plus
+    the controller's own installs since) is below L. A port that was refused
+    since the last poll has unknown demand and is treated as unbounded. An
+    honest port therefore keeps min(demand, q * capacity / n_ports) entries
+    whatever the attacker's refresh rate, packet sizes or source IPs.
+    """
+    def __init__(self, inner=None, rho_q=0.9, q=0.8, hold_s=30.0, name="portguard"):
+        self.inner, self.rho_q, self.q, self.hold_s, self.name = inner, rho_q, q, hold_s, name
+        self.needs_features = bool(inner is not None and inner.needs_features)
+        self._inner_admit = getattr(inner, "admit_filter", None)
+        self.admit_filter = self._admit
+
+    def reset(self, ctx):
+        if self.inner is not None:
+            self.inner.reset(ctx)
+        self.port = ctx["flow_port"]
+        if self.port is None:
+            raise ValueError("PortGuard needs traffic.flow_port (see ports.assign_ports)")
+        n_ports = int(self.port.max()) + 1
+        self.quota = np.full(n_ports, np.inf)
+        self.used = np.zeros(n_ports)        # entries at last poll + installs since
+        self.refused = np.zeros(n_ports, bool)
+        self.active_until = -np.inf
+
+    def admit_timeouts(self, fids, now, default):
+        if self.inner is not None:
+            return self.inner.admit_timeouts(fids, now, default)
+        return np.full(len(fids), default)
+
+    def _admit(self, fids, now):
+        ok = np.ones(len(fids), bool)
+        if self._inner_admit is not None:
+            ok &= self._inner_admit(fids, now)
+        p = self.port[fids]
+        if np.isfinite(self.quota).any():
+            # Rank of each new flow within its port, in arrival order.
+            order = np.argsort(p, kind="stable")
+            ps = p[order]
+            start = np.r_[0, np.flatnonzero(np.diff(ps)) + 1]
+            rank = np.arange(len(ps)) - np.repeat(start, np.diff(np.r_[start, len(ps)]))
+            room = self.quota[ps] - self.used[ps]
+            okq = np.empty(len(fids), bool)
+            okq[order] = rank < room
+            # Flows refused by the inner defense do not consume quota.
+            okq |= ~ok
+            self.refused[np.unique(p[~okq])] = True
+            ok &= okq
+        np.add.at(self.used, p[ok], 1)
+        return ok
+
+    def _scores(self, obs, idx):
+        m = getattr(self.inner, "model", None)
+        if m is not None and "X" in obs and getattr(self.inner, "inputs", "X") == "X":
+            X = obs["X"] if self.inner.feature_idx is None else obs["X"][:, self.inner.feature_idx]
+            return m.predict_proba(X[idx])
+        # No detector: evict the lowest packet rate first.
+        age = np.maximum(obs["t"] - obs["install_t"][idx], 1.0)
+        return -obs["pkts"][idx] / age
+
+    def on_poll(self, t, obs):
+        dels, dems = (None, None) if self.inner is None else self.inner.on_poll(t, obs)
+        cap, fids = obs["capacity"], obs["fids"]
+        gone = np.zeros(len(fids), bool)
+        for arr in (dels, dems):
+            if arr is not None and len(arr):
+                gone |= np.isin(fids, arr)
+        keep = np.flatnonzero(~gone)
+        ports = self.port[fids[keep]]
+        counts = np.bincount(ports, minlength=len(self.quota)).astype(float)
+        if obs["count"] / cap >= self.rho_q:
+            self.active_until = t + self.hold_s
+        refused, self.refused = self.refused, np.zeros_like(self.refused)
+        self.used = counts.copy()
+        if t > self.active_until or len(keep) == 0:
+            self.quota[:] = np.inf
+            return dels, dems
+        L = water_level(np.where(refused, np.inf, counts), self.q * cap)
+        if not np.isfinite(L):
+            self.quota[:] = np.inf
+            return dels, dems
+        lvl = max(int(np.floor(L)), 1)
+        self.quota[:] = lvl
+        over = np.flatnonzero(counts > lvl)
+        if len(over) == 0:
+            return dels, dems
+        trim = []
+        for p in over:
+            sel = keep[ports == p]
+            s = self._scores(obs, sel)
+            trim.append(fids[sel[np.argsort(-s, kind="stable")[:len(sel) - lvl]]])
+        trim = np.concatenate(trim)
+        self.used[over] = lvl
+        dels = trim if dels is None else np.concatenate([np.asarray(dels), trim])
+        return dels, dems

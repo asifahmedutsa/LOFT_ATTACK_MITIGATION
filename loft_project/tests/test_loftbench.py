@@ -240,3 +240,54 @@ def test_ensemble_averages_members():
         def predict_proba(self, X):
             return np.full(len(X), self.c)
     assert np.allclose(EnsembleModel([C(0.2), C(0.6)]).predict_proba(np.zeros((3, 2))), 0.4)
+
+
+def test_water_level_is_max_min_fair():
+    from loftbench.defenses import water_level
+    assert water_level([100, 100], 500) == np.inf
+    assert abs(water_level([375] * 4 + [1700, 1700], 2800) - 650) < 1e-6
+    # A refused port (unknown demand) takes whatever the others leave.
+    assert abs(water_level([100, 200, np.inf], 600) - 300) < 1e-6
+    assert abs(water_level([100, 500, np.inf], 600) - 250) < 1e-6
+
+
+def test_ports_follow_owner_and_do_not_change_traffic():
+    from loftbench.ports import assign_ports
+    from loftbench.traffic import _rng
+    v = VARIANTS["A5"]
+    owner = []
+    t1, f1, _, _, _ = generate_attack(v, 0.0, 200.0, 0, 0, _rng("x", 1), owner_out=owner)
+    t2, f2, _, _, _ = generate_attack(v, 0.0, 200.0, 0, 0, _rng("x", 1))
+    assert np.array_equal(t1, t2) and np.array_equal(f1, f2)
+    assert sorted(set(owner)) == [0, 1]
+    tr = build_traffic(DOMAINS["D1"], 0, v, 1, 120.0, 30.0)
+    ded = assign_ports(tr, "dedicated").flow_port.copy()
+    assert set(ded[~tr.flow_attack]) <= {0, 1, 2, 3}
+    assert np.array_equal(ded[tr.flow_attack], 4 + tr.flow_owner[tr.flow_attack])
+    dist = assign_ports(tr, "distributed").flow_port
+    assert len(set(dist[tr.flow_attack])) == 6
+    # Same client, same port.
+    src = tr.flow_src[~tr.flow_attack]
+    p = ded[~tr.flow_attack]
+    assert all(len(set(p[src == s])) == 1 for s in np.unique(src)[:50])
+
+
+def test_portguard_caps_admission_and_trims_over_quota_port():
+    from loftbench.defenses import PortGuard
+    # Ports: flows 0-3 on port 0 (benign), flows 4-19 on port 1 (attacker,
+    # refreshing every 0.5 s). Capacity 21 incl. table-miss rule.
+    n = 20
+    pk = [(0.05 + 0.01 * i, i) for i in range(4)]
+    pk += [(0.1 + 0.5 * k + 0.001 * i, i) for k in range(20) for i in range(4, n)]
+    att = np.r_[np.zeros(4, bool), np.ones(16, bool)]
+    tr = make_traffic(pk, n, att)
+    tr.flow_port = np.r_[np.zeros(4, np.int16), np.ones(16, np.int16)]
+    cfg = SimConfig(capacity=21, infra_rules=1, duration=10.0, idle_timeout=10.0)
+    g = PortGuard(None, rho_q=0.9, q=0.5, hold_s=30.0)
+    res = run_episode(tr, cfg, g)
+    occ = [r["occupancy"] for r in res.timeseries]
+    assert max(occ[:1]) >= 0.9                  # attacker fills the table first
+    # Target 0.5 * 21 = 10.5: benign port keeps its 4, attacker trimmed to 6.
+    assert abs(occ[-1] - 10 / 21) < 1e-9
+    assert res.summary["benign_flows_harmed_frac"] == 0
+    assert res.summary["blocked_pkts"] > 0     # attacker re-installs refused

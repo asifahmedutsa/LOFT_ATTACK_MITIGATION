@@ -24,6 +24,8 @@ class Traffic:
     flow_src: np.ndarray     # int64 source address per flow id
     flow_kind: np.ndarray    # int8 per flow id
     attack_active: list      # [(t_on, t_off)] intervals with attack refreshes
+    flow_owner: np.ndarray = None  # int8 per flow id: -1 benign, else attacker index
+    flow_port: np.ndarray = None   # int16 ingress port per flow id (see ports.py)
 
     @property
     def n_flows(self):
@@ -149,8 +151,11 @@ def generate_benign(profile: DomainProfile, duration: float, domain_idx: int, rn
 
 
 def generate_attack(variant: AttackVariant, start: float, duration: float,
-                    domain_idx: int, fid_offset: int, rng):
-    """DMS-BTT LFTO recurrence with optional mimicry, spoofing and pulsing."""
+                    domain_idx: int, fid_offset: int, rng, owner_out=None):
+    """DMS-BTT LFTO recurrence with optional mimicry, spoofing and pulsing.
+
+    If owner_out is a list, the attacker index of every new flow is appended to
+    it (no random draws, so traffic is unchanged)."""
     ts, fids, sizes, flow_src = [], [], [], []
     active_intervals = []
     next_fid = fid_offset
@@ -184,6 +189,8 @@ def generate_attack(variant: AttackVariant, start: float, duration: float,
                 else:
                     flow_src.extend(rng.integers(0x01000000, 0xDF000000, n_new).tolist())
                 live.extend(new)
+                if owner_out is not None:
+                    owner_out.extend([a] * n_new)
             lo, hi = variant.pkts_per_refresh
             reps = rng.integers(lo, hi + 1, len(live))
             f = np.repeat(np.array(live), reps)
@@ -213,10 +220,11 @@ def build_traffic(profile: DomainProfile, domain_idx: int, variant, seed: int,
     rb = _rng("benign", profile.name, seed)
     bt, bf, bs, bsrc, bkind = generate_benign(profile, duration, domain_idx, rb)
     n_b = len(bsrc)
+    owner = []
     if variant is not None:
         ra = _rng("attack", profile.name, variant.name, seed)
         at, af, asz, asrc, intervals = generate_attack(
-            variant, attack_start, duration, domain_idx, n_b, ra)
+            variant, attack_start, duration, domain_idx, n_b, ra, owner_out=owner)
     else:
         at, af, asz, asrc, intervals = (np.zeros(0), np.zeros(0, dtype=np.int64),
                                         np.zeros(0, dtype=np.int64),
@@ -229,5 +237,6 @@ def build_traffic(profile: DomainProfile, domain_idx: int, variant, seed: int,
     order = np.argsort(t, kind="stable")
     flow_attack = np.concatenate([np.zeros(n_b, bool), np.ones(len(asrc), bool)])
     flow_kind = np.concatenate([bkind, np.full(len(asrc), ATTACK_KIND, np.int8)])
+    flow_owner = np.concatenate([np.full(n_b, -1, np.int8), np.array(owner, np.int8)])
     return Traffic(t[order], fid[order], size[order], flow_attack,
-                   np.concatenate([bsrc, asrc]), flow_kind, intervals)
+                   np.concatenate([bsrc, asrc]), flow_kind, intervals, flow_owner)

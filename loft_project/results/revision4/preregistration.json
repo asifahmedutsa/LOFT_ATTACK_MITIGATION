@@ -1,0 +1,158 @@
+{
+  "created_utc": "2026-10-28T15:06:22.848263+00:00",
+  "mechanism": "PortGuard on top of v2.1",
+  "candidates": [
+    {
+      "id": "q0.85-r0.85-h10",
+      "q": 0.85,
+      "rho_q": 0.85,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.85-r0.85-h30",
+      "q": 0.85,
+      "rho_q": 0.85,
+      "hold_s": 30.0
+    },
+    {
+      "id": "q0.85-r0.80-h10",
+      "q": 0.85,
+      "rho_q": 0.8,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.85-r0.80-h30",
+      "q": 0.85,
+      "rho_q": 0.8,
+      "hold_s": 30.0
+    },
+    {
+      "id": "q0.9-r0.90-h10",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.9-r0.90-h30",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0
+    },
+    {
+      "id": "q0.9-r0.85-h10",
+      "q": 0.9,
+      "rho_q": 0.85,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.9-r0.85-h30",
+      "q": 0.9,
+      "rho_q": 0.85,
+      "hold_s": 30.0
+    },
+    {
+      "id": "q0.95-r0.95-h10",
+      "q": 0.95,
+      "rho_q": 0.95,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.95-r0.95-h30",
+      "q": 0.95,
+      "rho_q": 0.95,
+      "hold_s": 30.0
+    },
+    {
+      "id": "q0.95-r0.90-h10",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 10.0
+    },
+    {
+      "id": "q0.95-r0.90-h30",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 30.0
+    }
+  ],
+  "rule": {
+    "data": "validation seeds 2000-2002, dedicated ports, D1-D3, A1-A7 + gap sweep + benign-only",
+    "feasible": "mean benign harm on A1-A7 <= v2.1's + 0.5 points and benign-only harm <= v2.1's + 0.1 points",
+    "objective": "minimise mean benign harm over the gap sweep",
+    "tie_break": "within 0.05 points: lower mean attacker occupancy over the gap sweep, then fewer overflow seconds",
+    "fallback": "if none is feasible: minimise total constraint violation (points), then the objective",
+    "applies_to": "the selected knobs are used for v2.1+pfs, pfs and dms-blocklist+pfs"
+  },
+  "hypotheses": {
+    "H1": "dedicated: over gaps <= 1 s, v2.1+pfs harms fewer benign flows than v2.1 (cluster Wilcoxon, Holm)",
+    "H2": "dedicated: on A1-A7, v2.1+pfs is non-inferior to v2.1 (mean harm difference <= 0.5 points)",
+    "H3": "dedicated: on A1-A7, v2.1+pfs harms fewer than pfs alone (detector contribution)",
+    "H4": "dedicated: over all attacks, v2.1+pfs harms fewer than dms-blocklist+pfs",
+    "H5": "dedicated: at every gap, v2.1+pfs mean harm <= 3 %",
+    "H6": "distributed (expected negative): over gaps <= 1 s, v2.1+pfs does not reduce harm vs v2.1"
+  },
+  "defenses": [
+    "none",
+    "dms-blocklist",
+    "v2.1",
+    "pfs",
+    "v2.1+pfs",
+    "dms-blocklist+pfs"
+  ],
+  "gaps_s": [
+    0.25,
+    0.5,
+    0.8,
+    1.0,
+    2.0,
+    5.0,
+    9.0
+  ],
+  "gap_variant": "step 100, t1 in [0.9g, g], benign sizes, spoofed sources, burst rate max(1500, 1.25*1700/(0.9g)) pps per attacker",
+  "scenarios": {
+    "main": "dedicated",
+    "generalisation": [
+      "shared",
+      "distributed"
+    ]
+  },
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": {
+    "dedicated": [
+      6000,
+      6001,
+      6002,
+      6003,
+      6004,
+      6005,
+      6006,
+      6007,
+      6008,
+      6009
+    ],
+    "shared": [
+      6000,
+      6001,
+      6002,
+      6003,
+      6004
+    ],
+    "distributed": [
+      6000,
+      6001,
+      6002,
+      6003,
+      6004
+    ]
+  },
+  "primary_metric": "benign_flows_harmed_frac",
+  "statistics": "cluster bootstrap and cluster Wilcoxon over (domain, seed), Holm within family",
+  "fixed": {
+    "v21": "results/v21 selected configuration",
+    "dms_blocklist": "results/revision2 family B (tuned DMS-BTT + blocklist)"
+  }
+}
