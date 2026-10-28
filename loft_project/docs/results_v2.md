@@ -641,3 +641,149 @@ B has better overflow tails: 12 % of episodes exceed 5 s, against 41 % for v2.1.
    - It must be pre-registered and tested on seeds 6000+.
    - Note the blocklist's cost: it drops benign flows outright (0.30 % of benign flows
      were blocked in B), whereas demotion only slow-paths them.
+
+## 12. Revision step 3 — is federation necessary? (review item 5)
+
+Pre-registered in `results/revision3/preregistration.json` (commit `491d95f`, sha256
+in `preregistration.sha256`) before any model was trained. Code:
+`loftbench/revision3.py`. Tables: `results/revision3/tables/`.
+
+**Design.** Every method uses the same 17 features, the same MLP, the same v2.1 policy
+(ρ = 0.7, t_short = 1 s, no hard guard) and the same calibration (1 % budget on its own
+domain's validation benign). Only the training data each controller can use differs:
+
+| Method | Training data per controller |
+|---|---|
+| Local only | Own domain (2 of 7 variants) |
+| FedAvg (v2.1) | Own domain; weights averaged across the 3 controllers |
+| Pooled raw data (oracle) | All three domains' raw records |
+| Ensemble of local models | Own domain; at test time, mean score of the 3 local models |
+| Local + public library (A1–A3) | Own domain + the three published DMS-BTT settings |
+| Local + library of all known variants | Own domain + every variant except A6 (upper bound) |
+
+Fresh evaluation seeds 7000–7009 (never used before); 30 (domain, seed) clusters;
+cluster Wilcoxon with Holm correction. Seeds 6000+ remain untouched for step 4.
+
+**Post-registration bug fixes (implementation only, design unchanged).** The first
+run crashed in the exposure-skew sweep. (1) The attack-row budget `n_att` was summed
+with Python's built-in `sum` over an int8 label array, which overflowed and went
+negative. (2) Each variant's sample was capped at the rows available, so the
+pre-registered fixed total was not honoured. Both are fixed in `_sweep_task`; the
+main and leave-one-variant-out code paths were not affected. All stages were rerun
+from training.
+
+### 12.1 Pre-registered decision
+
+| Comparison (benign flows harmed) | FedAvg − comparator | FedAvg wins / losses (30 clusters) | Holm p |
+|---|---|---|---|
+| Local + public library (A1–A3) | **−4.21 points** | 28 / 2 | 5 × 10⁻⁸ |
+
+**Federation is necessary relative to a public attack library** (rule: Holm p < 0.05
+and difference ≥ 0.5 points). The paper keeps cross-controller learning as a core
+claim. The re-scope to a mitigation-only paper is **not** triggered.
+
+### 12.2 Main comparison (attacked episodes, seeds 7000–7009)
+
+| Method | Harmed % [95 % cluster CI] | Malicious occupancy % | Overflow mean / p90 (s) | Share > 5 s |
+|---|---|---|---|---|
+| No defense | 42.21 [41.08, 43.39] | 53.29 | 147.4 / 188.3 | 1.00 |
+| DMS-BTT tuned + blocklist | 4.49 [3.45, 5.52] | 13.79 | 3.77 / 5.47 | 0.11 |
+| Local only | 7.89 [7.25, 8.57] | 23.10 | 29.2 / 119.6 | 0.61 |
+| **FedAvg (v2.1)** | **1.53 [1.12, 1.98]** | 14.49 | 4.71 / 9.31 | 0.36 |
+| Pooled raw data (oracle) | 1.69 [1.14, 2.27] | 13.70 | 3.10 / 5.72 | 0.12 |
+| Ensemble of local models | 1.42 [1.06, 1.82] | 15.12 | 5.64 / 11.23 | 0.41 |
+| Local + public library (A1–A3) | 5.75 [4.33, 7.15] | 19.87 | 19.8 / 44.5 | 0.42 |
+| Local + all known variants | 1.49 [1.17, 1.83] | 15.51 | 5.26 / 12.22 | 0.31 |
+
+Paired against FedAvg (`cluster_paired_tests_main.csv`):
+
+- **vs public library:** FedAvg better on harm (−4.2 points), occupancy (−5.4 points)
+  and overflow (−15.1 s); all 28–30 / 30, Holm p < 10⁻⁷. The library fails exactly
+  where it has no coverage: A4 mimicry (29.7 % harmed) and A6 slow-fill (5.3 %).
+- **vs pooled oracle:** harm not different (12 / 18, p = 0.88): H4 holds. Pooled has
+  lower occupancy (0.8 points) and overflow (1.6 s), 30 / 30.
+- **vs ensemble of local models:** harm not different (−0.11 points in the
+  ensemble's favour, 10 / 20, Holm p = 0.074). FedAvg is better on occupancy
+  (−0.6 points, 30 / 30) and overflow (−0.9 s, 28 / 2). **H2 is not supported.**
+- **vs library of all known variants:** no difference on any metric (H3 not
+  supported). This upper bound assumes a generator for every variant is public.
+- **vs DMS-BTT tuned + blocklist:** 2.9× fewer harmed (28 / 2, Holm p = 2 × 10⁻⁷);
+  occupancy and overflow not significantly different. This reproduces §11 on fresh
+  seeds.
+
+### 12.3 Leave-one-variant-out (each variant withheld from every controller)
+
+Online, benign harmed % on the withheld variant (5 seeds × 3 domains per variant):
+
+| Held out | Local | FedAvg | Pooled | Ensemble | Library A1–A3 | Library all |
+|---|---|---|---|---|---|---|
+| A1 | 2.46 | 7.37 | 1.25 | 1.57 | 6.56 | 1.61 |
+| A2 | 18.32 | 1.67 | 0.78 | 1.07 | 18.15 | 0.98 |
+| A3 | 9.68 | 1.65 | 1.31 | 1.68 | 1.38 | 1.62 |
+| A4 | 26.07 | 3.33 | 5.37 | 12.23 | 24.68 | 3.68 |
+| A5 | 2.23 | 1.63 | 4.17 | 1.47 | 2.79 | 1.55 |
+| A6 | 4.67 | 0.90 | 1.21 | 0.63 | 5.66 | 0.45 |
+| A7 | 11.56 | 1.96 | 1.96 | 2.10 | 0.73 | 1.12 |
+| **Mean [CI]** | 10.71 [9.31, 12.15] | **2.64 [1.59, 3.84]** | 2.29 [1.44, 3.25] | 2.97 [2.42, 3.62] | 8.56 [6.35, 10.90] | 1.57 [1.00, 2.22] |
+
+(Library columns exclude the withheld variant from the library as well.)
+
+Paired tests over 105 (variant, domain, seed) pairs (`lovo_online_tests.csv`):
+FedAvg beats local by 8.1 points (69 / 36, Holm p = 10⁻⁶). Against the public library
+the mean gap is 5.9 points but the pairs split 50 / 55 (Holm p = 0.099): FedAvg wins
+by large margins on A2, A4 and A6 and loses on A1 and A7. **H5 holds against local
+training, not against the library.**
+
+The A1 row is a real weakness: with A1 withheld, FedAvg harms 7.4 % against 2.5 % for
+local. The averaged model generalises worse to that variant than a local model does.
+It should be reported.
+
+Offline, held-out TPR (`table_lovo_offline_tpr.csv`): FedAvg is ≥ 0.83 on every
+withheld variant except A6 (0.69); local ranges 0.21–0.72. The hardest variant is A4
+mimicry, where FedAvg (0.83) beats even the pooled oracle (0.31).
+
+### 12.4 Exposure-skew sweep (offline, `table_skew_sweep_offline.csv`)
+
+Each controller's attack rows are a Dirichlet(α) mix of the six known variants with a
+fixed total; 3 draws per α.
+
+| α | Skew | FedAvg − local TPR (mean ± sd) | TPR on rarely seen variants (w < 5 %): local / FedAvg / ensemble |
+|---|---|---|---|
+| 0.05 | extreme | **+0.137 ± 0.287** | 0.672 / 0.850 / 0.847 |
+| 0.2 | high | +0.042 ± 0.161 | 0.896 / 0.962 / 0.951 |
+| 1.0 | moderate | +0.016 ± 0.091 | 0.883 / 0.930 / 0.932 |
+| 5.0 | low | +0.000 ± 0.017 | 0.881 / 0.890 / 0.895 |
+| ∞ | uniform | +0.001 ± 0.017 | 0.834 / 0.848 / 0.876 |
+
+**H6 holds:** the federation gain grows monotonically with skew and vanishes when
+every controller sees every variant. FPR stays at 0.8–1.2 % throughout.
+
+### 12.5 Hypotheses
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | FedAvg harms fewer than the public library (main) | **Supported** (−4.2 points, Holm p = 5 × 10⁻⁸) |
+| H2 | FedAvg harms fewer than the ensemble of local models | **Not supported** (no difference; FedAvg better on occupancy/overflow) |
+| H3 | FedAvg harms fewer than the library of all known variants | **Not supported** (no difference) |
+| H4 | FedAvg within 1 point of pooled | **Supported** (−0.15 points, n.s.) |
+| H5 | On withheld variants, FedAvg beats local and the public library | **Partly**: vs local yes; vs library n.s. (50 / 55) |
+| H6 | The gain shrinks as exposure skew decreases | **Supported** |
+
+### 12.6 What the paper should claim
+
+1. **Keep cross-controller learning as a core contribution.** A controller that sees
+   only some variants, even with the published DMS-BTT attack settings added, harms
+   3.8× more benign flows than FedAvg and overflows 4× longer.
+2. **Claim sharing of learned knowledge, not FedAvg specifically.** A one-shot
+   ensemble of the three local models matches FedAvg on harm. FedAvg's advantages
+   over it are smaller: lower occupancy and overflow, and one model to run per poll
+   instead of three. Write the method as "cross-controller model sharing, instantiated
+   with FedAvg", with the ensemble as an ablation row.
+3. **State the regime.** The gain exists only when controllers see different attack
+   variants (α ≤ 1). Under uniform exposure, local training is enough. Frame
+   federation as the answer to heterogeneous exposure, not as a universal improvement.
+4. **Do not claim generalisation to unseen variants in general.** Against local
+   training it holds; against a public library it is not significant, and A1 is a
+   counter-example.
+5. **Equivalence with the pooled oracle is now like-for-like** (same v2.1 policy):
+   FedAvg matches pooled on harm, with slightly worse occupancy and overflow.

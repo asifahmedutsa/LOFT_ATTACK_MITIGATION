@@ -12,3 +12,4 @@ loft_project/results/v2*/*_timeseries.pkl
 catboost_info/
 loft_project/catboost_info/
 loft_project/results/revision*/models.pkl
+loft_project/results/revision*/train_runs.pkl

@@ -188,14 +188,14 @@ def _sweep_task(key):
         ben = Dataset.concat([runs[(d, None, s)] for s in SPLITS["train"]])
         ben_X = [ben.X[ben.y == 0]]
         att_X = []
-        n_att = int(sum(assemble(runs, d, EXPOSURE[d]).y))
+        n_att = int(assemble(runs, d, EXPOSURE[d]).y.sum())
         for v, wv in zip(KNOWN, w):
             ds = Dataset.concat([runs[(d, v, s)] for s in SPLITS["train"]])
             ben_X.append(ds.X[ds.y == 0])
             a = ds.X[ds.y == 1]
             k = int(round(wv * n_att))
             if k:
-                att_X.append(a[r.choice(len(a), min(k, len(a)), replace=k > len(a))])
+                att_X.append(a[r.choice(len(a), k, replace=k > len(a))])
         Xb, Xa = np.concatenate(ben_X), np.concatenate(att_X)
         loc[d] = (np.concatenate([Xb, Xa]), np.concatenate([np.zeros(len(Xb), np.int8), np.ones(len(Xa), np.int8)]))
     m = {}

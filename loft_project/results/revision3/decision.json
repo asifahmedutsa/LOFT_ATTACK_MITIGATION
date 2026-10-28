@@ -1,0 +1,6 @@
+{
+  "rule": "If lib-dms is not worse than fedavg on benign flows harmed (cluster Wilcoxon, Holm p >= 0.05, or mean difference < 0.5 points), federation is not necessary given a public attack library: re-scope the paper to the mitigation policy with federation as an optional deployment. lib-all is reported as an upper bound for libraries but is not part of the decision, because it assumes generators for every attack variant are public.",
+  "fedavg_minus_libdms_points": -4.212161845775823,
+  "p_holm": 4.6566128730773926e-08,
+  "federation_necessary": true
+}

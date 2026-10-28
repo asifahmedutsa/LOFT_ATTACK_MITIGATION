@@ -46,8 +46,16 @@ that a controller has not seen, or that mimic benign traffic: 1.1–3.2 % agains
 
 An ablation attributes the gain to the soft-demotion policy (7.9 → 4.1 %) and to
 federated training over richer flow features (4.1 → 1.7 %). Federating DMS-BTT's
-three features alone does not help. **[TODO: rewrite after steps 3–4: the shared
-attack-library comparator, and the adaptive attacker that refreshes faster than 1 s.]**
+three features alone does not help.
+
+Is federation needed, or would a shared attack library do? A local detector given the
+published DMS-BTT attack settings harms 5.8 % of benign flows, against 1.5 % with
+federation (28 of 30 clusters). Federation matches pooling the raw data. The benefit
+comes from sharing what each controller has learned: a one-shot ensemble of the local
+models does as well on harm, while FedAvg keeps occupancy and overflow lower. The gain
+appears only when controllers see different attack variants, and vanishes when every
+controller sees all of them. **[TODO: rewrite after step 4: the adaptive attacker that
+refreshes faster than 1 s.]**
 
 We also report where the first design fell short. Its pre-declared FedProx optimizer
 and hard overflow guard both hurt benign traffic, and removing the guard costs about
