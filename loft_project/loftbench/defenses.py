@@ -174,6 +174,21 @@ class DualGuard(Defense):
         return dels, dems
 
 
+def weighted_level(demands, weights, target):
+    """lam with sum(min(demands, weights * lam)) == target (inf if all fit)."""
+    d, w = np.asarray(demands, float), np.asarray(weights, float)
+    if np.isfinite(d).all() and d.sum() <= target:
+        return np.inf
+    lo, hi = 0.0, float(target) / max(w.min(), 1e-9)
+    for _ in range(80):
+        mid = 0.5 * (lo + hi)
+        if np.minimum(d, w * mid).sum() > target:
+            hi = mid
+        else:
+            lo = mid
+    return lo
+
+
 def water_level(demands, target):
     """Max-min fair level L with sum(min(demands, L)) == target (inf if all fit).
 
@@ -204,9 +219,26 @@ class PortGuard(Defense):
     since the last poll has unknown demand and is treated as unbounded. An
     honest port therefore keeps min(demand, q * capacity / n_ports) entries
     whatever the attacker's refresh rate, packet sizes or source IPs.
+
+    mode sets how the inner defense runs while PortGuard is enforcing (revision
+    step 4b): "full" always runs it on the whole table (step 4), "gated" pauses
+    it, "scoped" runs it only on entries of ports above the fair level. order
+    picks which entries a trimmed port loses first: "auto" (detector score if
+    there is one, else lowest packet rate), "score" or "rate". share="weighted"
+    replaces equal shares by weighted max-min fairness, each port weighted by its
+    entry count averaged (time constant tau_s) over polls without table pressure;
+    those demands fit in the table by construction, and a port that only grows
+    under pressure earns little weight.
     """
-    def __init__(self, inner=None, rho_q=0.9, q=0.8, hold_s=30.0, name="portguard"):
+    MODES = ("full", "gated", "scoped")
+
+    def __init__(self, inner=None, rho_q=0.9, q=0.8, hold_s=30.0, name="portguard", mode="full",
+                 order="auto", share="equal", tau_s=60.0):
+        if (mode not in self.MODES or order not in ("auto", "score", "rate")
+                or share not in ("equal", "weighted")):
+            raise ValueError((mode, order, share))
         self.inner, self.rho_q, self.q, self.hold_s, self.name = inner, rho_q, q, hold_s, name
+        self.mode, self.order, self.share, self.tau_s = mode, order, share, tau_s
         self.needs_features = bool(inner is not None and inner.needs_features)
         self._inner_admit = getattr(inner, "admit_filter", None)
         self.admit_filter = self._admit
@@ -222,6 +254,8 @@ class PortGuard(Defense):
         self.used = np.zeros(n_ports)        # entries at last poll + installs since
         self.refused = np.zeros(n_ports, bool)
         self.active_until = -np.inf
+        self.base = np.zeros(n_ports)        # calm-period demand per port (weighted share)
+        self.base_n = 0
 
     def admit_timeouts(self, fids, now, default):
         if self.inner is not None:
@@ -251,16 +285,61 @@ class PortGuard(Defense):
 
     def _scores(self, obs, idx):
         m = getattr(self.inner, "model", None)
-        if m is not None and "X" in obs and getattr(self.inner, "inputs", "X") == "X":
+        if (self.order != "rate" and m is not None and "X" in obs
+                and getattr(self.inner, "inputs", "X") == "X"):
             X = obs["X"] if self.inner.feature_idx is None else obs["X"][:, self.inner.feature_idx]
             return m.predict_proba(X[idx])
         # No detector: evict the lowest packet rate first.
         age = np.maximum(obs["t"] - obs["install_t"][idx], 1.0)
         return -obs["pkts"][idx] / age
 
+    def _level(self, counts, refused, cap):
+        """Per-port quota array, or None if every port's demand fits."""
+        d = np.where(refused, np.inf, counts)
+        if self.share == "equal":
+            L = water_level(d, self.q * cap)
+            return np.full(len(d), max(int(np.floor(L)), 1)) if np.isfinite(L) else None
+        w = np.maximum(self.base, 0.01 * self.q * cap / len(d))
+        lam = weighted_level(d, w, self.q * cap)
+        return np.maximum(np.floor(w * lam), 1) if np.isfinite(lam) else None
+
+    def _update_base(self, t, obs):
+        if self.share != "weighted" or t <= self.active_until or obs["count"] / obs["capacity"] >= self.rho_q:
+            return
+        c = np.bincount(self.port[obs["fids"]], minlength=len(self.base)).astype(float)
+        self.base_n += 1
+        a = max(1.0 - np.exp(-1.0 / self.tau_s), 1.0 / self.base_n)
+        self.base += a * (c - self.base)
+
+    def _inner_poll(self, t, obs):
+        if self.inner is None:
+            return None, None
+        enforcing = t <= self.active_until
+        if self.mode == "full" or not enforcing:
+            return self.inner.on_poll(t, obs)
+        if self.mode == "gated":
+            return None, None
+        # scoped: the inner defense only sees entries of ports above the fair level.
+        ports = self.port[obs["fids"]]
+        counts = np.bincount(ports, minlength=len(self.quota)).astype(float)
+        lvl = self._level(counts, self.refused, obs["capacity"])
+        if lvl is None:
+            return None, None
+        sel = np.flatnonzero(counts[ports] > lvl[ports])
+        if len(sel) == 0:
+            return None, None
+        sub = dict(obs)
+        for k in ("fids", "pkts", "bytes", "install_t", "X", "dms"):
+            if k in obs:
+                sub[k] = obs[k][sel]
+        return self.inner.on_poll(t, sub)
+
     def on_poll(self, t, obs):
-        dels, dems = (None, None) if self.inner is None else self.inner.on_poll(t, obs)
         cap, fids = obs["capacity"], obs["fids"]
+        self._update_base(t, obs)
+        if self.mode != "full" and obs["count"] / cap >= self.rho_q:
+            self.active_until = t + self.hold_s
+        dels, dems = self._inner_poll(t, obs)
         gone = np.zeros(len(fids), bool)
         for arr in (dels, dems):
             if arr is not None and len(arr):
@@ -275,11 +354,10 @@ class PortGuard(Defense):
         if t > self.active_until or len(keep) == 0:
             self.quota[:] = np.inf
             return dels, dems
-        L = water_level(np.where(refused, np.inf, counts), self.q * cap)
-        if not np.isfinite(L):
+        lvl = self._level(counts, refused, cap)
+        if lvl is None:
             self.quota[:] = np.inf
             return dels, dems
-        lvl = max(int(np.floor(L)), 1)
         self.quota[:] = lvl
         over = np.flatnonzero(counts > lvl)
         if len(over) == 0:
@@ -288,8 +366,8 @@ class PortGuard(Defense):
         for p in over:
             sel = keep[ports == p]
             s = self._scores(obs, sel)
-            trim.append(fids[sel[np.argsort(-s, kind="stable")[:len(sel) - lvl]]])
+            trim.append(fids[sel[np.argsort(-s, kind="stable")[:len(sel) - int(lvl[p])]]])
         trim = np.concatenate(trim)
-        self.used[over] = lvl
+        self.used[over] = lvl[over]
         dels = trim if dels is None else np.concatenate([np.asarray(dels), trim])
         return dels, dems

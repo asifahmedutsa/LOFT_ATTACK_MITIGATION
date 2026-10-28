@@ -291,3 +291,57 @@ def test_portguard_caps_admission_and_trims_over_quota_port():
     assert abs(occ[-1] - 10 / 21) < 1e-9
     assert res.summary["benign_flows_harmed_frac"] == 0
     assert res.summary["blocked_pkts"] > 0     # attacker re-installs refused
+
+
+def test_weighted_level_follows_weights():
+    from loftbench.defenses import weighted_level
+    assert weighted_level([10, 10], [1, 1], 100) == np.inf
+    lam = weighted_level([np.inf, np.inf], [3, 1], 400)
+    assert abs(lam - 100) < 1e-6                       # shares 300 and 100
+    lam = weighted_level([50, np.inf], [3, 1], 400)
+    assert abs(lam - 350) < 1e-6                       # port 0 satisfied, port 1 gets the rest
+
+
+class _SpyInner:
+    """Inner defense that records which entries it was shown."""
+    needs_features = False
+    admit_filter = None
+
+    def __init__(self):
+        self.seen = []
+
+    def reset(self, ctx):
+        pass
+
+    def admit_timeouts(self, fids, now, default):
+        return np.full(len(fids), default)
+
+    def on_poll(self, t, obs):
+        self.seen.append((t, set(obs["fids"].tolist())))
+        return None, None
+
+
+def _two_port_episode(mode):
+    from loftbench.defenses import PortGuard
+    n = 20
+    pk = [(0.05 + 0.01 * i, i) for i in range(4)] + [(4.0 + 0.5 * k, i) for k in range(10)
+                                                     for i in range(4)]
+    pk += [(0.1 + 0.5 * k + 0.001 * i, i) for k in range(20) for i in range(4, n)]
+    att = np.r_[np.zeros(4, bool), np.ones(16, bool)]
+    tr = make_traffic(sorted(pk), n, att)
+    tr.flow_port = np.r_[np.zeros(4, np.int16), np.ones(16, np.int16)]
+    spy = _SpyInner()
+    g = PortGuard(spy, rho_q=0.9, q=0.5, hold_s=30.0, mode=mode)
+    run_episode(tr, SimConfig(capacity=21, infra_rules=1, duration=6.0, idle_timeout=10.0), g)
+    return spy.seen
+
+
+def test_portguard_gated_and_scoped_modes():
+    full = _two_port_episode("full")
+    gated = _two_port_episode("gated")
+    scoped = _two_port_episode("scoped")
+    assert len(full) == 6 and all(len(s) > 0 for _, s in full)
+    # Enforcement starts at the first poll (table >= 90 % full): gated never calls the inner.
+    assert gated == []
+    # Scoped shows the inner only entries of the over-quota attacker port (flows 4-19).
+    assert scoped and all(s and s <= set(range(4, 20)) for _, s in scoped)
