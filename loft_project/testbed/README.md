@@ -15,8 +15,22 @@ controller fixes (below); runs 2–4 are in progress. Results are recorded in
    about 550 entries, and the controller treated each part as the whole table (it never
    saw more than 547 entries). It now accumulates parts until the last one
    (`OFPMPF_REPLY_MORE` cleared) before computing features or acting.
+3. **Refusals enforced only in the controller** (smoke tests, results_v2.md 16.8). A refused
+   flow got no rule, so every later packet of the refused host was another Packet-In; against
+   the fast-refresh attacker Open vSwitch dropped 114,000 controller messages and 24 % of benign
+   flows were never installed. A refusal now installs a drop rule for 1 s (priority 5, below
+   the per-flow rules): by source MAC, i.e. access port, for PortGuard; by source address for the
+   DMS-BTT blocklist. Drop rules take table entries, which the simulator does not charge.
+4. **Traffic ran past the window.** Drivers sent the packets of every flow that started before
+   `--duration`, so a 150 s run lasted 340 s. They now drop packets after `--duration`, as the
+   simulator does. Each host now builds the simulator's whole episode and sends the flows of
+   its own access port (loftbench.ports, dedicated scenario), so PortGuard sees the same port
+   mix as in simulation; trace domains T1-T3 replay the same way.
 
 Summarise a run with `python3 testbed/summarize_run.py <run_dir> [--attack-start S]`.
+`benign_harmed_pct` is the simulator's harm (refused an entry by TABLE_FULL, the defense or its
+drop rule, or evicted while still active); `benign_packet_in_lost_pct` is flows that never
+reached the controller. The minimal confirmation matrix is `bash testbed/matrix_minimal.sh`.
 Run one testbed at a time: `sudo mn -c` tears down any other running topology.
 
 ## Prerequisites (already present on this machine)

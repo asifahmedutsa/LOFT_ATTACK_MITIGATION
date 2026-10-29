@@ -4,8 +4,9 @@
 #   cd loft_project && sudo bash testbed/root/install.sh
 #
 # What it does, all as root:
-#   1. Copies a snapshot of loftbench/, testbed/, the exported v2.1 models and the Ryu
-#      environment's Python packages to /opt/loft-testbed (root-owned, not writable by users).
+#   1. Copies a snapshot of loftbench/, testbed/, the exported models, the trace replay files
+#      (traces/*.npz) and the Ryu environment's Python packages to /opt/loft-testbed
+#      (root-owned, not writable by users).
 #   2. Installs the validating wrapper /usr/local/sbin/loft-testbed (root-owned, mode 0755).
 #   3. Adds /etc/sudoers.d/loft-testbed allowing ONLY that wrapper without a password,
 #      after checking the file with visudo.
@@ -39,6 +40,11 @@ rm -rf "$NEW"
 install -d -m 0755 "$NEW/code" "$NEW/bin" "$NEW/code/results/v21"
 cp -r "$SRC/loftbench" "$SRC/testbed" "$NEW/code/"
 cp -r "$SRC/results/v21/exported" "$NEW/code/results/v21/"
+# Replay files for the trace domains T1-T3 (written by loftbench.pcapflows; not in git).
+install -d -m 0755 "$NEW/code/traces"
+for f in bigflows.npz univ2.npz; do
+    if [ -f "$SRC/traces/$f" ]; then cp "$SRC/traces/$f" "$NEW/code/traces/"; fi
+done
 cp -r "$SITE" "$NEW/py38-site"
 # Ryu is an editable install (its source lives in the user's home); copy the package itself and
 # drop every link back into user-writable directories.

@@ -48,7 +48,7 @@ def build(net, k, dname, port):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--domains", default="D1")
-    ap.add_argument("--variant", default="A2")
+    ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, or benign (no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
                     choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard"])
@@ -132,7 +132,8 @@ def main():
                      "--share", f"{i}/4", "--iface", f"{h.name}-eth0", "--dst", dst,
                      "--dst-mac", dmac, "--duration", str(a.duration),
                      "--truth", os.path.join(a.out, f"truth_{h.name}.csv")]))
-            for j, h in enumerate(dm["users"][4:]):
+            # --variant benign: the attacker hosts stay silent (false-alarm runs).
+            for j, h in enumerate(dm["users"][4:] if a.variant != "benign" else []):
                 procs.append(h.popen(
                     [a.python, drv, "--mode", "attack", "--domain", dm["name"], "--variant", a.variant,
                      "--seed", str(a.seed), "--attacker", str(j), "--iface", f"{h.name}-eth0",

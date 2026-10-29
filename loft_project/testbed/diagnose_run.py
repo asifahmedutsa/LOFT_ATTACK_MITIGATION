@@ -16,9 +16,8 @@ import re
 
 import numpy as np
 
-from loftbench.config import DOMAINS
-from loftbench.data import DOMAIN_IDX
-from loftbench.traffic import _rng, generate_benign
+from loftbench.data import profile_of
+from loftbench.traffic import build_traffic
 
 KEYS = ("rconn_overflow", "rconn_sent", "ofproto_recv_openflow", "ofproto_packet_out",
         "dpif_execute", "upcall_flow_limit_grew", "handler_duplicate_upcall")
@@ -47,8 +46,9 @@ def ip(x):
 
 
 def never_installed_by_start(d, domain, k, seed, duration=300.0):
-    t, fid, _, src, _ = generate_benign(DOMAINS[domain], duration, DOMAIN_IDX[domain],
-                                        _rng("benign", DOMAINS[domain].name, seed))
+    prof, didx = profile_of(domain)
+    tr = build_traffic(prof, didx, None, seed, duration, 50.0)
+    t, fid, src = tr.pkt_t, tr.pkt_fid.astype(np.int64), tr.flow_src
     first = np.full(fid.max() + 1, np.inf)
     np.minimum.at(first, fid, t)
     dst = f"10.{k}.0.100"

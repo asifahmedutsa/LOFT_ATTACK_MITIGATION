@@ -22,6 +22,10 @@ Environment variables:
   LOFT_LEAN         1 (default) = lean Packet-In handling, 0 = acceptance runs 1-3 behaviour:
                     no repeat install of a flow within 0.5 s, 1 s back-off after TABLE_FULL,
                     and slow-path packets output directly instead of resubmitted to the table
+  LOFT_DROP_RULES   1 (default) = enforce a refusal in the switch: a drop rule (priority
+                    DROP_PRIO, hard timeout DROP_S) for the refused host (PortGuard, by source
+                    MAC = access port) or source address (DMS-BTT blocklist), so the refused
+                    traffic stops reaching the controller; 0 = refuse in the controller only
 """
 import csv
 import json
@@ -47,6 +51,8 @@ MAX_FLOWS = 1 << 20
 N_PORTS = 64          # access-port ids learned at run time; OTHER_PORT for unknown sources
 OTHER_PORT = N_PORTS - 1
 PRIO = 10
+DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
+DROP_S = 1            # drop-rule hard timeout: the defense re-decides at most once per second
 DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard")
 
 
@@ -124,17 +130,25 @@ class LoftController(app_manager.RyuApp):
         self._parts = []
         self.xid_key = {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
+        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1"
+        # A DMS-BTT blocklist refuses source addresses; PortGuard refuses access ports.
+        self.drop_by_source = isinstance(self.defense, DMSBTT)
+        self.drop_until, self.drop_xids = {}, set()
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = 0
         self._tf_last = 0
         self.dp = None
         self.t0 = time.time()
-        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0)
+        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0,
+                        drop_rules=0, drop_rule_full=0)
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
+        # Wall-clock origin of the log's t column, to align it with the traffic drivers.
+        with open(log.replace(".csv", "_t0.txt"), "w") as f:
+            f.write(f"{self.t0:.6f}\n")
         self.log = open(log, "w", newline="")
         self.w = csv.writer(self.log)
         self.w.writerow(["t", "entries", "packet_in", "table_full", "installs", "deletes",
-                         "demotes", "decision_ms", "event_backlog", "blocked"])
+                         "demotes", "decision_ms", "event_backlog", "blocked", "drop_rules"])
         self.flowlog = open(log.replace(".csv", "_flows.csv"), "w", newline="")
         self.fw = csv.writer(self.flowlog)
         self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport"])
@@ -219,6 +233,8 @@ class LoftController(app_manager.RyuApp):
                 # the simulator.
                 self.cnt["blocked"] += 1
                 self.fw.writerow([round(t, 3), "blocked", *k])
+                if self.drop_rules:
+                    self._drop_rule(dp, eth.src, ip.src, now)
                 return
             else:
                 idle = int(round(float(self.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
@@ -242,10 +258,35 @@ class LoftController(app_manager.RyuApp):
         dp.send_msg(p.OFPPacketOut(datapath=dp, buffer_id=msg.buffer_id, in_port=in_port,
                                    actions=actions, data=data))
 
+    def _drop_rule(self, dp, mac, src, now):
+        """Enforce a refusal in the switch for DROP_S seconds.
+
+        A refused flow gets no rule, so without this every later packet of the refused host
+        is another Packet-In: against the fast-refresh attacker Open vSwitch then drops
+        controller messages and benign flows go uninstalled (results_v2.md 16.8)."""
+        field, value = ("ipv4_src", src) if self.drop_by_source else ("eth_src", mac)
+        if now < self.drop_until.get(value, 0.0):
+            return
+        self.drop_until[value] = now + DROP_S
+        p, o = dp.ofproto_parser, dp.ofproto
+        msg = p.OFPFlowMod(datapath=dp, priority=DROP_PRIO, match=p.OFPMatch(eth_type=0x0800, **{field: value}),
+                           instructions=[], hard_timeout=DROP_S, command=o.OFPFC_ADD)
+        dp.send_msg(msg)
+        if len(self.drop_xids) > 4096:       # errors arrive within milliseconds; keep it small
+            self.drop_xids.clear()
+        self.drop_xids.add(msg.xid)
+        self.cnt["drop_rules"] += 1
+        self.fw.writerow([round(now - self.t0, 3), "drop_rule", value, "", "", "", ""])
+
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
         o = ev.msg.datapath.ofproto
         if ev.msg.type == o.OFPET_FLOW_MOD_FAILED and ev.msg.code == o.OFPFMFC_TABLE_FULL:
+            if ev.msg.xid in self.drop_xids:
+                # A drop rule did not fit: the refusal stays controller-only this second.
+                self.drop_xids.discard(ev.msg.xid)
+                self.cnt["drop_rule_full"] += 1
+                return
             self.cnt["table_full"] += 1
             k = self.xid_key.pop(ev.msg.xid, None)
             if k is not None:
@@ -311,7 +352,8 @@ class LoftController(app_manager.RyuApp):
         # the bottleneck (Packet-Ins wait here before Open vSwitch starts dropping them).
         backlog = self.events.qsize() if hasattr(self, "events") else -1
         self.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
-                         c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"]])
+                         c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"],
+                         c["drop_rules"]])
         self.log.flush()
         self.flowlog.flush()
 
