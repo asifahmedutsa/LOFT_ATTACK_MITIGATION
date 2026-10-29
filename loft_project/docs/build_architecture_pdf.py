@@ -413,12 +413,17 @@ def build(path):
         "<b>Limit.</b> If the attacker controls a host on every port, it gets a fair share on "
         "every port, and PortGuard cannot single it out. The test measures this case on purpose.",
     ])
-    s.append(P("<b>Test result (fresh seeds, attackers on their own ports).</b> PortGuard alone "
-               "keeps harm at about 6 % for every attacker speed from one refresh per 0.25 s to "
-               "one per 9 s, where every learned defense harms 15–81 %. Combined with DualGuard "
-               "it does worse (36 % against fast attackers): with the table held near full, "
-               "DualGuard keeps demoting normal entries, and PortGuard hands the freed slots to "
-               "the attackers. Making the two cooperate is the next step (4b).", BODY))
+    s.append(P("<b>Making them cooperate (step 4b).</b> A first combination failed: with the "
+               "table held near full, DualGuard kept demoting normal entries and PortGuard gave "
+               "the freed slots to the attackers. The final design pauses DualGuard while "
+               "PortGuard is enforcing, and weights each port's share by how much of the table "
+               "it used while there was no pressure, so busy normal ports are not throttled and "
+               "an attacker's port has earned almost nothing.", BODY))
+    s.append(P("<b>Test result (fresh seeds, attackers on their own ports).</b> 0.1–0.4 % of "
+               "normal flows harmed against attackers refreshing every 0.25–1 s, and at most "
+               "3.3 % at any speed, where every learned defense harms 15–81 %. It must be "
+               "switched off when the attacker sends from every port: there it raises harm on "
+               "the standard attacks from 1.6 % to 8.9 %.", BODY))
 
     # Steps 10-11
     s.append(PageBreak())
@@ -477,10 +482,10 @@ def build(path):
          "than DMS-BTT"],
         ["Fast attacker (refresh ≤ 1 s): v2.1 alone", "72 %", "The detector does not "
          "recognise it"],
-        ["Fast attacker: PortGuard alone", "6.2 %", "Bounded at every speed when attackers have "
-         "their own ports; fails if they control every port"],
-        ["Fast attacker: v2.1 + PortGuard", "36 %", "The two conflict; step 4b will fix the "
-         "composition"],
+        ["Fast attacker: v2.1 + PortGuard (final)", "0.2 %", "Attackers on their own ports; "
+         "same 1.6 % as v2.1 on the standard attacks"],
+        ["Same, attacker on every port", "68 %", "Port isolation cannot help; leave PortGuard "
+         "off there"],
     ], [6.4 * cm, 3.2 * cm, 7.4 * cm]))
     s.append(Spacer(1, 6))
     s.append(P("<b>Still to do before submission:</b> run the Mininet/Ryu testbed with real "

@@ -24,9 +24,10 @@ detector given the published DMS-BTT attack settings harms 5.8 % of benign flows
 gain appears only when controllers see different attack variants (`results_v2.md` §12).
 
 Against an adaptive attacker refreshing faster than once a second, every learned
-defense fails (revision step 4). A per-port fair-share guard (PortGuard) bounds harm at
-about 6 % when attackers have their own ports; combining it with DualGuard is still open
-(`results_v2.md` §14).
+defense fails. A per-port weighted fair share of the table (PortGuard) combined with
+DualGuard holds harm at 0.1–0.4 % when attackers have their own access ports, matching
+v2.1 on the standard attacks; it must be off when attack traffic enters on every port
+(`results_v2.md` §14–15).
 
 The independent review (`docs/results_v2.md` §9) identified open problems,
 most importantly a faster-refreshing adaptive attacker. Work on them follows

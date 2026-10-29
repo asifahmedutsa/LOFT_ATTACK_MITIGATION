@@ -1,0 +1,7 @@
+hypothesis,a,b,mean_cluster_diff_points,a_wins,a_losses,p,p_holm
+H1,v2.1 + PortGuard (step 4b),v2.1 + PortGuard (step 4),-35.484830834575185,30,0,1.862645149230957e-09,1.1175870895385742e-08
+H2,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1,0.03168758105648317,11,19,1.0,1.0
+H4,v2.1 + PortGuard (step 4b),"PortGuard alone (selected share, q)",-0.36509397010825095,17,13,0.8078304156661034,1.0
+H5,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1,-46.57837619434203,15,0,6.103515625e-05,0.00030517578125
+H6,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1,7.322189280917053,0,15,6.103515625e-05,0.00030517578125
+H7,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1,-4.683991535254547,13,2,0.0006103515625,0.0018310546875

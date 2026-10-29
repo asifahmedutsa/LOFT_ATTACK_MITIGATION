@@ -946,3 +946,96 @@ specified. It was not anticipated in the pre-registration.
    learned defenses; show the attacker-budget curve; present PortGuard as a bounded-harm
    guard for port-isolated attackers, with the distributed and shared cases as its
    limits. Do not claim the combination solves the fast attacker.
+
+## 15. Revision step 4b — making DualGuard and PortGuard cooperate
+
+Pre-registered in `results/revision4b/preregistration.json` (commit `8447e0f`); the
+validation-only selection was committed (`7bed23d`) before any test result existed. A first
+test run was interrupted at about 1,200 of 6,300 episodes when the machine restarted; nothing
+from it was written (`test_interrupted.log`), and the test was rerun from the start on the
+same fresh seeds. Code: `loftbench/revision4b.py`, `PortGuard(mode=…, share=…)`. Tables:
+`results/revision4b/tables/`.
+
+**Changes from step 4.** Two compositions that keep DualGuard from fighting PortGuard
+(*gated*: DualGuard pauses while PortGuard enforces; *scoped*: DualGuard only sees entries
+of ports above their fair level), and **weighted max-min shares**: each port is weighted by
+its entry count averaged over polls without table pressure (time constant 60 s). Calm-period
+demand fits in the table by construction, and a port that only grows under pressure, as an
+attacker's does, earns little weight. Mode and share rules were developed on training seed
+1000 only.
+
+### 15.1 Selection (validation seeds 2000–2002, dedicated ports)
+
+| Candidate | Harm A1–A7 | Mean harm, gap sweep | Feasible |
+|---|---|---|---|
+| gated, equal, q 0.90 / 0.95 | 3.90 / 3.35 % | 8.7 / 6.6 % | no / no |
+| **gated, weighted, q 0.90** | **1.37 %** | **0.94 %** | yes (selected) |
+| gated, weighted, q 0.95 | 1.84 % | 1.11 % | yes |
+| scoped, equal, q 0.90 / 0.95 | 2.23 / 1.81 % | 8.4 / 6.3 % | no / yes |
+| scoped, weighted, q 0.90 / 0.95 | 1.09 / 1.30 % | 1.15 / 1.29 % | yes / yes |
+
+v2.1 reference: 1.45 % on A1–A7. Weighted shares are what matter: every weighted candidate
+holds the sweep near 1 %, every equal-share one at 6–9 %.
+
+### 15.2 One-shot test (fresh seeds 8000–8009 dedicated; 8000–8004 shared, distributed)
+
+Benign flows harmed, % [95 % cluster CI] (`table_summary.csv`):
+
+| | Dedicated A1–A7 | Dedicated fast (≤ 1 s) | Dedicated all gaps | Shared fast | Distributed A1–A7 | Distributed fast |
+|---|---|---|---|---|---|---|
+| No defense | 42.12 | 80.74 | 72.03 | 80.95 | 42.35 | 80.95 |
+| DMS-BTT tuned + blocklist | 4.47 | 61.94 | 47.78 | 62.20 | 4.53 | 62.20 |
+| FL-DualGuard v2.1 | **1.53** [1.12, 1.98] | 72.53 | 55.43 | 72.74 | **1.59** | 72.74 |
+| PortGuard alone (step 4) | 6.14 | 6.52 | 6.69 | 26.26 | 45.60 | 82.13 |
+| PortGuard alone, weighted q 0.90 | 1.93 [1.23, 2.83] | **0.20** [0.03, 0.48] | **0.88** | 26.37 | 44.37 | 73.34 |
+| v2.1 + PortGuard (step 4) | 1.73 | 35.71 | 23.66 | 50.22 | 3.03 | 75.48 |
+| **v2.1 + PortGuard (step 4b)** | **1.57** [1.22, 1.96] | **0.22** [0.07, 0.48] | **1.10** [0.75, 1.57] | 26.17 | 8.91 [6.76, 11.15] | 68.06 |
+
+Attacker-budget curve, dedicated ports (`table_budget_curve_harm.csv`):
+
+| Gap (s) | 0.25 | 0.5 | 0.8 | 1 | 2 | 5 | 9 |
+|---|---|---|---|---|---|---|---|
+| v2.1 | 81.3 | 76.8 | 66.9 | 65.2 | 52.1 | 30.0 | 15.8 |
+| v2.1 + PortGuard (step 4) | 58.9 | 47.1 | 20.0 | 16.8 | 10.6 | 7.4 | 4.8 |
+| **v2.1 + PortGuard (step 4b)** | **0.14** | **0.11** | **0.27** | **0.37** | **0.94** | **3.26** | **2.61** |
+| PortGuard alone, weighted | 0.14 | 0.09 | 0.23 | 0.33 | 0.74 | 2.72 | 1.89 |
+
+Benign-only episodes (no attack): 0.059 % harmed with step 4b, 0.037 % with v2.1.
+
+### 15.3 Pre-registered hypotheses (`hypothesis_tests.csv`, `outcomes.json`)
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | Dedicated, fast: step 4b harms fewer than step 4's composition | **Supported** (−35.5 points, 30 / 30, Holm p = 10⁻⁸) |
+| H2 | Dedicated, A1–A7: non-inferior to v2.1 (≤ 0.5 points) | **Supported** (+0.03 points) |
+| H3 | Dedicated: ≤ 3 % at every gap | **Not supported, narrowly** (3.26 % at 5 s; all other gaps ≤ 2.61 %) |
+| H4 | Dedicated, A1–A7: fewer than PortGuard alone (same share, q) | **Not supported** (−0.37 points, 17 / 13, Holm p = 1.0) |
+| H5 | Shared, fast: fewer than v2.1 | **Supported** (−46.6 points, 15 / 0) |
+| H6 | Distributed, A1–A7: non-inferior to v2.1 | **Not supported** (+7.3 points, 0 / 15) |
+| H7 | Distributed, fast: no reduction vs v2.1 (expected negative) | **Not as expected**: a small significant reduction (−4.7 points, 13 / 2), still 68 % harmed |
+
+### 15.4 What this means
+
+1. **The adaptive fast-refresh attacker is defeated when attackers are port-isolated.**
+   In the DMS-BTT topology, step 4b harms 0.1–0.4 % of benign flows for refresh gaps up to
+   1 s and at most 3.3 % at any gap, against 15–81 % for every learned defense and the tuned
+   DMS-BTT. It does so while matching v2.1 on the standard and mimicry variants
+   (1.57 % vs 1.53 %). The step-4 composition failure is fixed (H1).
+2. **Weighted fair share does the work; the detector adds little in that topology.**
+   PortGuard alone with weighted shares is statistically indistinguishable on harm (H4).
+   DualGuard still lowers malicious occupancy (20.8 % vs 36.3 % on A1–A7), but that is a
+   secondary metric. The federated detector's demonstrated value is on the slow and mimicry
+   variants when ports cannot separate the attacker: the distributed scenario, where v2.1
+   alone is best (1.59 %).
+3. **PortGuard must not run blindly.** When attack flows enter on every port it raises harm
+   on A1–A7 from 1.6 % to 8.9 % (H6) and protects little against fast attackers (68 %).
+   When attackers share ports with users, it cuts fast-attack harm from 73 % to 26 % but
+   the users behind those ports bear it.
+4. **Deployment rule for the paper.** Enable the fair-share guard on access switches where
+   hosts have their own ports (the DMS-BTT and most campus/enterprise access topologies);
+   rely on the federated detector alone where attack traffic cannot be separated by port.
+   An automatic switch, for example enabling PortGuard only when the excess demand
+   concentrates on a few ports, is future work and would need its own pre-registered test.
+5. **Cost.** Refused attack installs become Packet-Ins: about 3,400/s under the fastest
+   attackers (v2.1 alone: about 980/s). A hardware deployment needs a per-port meter on
+   table misses; this belongs in the testbed measurements (E13).

@@ -55,9 +55,11 @@ comes from sharing what each controller has learned: a one-shot ensemble of the 
 models does as well on harm, while FedAvg keeps occupancy and overflow lower. The gain
 appears only when controllers see different attack variants, and vanishes when every
 controller sees all of them. Against an adaptive attacker that refreshes faster than once a second, every learned
-defense fails (15–81 % harmed). A per-port fair-share guard bounds harm at about 6 % when
-attackers are isolated on their own ports, but not when they control every port.
-**[TODO: update after step 4b, the composition of DualGuard and PortGuard.]**
+defense fails (15–81 % harmed). Adding a per-port fair share of the table, weighted by each
+port's demand while the table is not under pressure, holds harm at 0.1–0.4 % for such
+attackers when they are isolated on their own access ports (at most 3.3 % at any refresh
+rate), without cost on the standard variants. It must be disabled when attack traffic
+enters on every port, where it raises harm from 1.6 % to 8.9 %.
 
 We also report where the first design fell short. Its pre-declared FedProx optimizer
 and hard overflow guard both hurt benign traffic, and removing the guard costs about

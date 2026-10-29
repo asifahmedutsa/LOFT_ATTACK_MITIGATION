@@ -1,0 +1,18 @@
+{
+  "H1": true,
+  "H2": true,
+  "H3": false,
+  "H3_per_gap_harm": {
+    "X0.25": 0.139,
+    "X0.5": 0.112,
+    "X0.8": 0.266,
+    "X1": 0.375,
+    "X2": 0.935,
+    "X5": 3.256,
+    "X9": 2.61
+  },
+  "H4": false,
+  "H5": true,
+  "H6": false,
+  "H7_no_reduction": false
+}
