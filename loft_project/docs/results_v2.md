@@ -1312,3 +1312,95 @@ earliest overflow, Packet-In and TABLE_FULL: `tables/table_main_dmsbtt_format.cs
   for the testbed caveat.
 - **The cost of PortGuard is on T3:** at 9,000 pps the per-port quotas cut into benign ports
   (A1–A7 harm 4.3 % against 3.3 % for v2.1 alone).
+
+## 18. Minimal testbed confirmation matrix (Mininet/OVS/Ryu, 29 Oct 2026)
+
+48 runs of 300 s, one at a time, through the passwordless runner (`testbed/matrix_minimal.sh`,
+15:57–20:14, no failed runs). Every host replays its own access port's flows of the simulator
+episode (dedicated scenario), so each run is the simulator's episode for that seed. Trace T1
+replays the bigFlows trace the same way. Defenses are the simulator's objects running in Ryu:
+DMS-BTT tuned + blocklist, FL-DualGuard v2.1, and v2.1 + PortGuard (step 4b). Simulator
+references are the dedicated-port test episodes: revision 4b for D1–D3 (seeds 8000–8009) and
+revision 5 for T1 (seeds 9000–9009). Table: `results/testbed_m1/table_m1.csv`, built by
+`testbed/compare_matrix.py`. Run directories are in `~/loft-runs/m1_*` (not in git).
+
+Harm is the simulator's: benign flows refused (TABLE_FULL or the defense) or evicted while
+active, as a % of benign flows. Flows whose Packet-In never reached the controller are reported
+separately ("Packet-In lost") and are not counted as harm.
+
+### 18.1 Main cells (seed 4000)
+
+Benign harmed %, testbed / simulator mean [min, max over 10 seeds]:
+
+| Cell | No defense | DMS-BTT | FL-DualGuard v2.1 | v2.1 + PortGuard |
+|---|---|---|---|---|
+| D1 A2 | 40.0 / 48.9 | 0.54 / 0.57 [0.49, 0.66] | 0.34 / 0.33 [0.11, 0.55] | 0.47 / 0.90 [0.17, 1.67] |
+| D2 A2 | 45.2 / 52.7 | 0.08 / 0.10 [0.07, 0.14] | 0.70 / 2.87 [2.29, 3.88] | 0.23 / 2.96 [2.57, 3.58] |
+| D3 A2 | 44.1 / 49.0 | 0.00 / 0.15 [0.00, 1.44] | 0.05 / 0.74 [0.12, 1.97] | 0.08 / 0.93 [0.14, 3.38] |
+| T1 A2 | 59.6 / 55.2 | 0.13 / 0.14 [0.10, 0.18] | 1.70 / 1.00 [0.42, 1.64] | 2.88 / 2.07 [0.78, 3.75] |
+| D1 A4 | 34.5 / 50.3 | 0.82 / 1.07 [0.98, 1.17] | **18.98** / 1.41 [0.43, 1.96] | 1.96 / 0.72 [0.14, 1.01] |
+| D2 A4 | 40.3 / 55.3 | 17.8 / 32.5 [31.7, 33.3] | **27.35** / 5.31 [3.00, 6.24] | 3.09 / 2.16 [1.68, 2.81] |
+| D3 A4 | 39.4 / 49.2 | 14.2 / 30.0 [26.8, 34.9] | **21.95** / 1.60 [0.35, 4.41] | 4.45 / 1.97 [0.26, 8.35] |
+| T1 A4 | 56.7 / 54.9 | 14.8 / 19.6 [13.6, 25.2] | **48.35** / 27.0 [23.8, 30.4] | 4.69 / 1.90 [0.69, 4.53] |
+
+Benign flows whose Packet-In was lost: 4.5–9.8 % on D1–D3 for every defense including none,
+0.2–17 % on T1, up to 19.7 % (D2 A4, DMS-BTT).
+
+**Extra seeds (D1).** Seeds 4001 / 4002: DMS-BTT 0.58 / 0.68 % on A2 and 0.84 / 1.17 % on A4;
+v2.1 + PortGuard 0.06 / 0.14 % on A2 and 0.43 / 1.13 % on A4. All are within or next to the
+simulator's range, as is seed 4000.
+
+**False alarms (no attack, D1 and T1).** v2.1 and v2.1 + PortGuard: 0.0 % harmed, 0 TABLE_FULL,
+0.08–0.09 % Packet-In lost, in all four runs.
+
+### 18.2 What agrees and what does not
+
+1. **No defense, DMS-BTT and v2.1 + PortGuard transfer.** Every no-defense cell overflows
+   (TABLE_FULL 22,000–32,000; 35–60 % harmed). Testbed harm on D1–D3 is 5–16 points below the
+   simulator because flows with lost Packet-Ins are left out and fill no entries. DMS-BTT
+   matches on every A2 cell and on D1 A4, and is *better* than simulated on D2/D3/T1 A4
+   (14–18 % against 20–33 %). v2.1 + PortGuard is at most 4.7 % in every attacked cell. On A2 it
+   is within or below the simulator's range; on A4 it is 0.9–2.8 points above the simulator's mean, but the
+   ranking is the same: it is the only defense that holds A4 everywhere.
+2. **FL-DualGuard v2.1 alone does not transfer on A4.** It is right on A2 (within, below or, on T1, just
+   above the simulator's range), but on A4 it harms 19–48 % against 1.4–27 % simulated. The simulator run
+   on the same seed 4000 gives 1.46 % (D1) and 4.09 % (D2), so this is the testbed, not the seed.
+   What differs is whom it demotes. In the simulator 96–98 % of v2.1's demotes hit attacker
+   entries (D1 A4: 3,451 attacker, 73 benign); on the testbed 58 % do (1,719 attacker,
+   1,241 benign), and D2 A4 is 47 % (1,122 / 1,258). On A2 the testbed still demotes mostly
+   attacker entries (24,889 / 1,638). A4 mimics benign sizes and sends 1–3 packets per refresh,
+   so the detector depends on per-poll timing features, which the testbed perturbs. Stats polls
+   during the attack are 0.85–1.34 s apart (10th–90th percentile; 1.00–1.04 s before it). Attacker
+   entries also expire and are reinstalled between refreshes (median 6.5 s between installs,
+   which resets their per-flow history). Neither has been confirmed as the cause. **Open:**
+   log scores and features in the controller and compare them with the simulator on the same
+   flows.
+3. **The control plane is saturated under every attack.** Before the attack Ryu receives
+   100–200 Packet-Ins/s with an event backlog near 20. During it, it receives 470–650/s, the
+   backlog sits at 100–116 of 128, Ryu runs at 62–98 % of a core, and Open vSwitch drops
+   17,000–99,000 controller messages per run (`rconn_overflow`). Refused flows install nothing,
+   so each of their later packets is another Packet-In. This hits every defense, including
+   none. It also explains the ping loss on D2 (19–35 % in all four defenses). One laptop's Ryu
+   (about 500 Packet-Ins/s) is a limit of this testbed, not a property of a defense.
+4. **Fast refresh (X1, D1) is a control-plane limit here.** Testbed / simulator harm: none
+   59.4 / 78.5, DMS-BTT 9.7 / 25.5, v2.1 53.0 / 63.0, v2.1 + PortGuard 6.3 / 0.01 %, with 15–38 %
+   of benign Packet-Ins lost in every run. The order of the defenses holds (PortGuard best, v2.1
+   alone fails), but the 0.01 % of the simulator is not reproduced.
+
+**Correction to §16.8 and testbed README fix 3.** Drop rules refreshed at every poll did not
+fix X1. In check run `chk2_D1_X1_dualguard_portguard`, only 49 drop rules were needed, 26 % of
+benign flows were never installed, and Ryu ran at 110 % of a core in 120–300 s. The smoke test's
+"not saturated (30 %)" was a whole-run mean. Most of the Packet-In load comes from attacker
+flows that are admitted and then trimmed at the next poll, not from refused ones.
+
+### 18.3 What the paper can claim from the testbed
+
+- **The overflow and its cure are real.** On Open vSwitch with a 3,500-entry limit, the low-rate
+  attack fills the table and harms 35–60 % of benign flows. DMS-BTT and v2.1 + PortGuard
+  bring A2 under 1 % (T1: 2.9 %) with no false alarms. v2.1 + PortGuard holds the mimicry
+  attack A4 to 2–4.7 %, where DMS-BTT reaches 14–18 % on three of four domains. This is the
+  same ranking as the simulator.
+- **Not yet claimable:** FL-DualGuard alone against A4 on a real controller (item 2 is open),
+  and any testbed number for fast refresh (item 4).
+- **Report Packet-In loss as a testbed limit** with its own column: 0.1 % without an attack and
+  5–20 % under attack, for all defenses alike.

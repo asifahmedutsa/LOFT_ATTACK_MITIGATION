@@ -1,9 +1,9 @@
 # Mininet/OVS/Ryu emulation testbed
 
 This harness validates the simulator's findings on real Open vSwitch tables. It needs
-root to run Mininet. **Status (29 Oct 2026): acceptance run 1 passed** after two
-controller fixes (below); runs 2–4 are in progress. Results are recorded in
-`docs/results_v2.md` §16.
+root to run Mininet. **Status (29 Oct 2026):** the acceptance runs passed after the
+controller fixes below, and the 48-run confirmation matrix is done. Results are in
+`docs/results_v2.md` §16 and §18.
 
 ## Fixes found by the first runs
 
@@ -23,8 +23,11 @@ controller fixes (below); runs 2–4 are in progress. Results are recorded in
    per-flow rules, 2 s hard timeout refreshed at every poll and on every refused Packet-In).
    Installing it only on refused Packet-Ins was not enough: they wait about 1 s in the
    controller queue under attack, so the rule was off half the time (check run
-   `chk_D1_X1_dualguard_portguard`). Drop rules take table entries (one per full port), which
-   the simulator does not charge. The DMS-BTT blocklist is per flow, so it stays in the
+   `chk_D1_X1_dualguard_portguard`). Refreshing it at every poll did not fix fast refresh
+   either (results_v2.md 18.2): most of the Packet-In load comes from attacker flows that are
+   admitted and trimmed at the next poll, and Ryu on this machine saturates at about
+   500 Packet-Ins/s. Drop rules take table entries (one per full port), which the simulator
+   does not charge. The DMS-BTT blocklist is per flow, so it stays in the
    controller: a per-flow drop rule would take the entry the deletion frees.
 4. **Traffic ran past the window.** Drivers sent the packets of every flow that started before
    `--duration`, so a 150 s run lasted 340 s. They now drop packets after `--duration`, as the
@@ -35,7 +38,8 @@ controller fixes (below); runs 2–4 are in progress. Results are recorded in
 Summarise a run with `python3 testbed/summarize_run.py <run_dir> [--attack-start S]`.
 `benign_harmed_pct` is the simulator's harm (refused an entry by TABLE_FULL, the defense or its
 drop rule, or evicted while still active); `benign_packet_in_lost_pct` is flows that never
-reached the controller. The minimal confirmation matrix is `bash testbed/matrix_minimal.sh`.
+reached the controller. The minimal confirmation matrix is `bash testbed/matrix_minimal.sh`; compare it with the
+simulator with `python3 testbed/compare_matrix.py`.
 Run one testbed at a time: `sudo mn -c` tears down any other running topology.
 
 ## Prerequisites (already present on this machine)
