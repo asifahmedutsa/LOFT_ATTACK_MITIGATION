@@ -1091,3 +1091,41 @@ never received an entry (6,097 of 25,354); 3,394 of 3,400 attack flows did. The 
 keeps its own refreshed entry, so its RTT does not change (38.1 ms); harm falls on new flows.
 The controller now logs which flow each TABLE_FULL refers to, so the simulator's harm metric
 (benign flows refused at least once; simulator 47.5 %) can be computed on the testbed.
+
+### 16.3 Run 2 repeated with refusal logging, and run 3: FL-DualGuard v2.1 (D1, A2, seed 4000)
+
+| | No defense (`tb_D1_A2_none_v3`) | FL-DualGuard v2.1 (`tb_D1_A2_dg`) | Simulator, v2.1 |
+|---|---|---|---|
+| Benign flows refused an entry at least once | 21.57 % | **0.41 %** | 0.26 % rejected (0.30 % harmed) |
+| TABLE_FULL errors | 31,572 | 419 | 1,661 |
+| Ping (300 probes) | 45 % loss, RTT up to 33.8 s | **0 % loss, 38.1 ms** | — |
+| Demotions | — | 8,959 (98.6 % attack flows) | 27,903 (29 benign) |
+| Benign flows whose request never reached the controller | 25.4 % | **15.3 %** | not modelled |
+| Peak / mean (100–250 s) Packet-In rate | 750 / 374 per s | 895 / 459 per s | — |
+| Controller decision time, mean / max | 21 / 71 ms | 27 / 618 ms | — |
+
+**Table protection reproduces.** With FL-DualGuard the real table stays below capacity, TABLE_FULL
+errors fall 75-fold, refusals fall from 21.6 % to 0.41 % of benign flows (simulator 0.26 %), the
+ping is unaffected, and demotions are 98.6 % attack flows.
+
+**The control plane is a second bottleneck the simulator does not model.** Under attack, many new
+benign flows produce neither an install nor a refusal: their Packet-In never reaches the
+controller. None are lost before the attack (0 % in the benign-only run and in the first 100 s of
+attacked runs). For flows starting after 150 s, 40–54 % are lost with no defense and 27–31 % with
+FL-DualGuard. The Ryu controller (Python, single-threaded) handles about 400–460 Packet-Ins per
+second while parsing a 3,000-entry flow-stats reply every second, and Open vSwitch drops Packet-Ins
+it cannot deliver. This is the Packet-In loss measured by rDefender (TIFS 2024), and it is also
+why the no-defense ping degraded in one run (its entries expired while its packets waited in the
+controller queue) but not in an identical earlier run.
+
+**Consequences.**
+
+1. The simulator's harm figures assume a controller that never loses Packet-Ins. The paper must
+   report Packet-In loss alongside table-level harm (experiment E13), and state the controller
+   capacity under which the simulator's numbers hold.
+2. FL-DualGuard lowers Packet-In loss (25.4 % → 15.3 % of benign flows) but adds Packet-In load
+   (demoted attack flows reinstall). PortGuard's refusals would add more (step 4b measured about
+   3,400 refused attack Packet-Ins per second in simulation); a per-port Packet-In meter is needed.
+3. Before scaling the testbed matrix: confirm where Packet-Ins are dropped (OVS coverage counters
+   `ofproto/…` before and after a run), and reduce controller cost (poll stats less often under
+   load or filter them by cookie; a compiled controller such as ONOS or ODL for comparison).
