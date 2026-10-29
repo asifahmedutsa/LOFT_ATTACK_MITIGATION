@@ -5,7 +5,8 @@ hosts and two attackers per switch. Spoofing changes a packet's source IP, not
 the port it arrives on, so the port is the identity an attacker cannot forge.
 
 Scenarios (benign flows are mapped to ports by client address, so one client
-always uses one port):
+always uses one port; for replayed traces the client is the flow's anchor, see
+trace.anchors):
 
   dedicated    4 benign ports; attacker a on its own port 4 + a (DMS-BTT topology)
   shared       benign clients spread over all 6 ports; attacker a also on port 4 + a
@@ -33,7 +34,9 @@ def assign_ports(traffic, scenario="dedicated"):
         raise ValueError("traffic has no flow_owner; build it with build_traffic")
     nb = N_BENIGN_PORTS[scenario]
     own = traffic.flow_owner
-    port = (_mix(traffic.flow_src) % np.uint64(nb)).astype(np.int16)
+    # A trace replay ties each flow to its user host (both directions of a client).
+    key = traffic.flow_src if traffic.flow_anchor is None else traffic.flow_anchor
+    port = (_mix(key) % np.uint64(nb)).astype(np.int16)
     att = own >= 0
     if scenario == "distributed":
         fid = np.flatnonzero(att)

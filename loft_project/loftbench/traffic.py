@@ -10,8 +10,10 @@ from dataclasses import dataclass
 import numpy as np
 
 from .config import FLOW_KINDS, AttackVariant, DomainProfile
+from .trace import TraceProfile, generate_trace_benign
 
 ATTACK_KIND = len(FLOW_KINDS)  # kind code for attack flows
+TRACE_KIND = ATTACK_KIND + 1   # kind code for benign flows replayed from a pcap trace
 KIND_CODE = {k: i for i, k in enumerate(FLOW_KINDS)}
 
 
@@ -26,6 +28,7 @@ class Traffic:
     attack_active: list      # [(t_on, t_off)] intervals with attack refreshes
     flow_owner: np.ndarray = None  # int8 per flow id: -1 benign, else attacker index
     flow_port: np.ndarray = None   # int16 ingress port per flow id (see ports.py)
+    flow_anchor: np.ndarray = None  # int64 user-host address per flow (trace replay), else None
 
     @property
     def n_flows(self):
@@ -215,10 +218,14 @@ def generate_attack(variant: AttackVariant, start: float, duration: float,
             np.zeros(0, dtype=np.int64), [])
 
 
-def build_traffic(profile: DomainProfile, domain_idx: int, variant, seed: int,
+def build_traffic(profile, domain_idx: int, variant, seed: int,
                   duration: float, attack_start: float) -> Traffic:
     rb = _rng("benign", profile.name, seed)
-    bt, bf, bs, bsrc, bkind = generate_benign(profile, duration, domain_idx, rb)
+    banc = None
+    if isinstance(profile, TraceProfile):
+        bt, bf, bs, bsrc, bkind, banc = generate_trace_benign(profile, duration, rb)
+    else:
+        bt, bf, bs, bsrc, bkind = generate_benign(profile, duration, domain_idx, rb)
     n_b = len(bsrc)
     owner = []
     if variant is not None:
@@ -238,5 +245,7 @@ def build_traffic(profile: DomainProfile, domain_idx: int, variant, seed: int,
     flow_attack = np.concatenate([np.zeros(n_b, bool), np.ones(len(asrc), bool)])
     flow_kind = np.concatenate([bkind, np.full(len(asrc), ATTACK_KIND, np.int8)])
     flow_owner = np.concatenate([np.full(n_b, -1, np.int8), np.array(owner, np.int8)])
-    return Traffic(t[order], fid[order], size[order], flow_attack,
-                   np.concatenate([bsrc, asrc]), flow_kind, intervals, flow_owner)
+    flow_src = np.concatenate([bsrc, asrc])
+    flow_anchor = None if banc is None else np.concatenate([banc, asrc])
+    return Traffic(t[order], fid[order], size[order], flow_attack, flow_src, flow_kind,
+                   intervals, flow_owner, flow_anchor=flow_anchor)

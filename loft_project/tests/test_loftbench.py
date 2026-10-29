@@ -345,3 +345,68 @@ def test_portguard_gated_and_scoped_modes():
     assert gated == []
     # Scoped shows the inner only entries of the over-quota attacker port (flows 4-19).
     assert scoped and all(s and s <= set(range(4, 20)) for _, s in scoped)
+
+
+def _write_pcap(path, pkts):
+    """pkts: (ts, eth_type_bytes, ip_payload_bytes or None, orig_len)."""
+    import struct
+    with open(path, "wb") as f:
+        f.write(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1))
+        for ts, etype, ip, orig in pkts:
+            frame = b"\x00" * 12 + etype + (ip or b"")
+            sec = int(ts)
+            f.write(struct.pack("<IIII", sec, int(round((ts - sec) * 1e6)), len(frame), orig))
+            f.write(frame)
+
+
+def _ipv4(src, dst, proto, sport=0, dport=0):
+    import struct
+    hdr = struct.pack("!BBHHHBBHII", 0x45, 0, 28, 0, 0, 64, proto, 0, src, dst)
+    return hdr + struct.pack("!HH", sport, dport) + b"\x00" * 4
+
+
+def test_pcap_reader_groups_directional_5tuple_flows(tmp_path):
+    from loftbench.pcapflows import read_pcap, to_flows
+    p = tmp_path / "t.pcap"
+    _write_pcap(p, [
+        (10.0, b"\x08\x00", _ipv4(1, 2, 17, 5000, 53), 80),
+        (10.5, b"\x08\x00", _ipv4(2, 1, 17, 53, 5000), 120),     # reverse direction: new flow
+        (11.0, b"\x08\x00", _ipv4(1, 2, 17, 5000, 53), 90),
+        (11.2, b"\x86\xdd", b"\x60" + b"\x00" * 40, 100),         # IPv6: skipped
+        (12.0, b"\x08\x00", _ipv4(3, 2, 6, 40000, 80), 1500),
+    ])
+    cols = read_pcap([str(p)])
+    assert cols["skipped"] == 1
+    fl = to_flows(cols)
+    assert fl["pkt_t"].tolist() == [0.0, 0.5, 1.0, 2.0]
+    assert fl["pkt_fid"].tolist() == [0, 1, 0, 2]
+    assert fl["pkt_size"].tolist() == [80, 120, 90, 1500]      # wire lengths
+    assert fl["flow_src"].tolist() == [1, 2, 3]
+
+
+def test_trace_replay_rate_seed_and_wraparound():
+    from loftbench.trace import replay
+    # A 100 s trace at 10 pps: 500 two-packet flows, one every 0.2 s.
+    t = np.repeat(np.arange(500) * 0.2, 2) + np.tile([0.0, 0.1], 500)
+    tr = dict(pkt_t=t, pkt_fid=np.repeat(np.arange(500), 2), pkt_size=np.full(1000, 100),
+              flow_src=np.arange(500) + 7)
+    a = replay(tr, 120.0, 5.0, np.random.default_rng(3))         # stretched 2x: 200 s pass
+    b = replay(tr, 120.0, 5.0, np.random.default_rng(3))
+    assert all(np.array_equal(x, y) for x, y in zip(a, b))
+    ts, fid, size, src, anc = a
+    assert np.array_equal(anc, src)                              # default anchor = source
+    assert ts.min() >= 0 and ts.max() < 120.0
+    assert abs(len(ts) / 120.0 - 5.0) < 0.3                     # target rate
+    assert len(src) == fid.max() + 1 and set(src.tolist()) <= set(range(7, 507))
+    # Every flow keeps its 0.1 s gap stretched to about 0.2 s (no wrap duplicates).
+    for f in np.unique(fid)[:50]:
+        g = ts[fid == f]
+        assert len(g) == 1 or abs(g[1] - g[0] - 0.2) < 1e-3
+
+
+def test_trace_anchor_keeps_both_directions_of_a_client_together():
+    from loftbench.trace import anchors
+    c, server, inner = (172 << 24) | (16 << 16) | 5, (8 << 24) | 8, (10 << 24) | 9
+    tr = dict(flow_src=np.array([c, server, c, inner]), flow_dst=np.array([server, c, inner, c]))
+    assert anchors(tr, "private").tolist() == [c, c, c, inner]
+    assert anchors(tr, "src").tolist() == tr["flow_src"].tolist()
