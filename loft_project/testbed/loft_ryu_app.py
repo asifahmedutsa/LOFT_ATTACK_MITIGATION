@@ -22,10 +22,13 @@ Environment variables:
   LOFT_LEAN         1 (default) = lean Packet-In handling, 0 = acceptance runs 1-3 behaviour:
                     no repeat install of a flow within 0.5 s, 1 s back-off after TABLE_FULL,
                     and slow-path packets output directly instead of resubmitted to the table
-  LOFT_DROP_RULES   1 (default) = enforce a refusal in the switch: a drop rule (priority
-                    DROP_PRIO, hard timeout DROP_S) for the refused host (PortGuard, by source
-                    MAC = access port) or source address (DMS-BTT blocklist), so the refused
-                    traffic stops reaching the controller; 0 = refuse in the controller only
+  LOFT_DROP_RULES   1 (default) = enforce PortGuard's quota in the switch: while an access
+                    port's quota is full, a drop rule for that port's host (by source MAC,
+                    priority DROP_PRIO, hard timeout DROP_S) keeps its new flows from reaching
+                    the controller; refreshed at every poll and on every refused Packet-In.
+                    0 = refuse in the controller only. The DMS-BTT blocklist is per flow (a
+                    drop rule would take the entry it frees), so it always refuses in the
+                    controller.
 """
 import csv
 import json
@@ -52,7 +55,7 @@ N_PORTS = 64          # access-port ids learned at run time; OTHER_PORT for unkn
 OTHER_PORT = N_PORTS - 1
 PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
-DROP_S = 1            # drop-rule hard timeout: the defense re-decides at most once per second
+DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
 DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard")
 
 
@@ -130,9 +133,8 @@ class LoftController(app_manager.RyuApp):
         self._parts = []
         self.xid_key = {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
-        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1"
-        # A DMS-BTT blocklist refuses source addresses; PortGuard refuses access ports.
-        self.drop_by_source = isinstance(self.defense, DMSBTT)
+        self.pg = self.defense if isinstance(self.defense, PortGuard) else None
+        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and self.pg is not None
         self.drop_until, self.drop_xids = {}, set()
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = 0
@@ -233,8 +235,8 @@ class LoftController(app_manager.RyuApp):
                 # the simulator.
                 self.cnt["blocked"] += 1
                 self.fw.writerow([round(t, 3), "blocked", *k])
-                if self.drop_rules:
-                    self._drop_rule(dp, eth.src, ip.src, now)
+                if self.drop_rules and self.port_of[fid] != OTHER_PORT:
+                    self._drop_rule(dp, eth.src, now)
                 return
             else:
                 idle = int(round(float(self.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
@@ -258,25 +260,27 @@ class LoftController(app_manager.RyuApp):
         dp.send_msg(p.OFPPacketOut(datapath=dp, buffer_id=msg.buffer_id, in_port=in_port,
                                    actions=actions, data=data))
 
-    def _drop_rule(self, dp, mac, src, now):
-        """Enforce a refusal in the switch for DROP_S seconds.
+    def _drop_rule(self, dp, mac, now, refresh=False):
+        """Drop the host's new IPv4 flows in the switch for DROP_S seconds.
 
         A refused flow gets no rule, so without this every later packet of the refused host
         is another Packet-In: against the fast-refresh attacker Open vSwitch then drops
-        controller messages and benign flows go uninstalled (results_v2.md 16.8)."""
-        field, value = ("ipv4_src", src) if self.drop_by_source else ("eth_src", mac)
-        if now < self.drop_until.get(value, 0.0):
+        controller messages and benign flows go uninstalled (results_v2.md 16.8). Installing
+        only on a refused Packet-In is not enough, because Packet-Ins wait in the controller's
+        queue for about a second under attack; hence the refresh at every poll."""
+        if not refresh and now < self.drop_until.get(mac, 0.0):
             return
-        self.drop_until[value] = now + DROP_S
+        self.drop_until[mac] = now + DROP_S
         p, o = dp.ofproto_parser, dp.ofproto
-        msg = p.OFPFlowMod(datapath=dp, priority=DROP_PRIO, match=p.OFPMatch(eth_type=0x0800, **{field: value}),
+        # OFPFC_ADD of an identical match and priority replaces the rule and resets its timeout.
+        msg = p.OFPFlowMod(datapath=dp, priority=DROP_PRIO, match=p.OFPMatch(eth_type=0x0800, eth_src=mac),
                            instructions=[], hard_timeout=DROP_S, command=o.OFPFC_ADD)
         dp.send_msg(msg)
         if len(self.drop_xids) > 4096:       # errors arrive within milliseconds; keep it small
             self.drop_xids.clear()
         self.drop_xids.add(msg.xid)
         self.cnt["drop_rules"] += 1
-        self.fw.writerow([round(now - self.t0, 3), "drop_rule", value, "", "", "", ""])
+        self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", ""])
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
@@ -346,6 +350,15 @@ class LoftController(app_manager.RyuApp):
                 for f in np.unique(np.asarray(arr, np.int64)):
                     self._delete(int(f))
                     self.cnt[kind] += 1
+        if self.drop_rules:
+            # Ports whose quota is full refuse every new flow until the next poll.
+            full = np.flatnonzero(np.isfinite(self.pg.quota) & (self.pg.used >= self.pg.quota))
+            if len(full):
+                macs = {port: mac for mac, port in self.mac_to_port.get(self.access_dpid, {}).items()}
+                now = time.time()
+                for port in full:
+                    if port != OTHER_PORT and port in macs:
+                        self._drop_rule(self.dp, macs[port], now, refresh=True)
         ms = 1000 * (time.perf_counter() - t_start)
         c = self.cnt
         # Events waiting in this app's queue: a growing backlog means the controller is

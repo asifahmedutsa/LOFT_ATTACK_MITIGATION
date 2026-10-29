@@ -18,9 +18,14 @@ controller fixes (below); runs 2–4 are in progress. Results are recorded in
 3. **Refusals enforced only in the controller** (smoke tests, results_v2.md 16.8). A refused
    flow got no rule, so every later packet of the refused host was another Packet-In; against
    the fast-refresh attacker Open vSwitch dropped 114,000 controller messages and 24 % of benign
-   flows were never installed. A refusal now installs a drop rule for 1 s (priority 5, below
-   the per-flow rules): by source MAC, i.e. access port, for PortGuard; by source address for the
-   DMS-BTT blocklist. Drop rules take table entries, which the simulator does not charge.
+   flows were never installed. While an access port's PortGuard quota is full, the controller
+   now keeps a drop rule for that port's host in the switch (by source MAC, priority 5 below the
+   per-flow rules, 2 s hard timeout refreshed at every poll and on every refused Packet-In).
+   Installing it only on refused Packet-Ins was not enough: they wait about 1 s in the
+   controller queue under attack, so the rule was off half the time (check run
+   `chk_D1_X1_dualguard_portguard`). Drop rules take table entries (one per full port), which
+   the simulator does not charge. The DMS-BTT blocklist is per flow, so it stays in the
+   controller: a per-flow drop rule would take the entry the deletion frees.
 4. **Traffic ran past the window.** Drivers sent the packets of every flow that started before
    `--duration`, so a 150 s run lasted 340 s. They now drop packets after `--duration`, as the
    simulator does. Each host now builds the simulator's whole episode and sends the flows of

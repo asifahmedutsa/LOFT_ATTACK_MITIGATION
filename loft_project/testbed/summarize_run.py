@@ -116,7 +116,7 @@ def summarize(d, attack_start):
                 if kk in first:
                     tf, mac = first[kk]
                     tf -= t0
-                    if any(tr <= tf < tr + 1.05 for v in (kk[0], mac) for tr in win.get(v, ())):
+                    if any(tr <= tf < tr + 2.05 for v in (kk[0], mac) for tr in win.get(v, ())):
                         by_rule.add(kk)
         # The simulator's harm: refused an entry (TABLE_FULL, the defense, or its drop rule),
         # or evicted while still active.
