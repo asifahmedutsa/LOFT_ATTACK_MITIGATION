@@ -29,6 +29,12 @@ Environment variables:
                     0 = refuse in the controller only. The DMS-BTT blocklist is per flow (a
                     drop rule would take the entry it frees), so it always refuses in the
                     controller.
+  LOFT_INSTALL_CLOCK controller (default) = each entry's install time is when the controller
+                    sent its flow-mod; switch = poll time minus the entry's duration (the
+                    matrix of results_v2.md 18). The poll time is when Ryu processes the
+                    stats reply, which lags the switch by a varying queueing delay under load,
+                    so with "switch" the install time moves from poll to poll and the feature
+                    tracker restarts the history of entries that are not new.
 """
 import csv
 import json
@@ -127,6 +133,8 @@ class LoftController(app_manager.RyuApp):
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
+        self.install_clock = os.environ.get("LOFT_INSTALL_CLOCK", "controller")
+        self.install_t = np.zeros(MAX_FLOWS)
         self.defense.reset({"cfg": None, "n_flows": MAX_FLOWS, "flow_src": self.src_of,
                             "flow_port": self.port_of, "n_ports": N_PORTS})
         self.admit = getattr(self.defense, "admit_filter", None)
@@ -150,7 +158,8 @@ class LoftController(app_manager.RyuApp):
         self.log = open(log, "w", newline="")
         self.w = csv.writer(self.log)
         self.w.writerow(["t", "entries", "packet_in", "table_full", "installs", "deletes",
-                         "demotes", "decision_ms", "event_backlog", "blocked", "drop_rules"])
+                         "demotes", "decision_ms", "event_backlog", "blocked", "drop_rules",
+                         "fresh"])
         self.flowlog = open(log.replace(".csv", "_flows.csv"), "w", newline="")
         self.fw = csv.writer(self.flowlog)
         self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport"])
@@ -243,6 +252,7 @@ class LoftController(app_manager.RyuApp):
                 fm = self._send_flow(dp, self._match(p, k), actions, max(idle, 1))
                 self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
                 self.last_install[k] = now
+                self.install_t[fid] = round(t, 3)
                 self.cnt["installs"] += 1
                 self.fw.writerow([round(t, 3), "install", *k])
                 # Packet-Out through the table so the triggering packet is counted.
@@ -335,7 +345,12 @@ class LoftController(app_manager.RyuApp):
             inst.append(t - s.duration_sec - s.duration_nsec * 1e-9)
         fids = np.array(fids, np.int64)
         pk, by = np.array(pk, np.int64), np.array(by, np.int64)
-        inst = np.round(np.array(inst, float), 1)
+        if self.install_clock == "switch":
+            inst = np.round(np.array(inst, float), 1)
+        else:
+            inst = self.install_t[fids]
+        # Entries the tracker treats as new this poll (history restarted).
+        fresh = int((self.tracker.seen_install[fids] != inst).sum())
         X, dms, state = self.tracker.observe(t, fids, pk, by, inst,
                                              self.cnt["installs"] - self._installs_seen)
         self._installs_seen = self.cnt["installs"]
@@ -366,7 +381,7 @@ class LoftController(app_manager.RyuApp):
         backlog = self.events.qsize() if hasattr(self, "events") else -1
         self.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
                          c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"],
-                         c["drop_rules"]])
+                         c["drop_rules"], fresh])
         self.log.flush()
         self.flowlog.flush()
 

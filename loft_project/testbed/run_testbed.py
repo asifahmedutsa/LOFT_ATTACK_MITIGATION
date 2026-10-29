@@ -65,6 +65,8 @@ def main():
                     help="skip Open vSwitch counters and CPU sampling")
     ap.add_argument("--legacy-controller", action="store_true",
                     help="Packet-In handling of acceptance runs 1-3 (LOFT_LEAN=0)")
+    ap.add_argument("--install-clock", default="controller", choices=["controller", "switch"],
+                    help="entry install times for the features (LOFT_INSTALL_CLOCK)")
     ap.add_argument("--controller-queue", type=int, default=512,
                     help="Open vSwitch queue to each controller, messages (OVS default 100; 0 = leave)")
     a = ap.parse_args()
@@ -83,6 +85,7 @@ def main():
                    LOFT_MODEL=os.path.join(a.model_dir, f"{a.model_prefix}_{dm['name']}.json"),
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),
                    LOFT_LEAN="0" if a.legacy_controller else "1",
+                   LOFT_INSTALL_CLOCK=a.install_clock,
                    PYTHONPATH=ROOT)
         ctrl.append(subprocess.Popen(
             [a.ryu, "--ofp-tcp-listen-port", str(dm["port"]), os.path.join(HERE, "loft_ryu_app.py")],
