@@ -1,0 +1,62 @@
+#!/bin/bash
+# loft-testbed: run one Mininet/OVS/Ryu testbed experiment as root, with validated options only.
+#
+# Installed root-owned at /usr/local/sbin/loft-testbed by testbed/root/install.sh, together with a
+# root-owned snapshot of the code, models and Ryu packages in /opt/loft-testbed. A sudoers rule lets
+# one user run this file without a password; nothing it runs as root can be changed without root.
+#
+#   sudo loft-testbed --domains D1 --variant A2 --defense dualguard --out tb_D1_A2_dg
+#   sudo loft-testbed cleanup          # same as: mn -c
+set -euo pipefail
+export PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+unset PYTHONPATH PYTHONHOME PYTHONSTARTUP PYTHONUSERBASE LD_PRELOAD LD_LIBRARY_PATH
+
+BASE=/opt/loft-testbed
+OUTROOT="@OUTROOT@"          # replaced at install time, e.g. /home/<user>/loft-runs
+OWNER="@OWNER@"              # replaced at install time
+
+die() { echo "loft-testbed: $*" >&2; exit 2; }
+
+if [ "${1:-}" = "cleanup" ] && [ $# -eq 1 ]; then
+    exec mn -c
+fi
+
+args=()
+name=""
+while [ $# -gt 0 ]; do
+    opt="$1"
+    case "$opt" in
+        --no-diag|--legacy-controller)
+            args+=("$opt"); shift; continue ;;
+    esac
+    [ $# -ge 2 ] || die "missing value for $opt"
+    val="$2"
+    case "$opt" in
+        --domains)   [[ "$val" =~ ^(D[1-3]|T[1-3])(,(D[1-3]|T[1-3])){0,2}$ ]] || die "bad --domains" ;;
+        --variant)   [[ "$val" =~ ^A[1-7]$ ]] || die "bad --variant" ;;
+        --defense)   [[ "$val" =~ ^(none|dualguard)$ ]] || die "bad --defense" ;;
+        --seed)      [[ "$val" =~ ^[0-9]{1,6}$ ]] || die "bad --seed" ;;
+        --attack-start|--duration)
+                     [[ "$val" =~ ^[0-9]{1,6}(\.[0-9]{1,3})?$ ]] || die "bad $opt" ;;
+        --capacity|--controller-queue)
+                     [[ "$val" =~ ^[0-9]{1,5}$ ]] || die "bad $opt" ;;
+        --out)       [[ "$val" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$ ]] || die "bad --out (a run name)"
+                     name="$val"; shift 2; continue ;;
+        *)           die "option not allowed: $opt" ;;
+    esac
+    args+=("$opt" "$val")
+    shift 2
+done
+[ -n "$name" ] || die "--out <run name> is required"
+[ ! -e "$OUTROOT/$name" ] || die "$OUTROOT/$name already exists; choose a new run name"
+
+mn -c >/dev/null 2>&1 || true
+install -d -o "$OWNER" -m 0755 "$OUTROOT"
+cd "$BASE/code"
+status=0
+/usr/bin/python3 "$BASE/code/testbed/run_testbed.py" "${args[@]}" \
+    --out "$OUTROOT/$name" --model-dir "$BASE/code/results/v21/exported" \
+    --ryu "$BASE/bin/ryu-manager" --python "$BASE/bin/python38" || status=$?
+chown -R "$OWNER" "$OUTROOT/$name" || true
+mn -c >/dev/null 2>&1 || true
+exit $status
