@@ -1,9 +1,23 @@
 # Mininet/OVS/Ryu emulation testbed
 
 This harness validates the simulator's findings on real Open vSwitch tables. It needs
-root to run Mininet. **Status: written and syntax-checked, but not yet executed**,
-because the development session had no sudo. Running it is the main remaining step
-before submission.
+root to run Mininet. **Status (29 Oct 2026): acceptance run 1 passed** after two
+controller fixes (below); runs 2–4 are in progress. Results are recorded in
+`docs/results_v2.md` §16.
+
+## Fixes found by the first runs
+
+1. **Layer-2 rules swallowed IP traffic.** ARP learning installed `in_port, eth_dst`
+   rules that also matched IPv4, so after the first ping no new flow ever missed on the
+   monitored switch (6 installs in a 300 s run). The monitored switch now installs
+   layer-2 rules for non-IP traffic only; access switches keep plain layer-2 forwarding.
+2. **Multipart flow-stats replies.** OVS splits large flow-stats replies into parts of
+   about 550 entries, and the controller treated each part as the whole table (it never
+   saw more than 547 entries). It now accumulates parts until the last one
+   (`OFPMPF_REPLY_MORE` cleared) before computing features or acting.
+
+Summarise a run with `python3 testbed/summarize_run.py <run_dir> [--attack-start S]`.
+Run one testbed at a time: `sudo mn -c` tears down any other running topology.
 
 ## Prerequisites (already present on this machine)
 

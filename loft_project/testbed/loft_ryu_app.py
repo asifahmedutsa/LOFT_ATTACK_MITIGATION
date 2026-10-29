@@ -81,6 +81,7 @@ class LoftController(app_manager.RyuApp):
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
         self.demoted = set()
+        self._parts = []
         self._installs_seen = 0
         self.dp = None
         self.t0 = time.time()
@@ -158,9 +159,15 @@ class LoftController(app_manager.RyuApp):
             self.fw.writerow([round(time.time() - self.t0, 3), "install", *k])
             # Packet-Out through the table so the triggering packet is counted.
             actions = [p.OFPActionOutput(o.OFPP_TABLE)]
-        elif out != o.OFPP_FLOOD and ip is None:
+        elif out != o.OFPP_FLOOD and dp.id != self.dpid:
+            # Access switches: plain L2 forwarding for everything.
             self._send_flow(dp, p.OFPMatch(in_port=in_port, eth_dst=eth.dst), actions, 30,
                             priority=1)
+        elif out != o.OFPP_FLOOD and ip is None:
+            # Monitored switch: L2 rules for non-IP only (e.g. ARP), so every new IPv4
+            # flow misses and gets its own per-5-tuple entry.
+            self._send_flow(dp, p.OFPMatch(in_port=in_port, eth_dst=eth.dst, eth_type=eth.ethertype),
+                            actions, 30, priority=1)
         data = msg.data if msg.buffer_id == o.OFP_NO_BUFFER else None
         dp.send_msg(p.OFPPacketOut(datapath=dp, buffer_id=msg.buffer_id, in_port=in_port,
                                    actions=actions, data=data))
@@ -181,10 +188,16 @@ class LoftController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def stats(self, ev):
+        # OVS splits a large flow-stats reply into several parts (about 550 entries
+        # each); act only once the last part has arrived.
+        self._parts.extend(ev.msg.body)
+        if ev.msg.flags & ev.msg.datapath.ofproto.OFPMPF_REPLY_MORE:
+            return
+        body, self._parts = self._parts, []
         t = time.time() - self.t0
         t_start = time.perf_counter()
         fids, pk, by, inst = [], [], [], []
-        for s in ev.msg.body:
+        for s in body:
             m = s.match
             if s.priority != PRIO or "ipv4_src" not in m:
                 continue

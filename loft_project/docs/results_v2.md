@@ -1039,3 +1039,32 @@ Benign-only episodes (no attack): 0.059 % harmed with step 4b, 0.037 % with v2.1
 5. **Cost.** Refused attack installs become Packet-Ins: about 3,400/s under the fastest
    attackers (v2.1 alone: about 980/s). A hardware deployment needs a per-port meter on
    table misses; this belongs in the testbed measurements (E13).
+
+## 16. Emulation testbed (Mininet 2.3.0, Open vSwitch 3.3.9, Ryu 4.34)
+
+Topology as DMS-BTT: per domain a monitored switch (3,500-entry table, `overflow_policy=refuse`,
+idle timeout 10 s) behind an access switch with 4 benign hosts and 2 attackers; the same
+traffic generator as the simulator, sent with raw sockets. Run directories are in
+`~/loft-runs/` (not in git); `testbed/summarize_run.py` produces the figures below.
+
+**Two controller bugs found and fixed before any result** (`testbed/README.md`): layer-2 rules
+that swallowed IP traffic, and multipart flow-stats replies read as the whole table. Runs
+before the fixes (`tb_D1_benign`, `_v2`, `_v3`) are not used; `_v2` was also corrupted by a
+second concurrent run.
+
+### 16.1 Acceptance run 1: benign only (D1, seed 4000, no defense) — passed
+
+| Seconds | Simulator entries | Testbed entries |
+|---|---|---|
+| 0–50 | 1,008 | 998 |
+| 50–100 | 1,438 | 1,431 |
+| 100–150 | 1,537 | 1,530 |
+| 150–200 | 1,490 | 1,485 |
+| 200–250 | 1,526 | 1,521 |
+| 250–300 | 1,502 | 1,496 |
+
+From 60 s on: testbed mean 1,498 vs simulator 1,505 entries (ratio 0.996, RMSE 9 entries).
+No TABLE_FULL errors; ping 300/300 received, RTT 38.1 ms (the topology's 2 × 19 ms);
+all 25,354 benign flows sent and installed (25,366 distinct entries including pings);
+controller decision time mean 10 ms, max 48 ms. The simulator's table semantics (one entry
+per 5-tuple, 10 s idle timeout) reproduce on real OVS.
