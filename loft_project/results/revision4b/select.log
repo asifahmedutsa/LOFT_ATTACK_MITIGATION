@@ -1,0 +1,14 @@
+  [select] 300/1215 episodes, 304s
+  [select] 600/1215 episodes, 610s
+  [select] 900/1215 episodes, 941s
+  [select] 1200/1215 episodes, 1280s
+               cfg_id  harm_standard  harm_benign_only  harm_gaps  occ_gaps  overflow_gaps  violation  feasible  ref_harm_standard  ref_harm_benign_only
+     gated-equal-q0.9         0.0390            0.0004     0.0872    0.4385         1.6571     1.9528     False             0.0145                0.0004
+    gated-equal-q0.95         0.0335            0.0004     0.0658    0.4720         2.1095     1.3951     False             0.0145                0.0004
+  gated-weighted-q0.9         0.0137            0.0004     0.0094    0.4183         1.6746     0.0000      True             0.0145                0.0004
+ gated-weighted-q0.95         0.0184            0.0004     0.0111    0.4629         2.7238     0.0000      True             0.0145                0.0004
+    scoped-equal-q0.9         0.0223            0.0004     0.0836    0.4356         2.3873     0.2733     False             0.0145                0.0004
+   scoped-equal-q0.95         0.0181            0.0004     0.0625    0.4690         2.8921     0.0000      True             0.0145                0.0004
+ scoped-weighted-q0.9         0.0109            0.0004     0.0115    0.4141         2.3159     0.0000      True             0.0145                0.0004
+scoped-weighted-q0.95         0.0130            0.0004     0.0129    0.4593         3.4556     0.0000      True             0.0145                0.0004
+selected gated-weighted-q0.9
