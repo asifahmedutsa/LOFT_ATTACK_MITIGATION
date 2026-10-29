@@ -20,7 +20,6 @@ for d in D1 D2 D3 T1; do                      # main table
         for f in $DEF4; do specs+=("$d $v $f 4000"); done
     done
 done
-for f in $DEF4; do specs+=("D1 X1 $f 4000"); done                         # fast refresh
 for d in D1 T1; do                                                        # false alarms
     for f in dualguard dualguard+portguard; do specs+=("$d benign $f 4000"); done
 done
@@ -29,6 +28,10 @@ for s in 4001 4002; do                                                    # seed
         for f in dms-btt dualguard+portguard; do specs+=("D1 $v $f $s"); done
     done
 done
+
+# Fast refresh last: on this machine it saturates Ryu (about 500 Packet-Ins/s) whatever the
+# defense (results_v2.md 16.8); these runs record that limit.
+for f in $DEF4; do specs+=("D1 X1 $f 4000"); done
 
 name_of() { echo "m1_$1_$2_${3//+/_}_s$4"; }
 
