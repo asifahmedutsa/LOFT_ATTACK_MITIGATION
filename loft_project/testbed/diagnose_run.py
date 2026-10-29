@@ -46,8 +46,8 @@ def ip(x):
     return ".".join(str((int(x) >> s) & 255) for s in (24, 16, 8, 0))
 
 
-def never_installed_by_start(d, domain, k, seed):
-    t, fid, _, src, _ = generate_benign(DOMAINS[domain], 300.0, DOMAIN_IDX[domain],
+def never_installed_by_start(d, domain, k, seed, duration=300.0):
+    t, fid, _, src, _ = generate_benign(DOMAINS[domain], duration, DOMAIN_IDX[domain],
                                         _rng("benign", DOMAINS[domain].name, seed))
     first = np.full(fid.max() + 1, np.inf)
     np.minimum.at(first, fid, t)
@@ -60,7 +60,7 @@ def never_installed_by_start(d, domain, k, seed):
     st = np.array(list(k2t.values()))
     miss = np.array([kk not in inst for kk in k2t])
     return {f"{lo}-{lo + 50}s": round(float(100 * miss[(st >= lo) & (st < lo + 50)].mean()), 1)
-            for lo in range(0, 300, 50)}, round(float(100 * miss.mean()), 2)
+            for lo in range(0, int(duration), 50)}, round(float(100 * miss.mean()), 2)
 
 
 def main():
@@ -69,6 +69,7 @@ def main():
     ap.add_argument("--domain", default="D1")
     ap.add_argument("--k", type=int, default=1, help="position of the domain in --domains")
     ap.add_argument("--seed", type=int, default=4000)
+    ap.add_argument("--duration", type=float, default=300.0, help="the run's --duration")
     a = ap.parse_args()
     d = os.path.expanduser(a.run_dir)
     b, e = (coverage(os.path.join(d, f"ovs_coverage_{w}.txt")) for w in ("before", "after"))
@@ -86,7 +87,7 @@ def main():
     last = r[-1]
     print(f"Packet-Ins handled {last['packet_in']}, installs {last['installs']}, "
           f"TABLE_FULL {last['table_full']}")
-    by, total = never_installed_by_start(d, a.domain, a.k, a.seed)
+    by, total = never_installed_by_start(d, a.domain, a.k, a.seed, a.duration)
     print(f"benign flows never installed: {total} % overall; by flow start time: {by}")
 
 

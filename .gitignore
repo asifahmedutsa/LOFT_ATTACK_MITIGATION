@@ -14,3 +14,4 @@ loft_project/catboost_info/
 loft_project/results/revision*/models.pkl
 loft_project/results/revision*/train_runs.pkl
 loft_project/traces/
+loft_project/results/revision*/trace_runs.pkl

@@ -1,0 +1,4 @@
+domain,DMS-BTT tuned + blocklist (trained on trace),Local MLP + public library (trained on trace),No defense,FL-DualGuard v2.1 (transferred),v2.1 + PortGuard (step 4b)
+T1,0.0,0.0,0.0,0.0,0.0
+T2,0.0,0.0,0.0,0.0,0.0
+T3,0.0,0.057,0.0,0.411,0.411

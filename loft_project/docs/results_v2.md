@@ -1235,3 +1235,80 @@ flows without a defense and 4.1–7.6 % with FL-DualGuard: the defense neither c
 The ping, which needs no new entry, still loses up to 29 % of probes in D2, where the IoT traffic's
 many periodic flows keep the controller busiest. Total benign impact (refused or never installed)
 falls from 42–53 % to 4–8 % with FL-DualGuard.
+
+### 16.8 Smoke tests of the ported defenses (D1, seed 4000, 150 s, passwordless runner)
+
+The controller now runs the simulator's own DMS-BTT (tuned + blocklist, CatBoost models
+evaluated from JSON with exact parity), PortGuard (step 4b setting) and DualGuard + PortGuard.
+Runs `~/loft-runs/smoke_*`; diagnosis with `testbed/diagnose_run.py --duration 150`.
+
+| Defense | Attack | Benign refused at least once | Never installed (Packet-In lost) | TABLE_FULL | OVS dropped controller messages | Ryu CPU (mean) | Defense actions |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT tuned + blocklist | A2 | 0.0 % | 0.0 % | 0 | 0 | 18 % | 3,921 deletes, 13,613 blocked Packet-Ins |
+| PortGuard | A2 | 0.0 % | 0.0 % | 0 | 0 | 18 % | 1,033 deletes, 2,436 blocked |
+| DualGuard + PortGuard | A2 | 0.0 % | 0.0 % | 0 | 306 | 24 % | 4,067 demotes |
+| DualGuard + PortGuard | X1 (fast refresh) | 3.9 % | **24.3 %** | 1,542 | **114,220** | 30 % | 9,922 deletes, 26,241 blocked |
+
+All four runs completed without controller errors; all three defenses act in Ryu as in the simulator.
+Against A2 every defense keeps the table clear with no benign harm.
+
+**Fast refresh breaks the testbed's control channel, not the table.** In simulation this
+combination harms 0.0–0.4 % of benign flows against X1 (§15). On the testbed 24 % of benign flows
+are never installed, all after the attack starts (0 % in 0–50 s, 27 % in 50–100 s, 47 % in
+100–150 s), because Open vSwitch drops 114,000 messages on the controller connection. Ryu is not
+saturated (30 % of a core). The cause is the enforcement mechanism. A refused or blocked flow
+gets no rule, so every attacker packet keeps coming to the controller as a Packet-In, and the
+fast-refresh attacker sends many of them. The simulator charges nothing for refused packets.
+Enforcement in the data plane (a drop or rate-limit rule per over-quota port or blocked source,
+or an OpenFlow meter on Packet-Ins) is needed before the fast-refresh results can be claimed on
+the testbed. It is not done yet.
+
+## 17. Revision 5 — the main comparison on real traces (pre-registered)
+
+Pre-registration `results/revision5/preregistration.json` (sha256 committed in d5182f9 before any
+run); benign traffic replayed from real captures (`docs/traces.md`): T1 bigFlows at 1,200 pps,
+T2 IMC-10 univ2 at 1,000 pps (FTOP's rate), T3 the same univ2 window at its native 9,000 pps.
+Dedicated-port topology, as in DMS-BTT. DMS-BTT and the local MLP are trained on each trace (seeds
+1000–1004); FL-DualGuard v2.1 is transferred from the synthetic domains and only its threshold is
+recalibrated on trace validation runs (2000–2002). Ten test seeds (9000–9009) per trace, the seven
+library variants A1–A7 and the fast-refresh sweep X0.25–X9; 2,250 episodes.
+
+### 17.1 Main table (A1–A7, DMS-BTT Table-6 format; harm = benign flows refused at least once, 95 % cluster bootstrap)
+
+| Trace | No defense | DMS-BTT tuned + blocklist (trained on trace) | Local MLP + library (trained on trace) | FL-DualGuard v2.1 (transferred) | v2.1 + PortGuard |
+|---|---|---|---|---|---|
+| T1 bigFlows | 45.3 % | 3.4 % [3.0, 3.7] | 8.3 % [7.8, 8.8] | 5.6 % [5.2, 6.0] | **2.1 %** [1.9, 2.4] |
+| T2 univ2 1k pps | 27.1 % | 0.5 % [0.4, 0.7] | **0.4 %** [0.3, 0.6] | 0.6 % [0.5, 0.7] | 0.6 % [0.5, 0.6] |
+| T3 univ2 9k pps | 45.3 % | 4.1 % [3.7, 4.5] | 8.5 % [8.0, 9.2] | **3.3 %** [2.6, 4.1] | 4.3 % [3.2, 5.4] |
+| All traces | 39.2 % | 2.7 % [2.1, 3.2] | 5.7 % [4.3, 7.1] | 3.2 % [2.4, 3.9] | **2.3 %** [1.7, 3.0] |
+
+Overflow time per run (s), all traces: none 97.3, DMS-BTT 3.9, local 14.4, v2.1 6.7, v2.1 + PortGuard
+2.0. Benign-only false alarms are 0 % except v2.1 on T3 (0.41 %). Full table with Pa, table usage,
+earliest overflow, Packet-In and TABLE_FULL: `tables/table_main_dmsbtt_format.csv`.
+
+### 17.2 Hypotheses (as registered; cluster Wilcoxon over (trace, seed), Holm for H1/H4)
+
+| | Claim | Result | |
+|---|---|---|---|
+| H1 | v2.1 transferred harms fewer benign flows than DMS-BTT trained on the trace | +0.51 points (v2.1 worse), 10 wins / 20 losses, p = 0.088 | **not supported** |
+| H2 | v2.1 transferred non-inferior to local MLP trained on the trace (≤ 0.5 points) | −2.58 points (v2.1 better), 22 / 8 | **supported** |
+| H3 | v2.1 transferred harms ≤ 3 % on each trace | T1 5.6 %, T2 0.6 %, T3 3.3 % | **not supported** |
+| H4 | PortGuard reduces harm against fast refresh (gaps ≤ 1 s) | −57.8 points, 30 / 0, p_holm = 3.7e-9 | **supported** |
+| H5 | PortGuard non-inferior on A1–A7 (≤ 0.5 points) | −0.84 points (better), 16 / 10 | **supported** |
+
+### 17.3 Reading
+
+- **Transfer without retraining is close to, not better than, per-trace DMS-BTT.** The model
+  federated on synthetic domains, given only a new threshold, lands 0.5 points behind DMS-BTT
+  trained on each trace (not significant), and 2.6 points ahead of a local model trained on
+  the trace plus the public attack library. The paper must not claim that FL-DualGuard beats DMS-BTT
+  on real traffic. The supported claim is that it reaches comparable harm without trace-specific
+  training.
+- **A4 is where every learned detector loses.** On T1, A4 harms 19.6 % (DMS-BTT), 27.0 % (v2.1) and
+  48 % (local MLP); PortGuard brings it to 1.9 %. This drives H3's failure on T1.
+- **Fast refresh defeats every detector-only defense on real traffic** (X ≤ 2: 75–85 % harm on T1
+  and T3 for DMS-BTT, local MLP and v2.1), and PortGuard alone holds it to 0.0–0.1 % (T1), 1–3 % (T2)
+  and about 6 % (T3). The combination is the best defense overall. In simulation only, see §16.8
+  for the testbed caveat.
+- **The cost of PortGuard is on T3:** at 9,000 pps the per-port quotas cut into benign ports
+  (A1–A7 harm 4.3 % against 3.3 % for v2.1 alone).
