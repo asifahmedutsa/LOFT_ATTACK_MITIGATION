@@ -62,20 +62,26 @@ def summarize(d, attack_start):
             info["final_dump_flows_lines"] = open(ff).read().strip()
         info["_refused"], info["_installed"] = refused, keys
         out[dom] = info
-    hosts, benign = {}, set()
+    hosts, benign = {}, {}
     for t in sorted(glob.glob(os.path.join(d, "truth_*.csv"))):
         with open(t) as f:
             rows = list(csv.DictReader(f))
-        hosts[os.path.basename(t)[6:-4]] = (len(rows), sum(r["label"] == "1" for r in rows))
-        benign |= {tuple(r[k] for k in ("src", "dst", "proto", "sport", "dport"))
-                   for r in rows if r["label"] == "0"}
+        h = os.path.basename(t)[6:-4]
+        hosts[h] = (len(rows), sum(r["label"] == "1" for r in rows))
+        # Hosts are named d<k>h<i>, k = position of the domain in --domains (1-based).
+        benign.setdefault(h[1:h.index("h")], set()).update(
+            tuple(r[k] for k in ("src", "dst", "proto", "sport", "dport"))
+            for r in rows if r["label"] == "0")
     # Benign flows refused an entry at least once (the simulator's rejection harm), and
-    # benign flows that never got an entry (needs no refusal log).
-    for info in out.values():
+    # benign flows that never got an entry (needs no refusal log). Domains are matched to
+    # host prefixes in sorted-name order, which equals --domains order for D1,D2,D3.
+    for k, info in enumerate(out.values(), start=1):
+        b = benign.get(str(k), set())
+        info["benign_flows"] = len(b)
         info["benign_refused_at_least_once_pct"] = round(
-            100 * len(benign & info.pop("_refused")) / max(len(benign), 1), 2)
+            100 * len(b & info.pop("_refused")) / max(len(b), 1), 2)
         info["benign_never_installed_pct"] = round(
-            100 * len(benign - info.pop("_installed")) / max(len(benign), 1), 2)
+            100 * len(b - info.pop("_installed")) / max(len(b), 1), 2)
     return out, hosts
 
 

@@ -1129,3 +1129,18 @@ controller queue) but not in an identical earlier run.
 3. Before scaling the testbed matrix: confirm where Packet-Ins are dropped (OVS coverage counters
    `ofproto/…` before and after a run), and reduce controller cost (poll stats less often under
    load or filter them by cookie; a compiled controller such as ONOS or ODL for comparison).
+
+### 16.4 Run 4: three domains at once, unseen variant A6, FL-DualGuard (`tb_all_A6_dg`) — not valid
+
+Three Ryu controllers, 21 hosts and 6 attackers on a 4-core laptop saturate the CPU. Benign
+flows were lost before the attack began (Packet-In never processed: 16.3 % in D1 and 22.4 % in
+D3 for flows starting in the first 50 s, 0 % in single-domain runs), rising to 31–51 % of all
+benign flows by the end. Because so few flows were installed, no table filled (maximum 62–81 %
+occupancy), there were no TABLE_FULL errors and almost no demotions (0, 205, 0), whereas the
+simulator overflows every domain under A6 without a defense (7.8–23.3 % harmed). The run measures
+the machine's capacity, not the attack or the defense, and is not used.
+
+**Plan.** Run domains one at a time: the federation is offline (training), and online each
+controller protects its own switch, so concurrent domains are not required by the design. Before
+the larger matrix, locate the Packet-In drops (Open vSwitch coverage counters) and reduce the Ryu
+controller's per-second cost.
