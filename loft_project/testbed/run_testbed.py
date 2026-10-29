@@ -42,7 +42,7 @@ def build(net, k, dname, port):
         net.addLink(h, s2, bw=1000, delay="2ms")
         users.append(h)
     return dict(name=dname, c=c, s1=s1, s2=s2, srv=srv, users=users, port=port,
-                dpid=int(f"{k:x}1", 16))
+                dpid=int(f"{k:x}1", 16), access_dpid=int(f"{k:x}2", 16))
 
 
 def main():
@@ -50,7 +50,8 @@ def main():
     ap.add_argument("--domains", default="D1")
     ap.add_argument("--variant", default="A2")
     ap.add_argument("--seed", type=int, default=4000)
-    ap.add_argument("--defense", choices=["none", "dualguard"], default="none")
+    ap.add_argument("--defense", default="none",
+                    choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (results/v21/exported) or fedprox (results/v2/exported)")
@@ -76,6 +77,8 @@ def main():
     ctrl = []
     for dm in doms:
         env = dict(os.environ, LOFT_DPID=str(dm["dpid"]), LOFT_DEFENSE=a.defense,
+                   LOFT_ACCESS_DPID=str(dm["access_dpid"]), LOFT_MODEL_DIR=a.model_dir,
+                   LOFT_DOMAIN=dm["name"],
                    LOFT_CAPACITY=str(a.capacity),
                    LOFT_MODEL=os.path.join(a.model_dir, f"{a.model_prefix}_{dm['name']}.json"),
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),

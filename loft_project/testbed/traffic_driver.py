@@ -21,7 +21,7 @@ import time
 import numpy as np
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from loftbench.config import DOMAINS, VARIANTS  # noqa: E402
+from loftbench.config import DOMAINS, attack_variant  # noqa: E402
 from loftbench.data import DOMAIN_IDX  # noqa: E402
 from loftbench.traffic import _rng, generate_attack, generate_benign  # noqa: E402
 
@@ -76,7 +76,7 @@ def main():
         keep = fid % n == i
         t, fid, size = t[keep], fid[keep], size[keep]
     else:
-        v = VARIANTS[a.variant]
+        v = attack_variant(a.variant)
         # Generate the whole attack exactly as the simulator does (same random stream,
         # all attackers), then keep this attacker's flows. Each attacker therefore sends
         # its own source address and 5-tuples, packet for packet as in the simulator.

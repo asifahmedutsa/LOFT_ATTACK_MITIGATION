@@ -420,3 +420,19 @@ def test_trace_keeps_longest_segment_without_long_silence():
     out = longest_segment(tr)
     assert len(out["pkt_t"]) == 10 and out["pkt_t"][0] == 0.0
     assert out["flow_src"].tolist() == [1, 2, 3] and out["pkt_fid"].max() == 2
+
+
+def test_catboost_json_matches_catboost(tmp_path):
+    from catboost import CatBoostClassifier
+    from loftbench.cbjson import CatBoostJSON
+    r = np.random.default_rng(0)
+    X = r.normal(size=(400, 3))
+    for y in ((X[:, 0] + X[:, 1] > 0).astype(int), np.digitize(X[:, 2], [-0.5, 0.5])):
+        m = CatBoostClassifier(iterations=30, depth=4, verbose=False, random_seed=0,
+                               loss_function="Logloss" if y.max() == 1 else "MultiClass")
+        m.fit(X, y)
+        p = tmp_path / "m.json"
+        m.save_model(str(p), format="json")
+        mine = CatBoostJSON(str(p))
+        assert np.abs(m.predict_proba(X) - mine.predict_proba(X)).max() < 1e-9
+        assert (np.ravel(m.predict(X)).astype(int) == mine.predict(X)).all()

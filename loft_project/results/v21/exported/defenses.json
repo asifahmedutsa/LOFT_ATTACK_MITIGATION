@@ -1,0 +1,19 @@
+{
+  "dms_blocklist": {
+    "h1": 0.9,
+    "h2": 0.6,
+    "p_thresh": 0.7,
+    "numb_mode": "bytes",
+    "blocklist_s": 60,
+    "source": "results/revision2/selected.json (B)"
+  },
+  "portguard": {
+    "mode": "gated",
+    "share": "weighted",
+    "q": 0.9,
+    "rho_q": 0.9,
+    "hold_s": 30.0,
+    "tau_s": 60.0
+  },
+  "portguard_source": "results/revision4b/selected.json"
+}

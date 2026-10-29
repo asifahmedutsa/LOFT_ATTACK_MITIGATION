@@ -249,7 +249,8 @@ class PortGuard(Defense):
         self.port = ctx["flow_port"]
         if self.port is None:
             raise ValueError("PortGuard needs traffic.flow_port (see ports.assign_ports)")
-        n_ports = int(self.port.max()) + 1
+        # A controller that learns ports as traffic arrives passes a fixed n_ports.
+        n_ports = int(ctx.get("n_ports") or int(self.port.max()) + 1)
         self.quota = np.full(n_ports, np.inf)
         self.used = np.zeros(n_ports)        # entries at last poll + installs since
         self.refused = np.zeros(n_ports, bool)

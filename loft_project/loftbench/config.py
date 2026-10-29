@@ -106,3 +106,20 @@ EXPOSURE: Dict[str, Tuple[str, ...]] = {
     "D3": ("A3", "A7"),
 }
 UNSEEN_VARIANTS = ("A6",)
+
+
+def gap_variant(g):
+    """Adaptive fast-refresh attacker (revision step 4): spoofing, size-mimicking LFTO
+    refreshing every 0.9g-g seconds; the burst rate refreshes all 1,700 flows of an
+    attacker well within a gap."""
+    return AttackVariant(f"X-gap{g:g}", 100, (0.9 * g, g), size_mode="benign", src_mode="spoof",
+                         burst_pps=max(1500.0, 1.25 * 1700 / (0.9 * g)))
+
+
+def attack_variant(key):
+    """A1-A7, or X<gap> for the fast-refresh sweep (for example X0.25, X1, X9)."""
+    if key in VARIANTS:
+        return VARIANTS[key]
+    if key.startswith("X"):
+        return gap_variant(float(key[1:]))
+    raise KeyError(key)

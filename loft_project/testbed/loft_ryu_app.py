@@ -2,20 +2,26 @@
 
 Monitored switch (dpid LOFT_DPID): reactive per-5-tuple rules with idle
 timeout, table-full handling, 1 s flow-stats polling, and an optional
-defense (FL-DualGuard policy from an exported model). Other switches do
-plain L2 learning. Uses loftbench.features so the testbed and the simulator
-share one feature extractor.
+defense. Other switches do plain L2 learning. The defenses are the
+simulator's own classes (loftbench.defenses: DualGuard, DMSBTT, PortGuard)
+and the feature extractor is loftbench.features, so the testbed runs exactly
+the code the simulator evaluates.
 
 Environment variables:
-  LOFT_DPID      monitored switch datapath id (int, default 1)
-  LOFT_DEFENSE   none | dualguard (default none)
-  LOFT_MODEL     path to exported model JSON (dualguard)
-  LOFT_LOG       CSV path for the per-second controller log
-  LOFT_CAPACITY  flow-table capacity (default 3500)
-  LOFT_IDLE      idle timeout seconds (default 10)
-  LOFT_LEAN      1 (default) = lean Packet-In handling, 0 = acceptance runs 1-3 behaviour:
-                 no repeat install of a flow within 0.5 s, 1 s back-off after TABLE_FULL,
-                 and slow-path packets output directly instead of resubmitted to the table
+  LOFT_DPID         monitored switch datapath id (int, default 1)
+  LOFT_ACCESS_DPID  access switch datapath id; its learned MAC-to-port table gives each
+                    flow's ingress (access) port for PortGuard (default: none)
+  LOFT_DEFENSE      none | dualguard | dms-btt | portguard | dualguard+portguard
+  LOFT_MODEL_DIR    directory with v21_<D>.json, dmsB_state_<D>.json, dmsB_flow_<D>.json
+                    and defenses.json (see loftbench.export_testbed)
+  LOFT_DOMAIN       domain name for the model files (D1, D2, D3)
+  LOFT_MODEL        explicit path to the v2.1 model JSON (overrides LOFT_MODEL_DIR)
+  LOFT_LOG          CSV path for the per-second controller log
+  LOFT_CAPACITY     flow-table capacity (default 3500)
+  LOFT_IDLE         idle timeout seconds (default 10)
+  LOFT_LEAN         1 (default) = lean Packet-In handling, 0 = acceptance runs 1-3 behaviour:
+                    no repeat install of a flow within 0.5 s, 1 s back-off after TABLE_FULL,
+                    and slow-path packets output directly instead of resubmitted to the table
 """
 import csv
 import json
@@ -32,10 +38,16 @@ from ryu.lib.packet import ethernet, ipv4, packet, tcp, udp
 from ryu.ofproto import ofproto_v1_3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from loftbench.cbjson import CatBoostJSON  # noqa: E402
+from loftbench.defenses import DMSBTT, DualGuard, PortGuard  # noqa: E402
 from loftbench.features import FeatureTracker  # noqa: E402
+from loftbench.sim import Defense  # noqa: E402
 
 MAX_FLOWS = 1 << 20
+N_PORTS = 64          # access-port ids learned at run time; OTHER_PORT for unknown sources
+OTHER_PORT = N_PORTS - 1
 PRIO = 10
+DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard")
 
 
 def ip2int(s):
@@ -62,41 +74,67 @@ class ExportedMLP:
         return 1 / (1 + np.exp(-np.clip(z, -30, 30)))
 
 
+def build_defense(name, model_dir, domain, model_path=None):
+    """The simulator's defense objects, configured from exported files."""
+    if name not in DEFENSES:
+        raise ValueError(f"LOFT_DEFENSE must be one of {DEFENSES}")
+    if name == "none":
+        return Defense()
+    cfg = json.load(open(os.path.join(model_dir, "defenses.json"))) if model_dir else {}
+    if name == "dms-btt":
+        b = cfg["dms_blocklist"]
+        return DMSBTT(CatBoostJSON(os.path.join(model_dir, f"dmsB_state_{domain}.json")),
+                      CatBoostJSON(os.path.join(model_dir, f"dmsB_flow_{domain}.json")),
+                      h1=b["h1"], h2=b["h2"], p_thresh=b["p_thresh"], numb_mode=b["numb_mode"],
+                      blocklist_s=b["blocklist_s"])
+    pg = cfg.get("portguard", {})
+    if name == "portguard":
+        return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
+    m = ExportedMLP(model_path or os.path.join(model_dir, f"v21_{domain}.json"))
+    k = m.knobs
+    h_crit = float(k.get("h_crit", 0.90))
+    dg = DualGuard(m, m.tau, name="dualguard", rho=k.get("rho", 0.5), t_short=k.get("t_short", 1.0),
+                   hard=h_crit <= 1.0, h_crit=h_crit, target=k.get("target", 0.80))
+    if name == "dualguard":
+        return dg
+    return PortGuard(dg, name=name, **pg)
+
+
 class LoftController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
         self.dpid = int(os.environ.get("LOFT_DPID", "1"))
+        acc = os.environ.get("LOFT_ACCESS_DPID")
+        self.access_dpid = int(acc) if acc else None
         self.capacity = int(os.environ.get("LOFT_CAPACITY", "3500"))
         self.idle = int(os.environ.get("LOFT_IDLE", "10"))
-        self.t_short = 1
-        self.defense = os.environ.get("LOFT_DEFENSE", "none")
-        self.model = ExportedMLP(os.environ["LOFT_MODEL"]) if self.defense == "dualguard" else None
-        self.rho, self.h_crit, self.target = 0.5, 0.90, 0.80
-        if self.model is not None:
-            k = self.model.knobs
-            self.rho = k.get("rho", self.rho)
-            self.t_short = int(k.get("t_short", self.t_short))
-            self.h_crit = k.get("h_crit", self.h_crit)
-            self.target = k.get("target", self.target)
+        self.defense_name = os.environ.get("LOFT_DEFENSE", "none")
+        self.defense = build_defense(self.defense_name, os.environ.get("LOFT_MODEL_DIR"),
+                                     os.environ.get("LOFT_DOMAIN", "D1"),
+                                     os.environ.get("LOFT_MODEL"))
         self.mac_to_port = {}
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
+        self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
-        self.demoted = set()
+        self.defense.reset({"cfg": None, "n_flows": MAX_FLOWS, "flow_src": self.src_of,
+                            "flow_port": self.port_of, "n_ports": N_PORTS})
+        self.admit = getattr(self.defense, "admit_filter", None)
         self._parts = []
         self.xid_key = {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = 0
+        self._tf_last = 0
         self.dp = None
         self.t0 = time.time()
-        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0)
+        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0)
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
         self.log = open(log, "w", newline="")
         self.w = csv.writer(self.log)
         self.w.writerow(["t", "entries", "packet_in", "table_full", "installs", "deletes",
-                         "demotes", "decision_ms", "event_backlog"])
+                         "demotes", "decision_ms", "event_backlog", "blocked"])
         self.flowlog = open(log.replace(".csv", "_flows.csv"), "w", newline="")
         self.fw = csv.writer(self.flowlog)
         self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport"])
@@ -137,6 +175,13 @@ class LoftController(app_manager.RyuApp):
             f.update(udp_src=sp, udp_dst=dpt)
         return p.OFPMatch(**f)
 
+    def _access_port(self, mac):
+        """Ingress access port of a source MAC, learned on the access switch."""
+        if self.access_dpid is None:
+            return OTHER_PORT
+        port = self.mac_to_port.get(self.access_dpid, {}).get(mac)
+        return port if port is not None and 0 <= port < OTHER_PORT else OTHER_PORT
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in(self, ev):
         msg = ev.msg
@@ -161,19 +206,27 @@ class LoftController(app_manager.RyuApp):
                 self.fid_of[k] = fid
                 self.key_of.append(k)
                 self.src_of[fid] = ip2int(ip.src)
+                self.port_of[fid] = self._access_port(eth.src)
             now = time.time()
+            t = now - self.t0
             if self.lean and (now - self.last_install.get(k, -1e9) < 0.5
                               or now < self.refused_until.get(k, 0.0)):
                 # Install already in flight, or refused moments ago: forward this packet
                 # on the slow path without another flow-mod.
                 pass
+            elif self.admit is not None and not self.admit(np.array([fid]), t)[0]:
+                # Refused by the defense (DMS-BTT blocklist, PortGuard quota): drop, as in
+                # the simulator.
+                self.cnt["blocked"] += 1
+                self.fw.writerow([round(t, 3), "blocked", *k])
+                return
             else:
-                idle = self.t_short if fid in self.demoted else self.idle
-                fm = self._send_flow(dp, self._match(p, k), actions, idle)
+                idle = int(round(float(self.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
+                fm = self._send_flow(dp, self._match(p, k), actions, max(idle, 1))
                 self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
                 self.last_install[k] = now
                 self.cnt["installs"] += 1
-                self.fw.writerow([round(now - self.t0, 3), "install", *k])
+                self.fw.writerow([round(t, 3), "install", *k])
                 # Packet-Out through the table so the triggering packet is counted.
                 actions = [p.OFPActionOutput(o.OFPP_TABLE)]
         elif out != o.OFPP_FLOOD and dp.id != self.dpid:
@@ -236,34 +289,29 @@ class LoftController(app_manager.RyuApp):
             by.append(s.byte_count)
             inst.append(t - s.duration_sec - s.duration_nsec * 1e-9)
         fids = np.array(fids, np.int64)
-        X, _, _ = self.tracker.observe(t, fids, np.array(pk, np.int64), np.array(by, np.int64),
-                                       np.round(np.array(inst), 1),
-                                       self.cnt["installs"] - self._installs_seen)
+        pk, by = np.array(pk, np.int64), np.array(by, np.int64)
+        inst = np.round(np.array(inst, float), 1)
+        X, dms, state = self.tracker.observe(t, fids, pk, by, inst,
+                                             self.cnt["installs"] - self._installs_seen)
         self._installs_seen = self.cnt["installs"]
         n = len(fids)
-        if self.model is not None and n and n / self.capacity >= self.rho:
-            s = self.model.predict_proba(X)
-            flag = s >= self.model.tau
-            for f in fids[flag]:
-                self.demoted.add(int(f))
-                self._delete(int(f))
-                self.cnt["demotes"] += 1
-            n_after = n - int(flag.sum())
-            if n_after / self.capacity >= self.h_crit:
-                by_a = np.array(by)
-                eleph = by_a >= np.percentile(by_a, 90)
-                rest = np.flatnonzero(~flag & ~eleph)
-                rest = rest[np.argsort(-s[rest], kind="stable")][:n_after - int(self.target * self.capacity)]
-                for f in fids[rest]:
+        obs = dict(t=t, fids=fids, count=n, capacity=self.capacity,
+                   table_full_last=self.cnt["table_full"] - self._tf_last,
+                   pkts=pk, bytes=by, install_t=inst, X=X, dms=dms, state=state)
+        self._tf_last = self.cnt["table_full"]
+        dels, dems = self.defense.on_poll(t, obs) if n else (None, None)
+        for arr, kind in ((dems, "demotes"), (dels, "deletes")):
+            if arr is not None and len(arr):
+                for f in np.unique(np.asarray(arr, np.int64)):
                     self._delete(int(f))
-                    self.cnt["deletes"] += 1
+                    self.cnt[kind] += 1
         ms = 1000 * (time.perf_counter() - t_start)
         c = self.cnt
         # Events waiting in this app's queue: a growing backlog means the controller is
         # the bottleneck (Packet-Ins wait here before Open vSwitch starts dropping them).
         backlog = self.events.qsize() if hasattr(self, "events") else -1
         self.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
-                         c["deletes"], c["demotes"], round(ms, 2), backlog])
+                         c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"]])
         self.log.flush()
         self.flowlog.flush()
 

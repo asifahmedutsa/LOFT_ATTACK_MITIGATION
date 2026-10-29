@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from . import revision2, v21
-from .config import DOMAINS, VARIANTS, AttackVariant, SimConfig
+from .config import DOMAINS, VARIANTS, SimConfig, gap_variant
 from .data import DOMAIN_IDX
 from .defenses import PortGuard
 from .experiment import SPLITS, _dump
@@ -47,13 +47,6 @@ VAL_SEEDS = list(SPLITS["val"])
 TEST_SEEDS = list(range(6000, 6010))
 TEST_SEEDS_ALT = TEST_SEEDS[:5]
 GAPS = [0.25, 0.5, 0.8, 1.0, 2.0, 5.0, 9.0]
-
-
-def gap_variant(g):
-    """Spoofing, size-mimicking LFTO attacker refreshing every 0.9g-g seconds.
-    The burst rate refreshes all 1,700 flows of an attacker well within a gap."""
-    return AttackVariant(f"X-gap{g:g}", 100, (0.9 * g, g), size_mode="benign", src_mode="spoof",
-                         burst_pps=max(1500.0, 1.25 * 1700 / (0.9 * g)))
 
 
 ATTACKS = dict(VARIANTS, **{f"X{g:g}": gap_variant(g) for g in GAPS})
