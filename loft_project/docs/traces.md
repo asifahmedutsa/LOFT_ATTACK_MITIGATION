@@ -33,6 +33,18 @@ python -m loftbench.pcapflows "traces/univ2/univ2_pt*" --out traces/univ2.npz
 `pcapflows` keeps IPv4 TCP/UDP/ICMP packets, groups them into directional 5-tuple flows
 (one OpenFlow entry each) and keeps wire lengths.
 
+## Converted traces
+
+| Trace | IPv4 packets kept | Skipped | Directional flows | Span | Native rate | Mean size | sha256 |
+|---|---|---|---|---|---|---|---|
+| bigFlows | 790,893 | 722 | 40,547 | 300 s | 2,636 pps, 135 flows/s | 449 B | `2b630291…c42dc141` |
+| univ2 | pending download | | | | | | |
+
+Sanity check (training seeds 1000–1001, no defense, 300 s): bigFlows replayed at 1,200 pps
+keeps about 1,400 benign entries in the table before the attack (synthetic D1: about 980),
+never overflows on its own, and DMS-BTT setting A2 overflows it from about 113 s
+(57.6 % of benign flows harmed; synthetic D1: 127 s, 47.7 %).
+
 ## How a trace is replayed
 
 - **Rate.** Trace time is stretched so the total benign rate equals the profile's
