@@ -82,6 +82,7 @@ class LoftController(app_manager.RyuApp):
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
         self.demoted = set()
         self._parts = []
+        self.xid_key = {}
         self._installs_seen = 0
         self.dp = None
         self.t0 = time.time()
@@ -100,10 +101,12 @@ class LoftController(app_manager.RyuApp):
     def _send_flow(self, dp, match, actions, idle, cmd=None, priority=PRIO):
         p, o = dp.ofproto_parser, dp.ofproto
         inst = [p.OFPInstructionActions(o.OFPIT_APPLY_ACTIONS, actions)]
-        dp.send_msg(p.OFPFlowMod(datapath=dp, priority=priority, match=match,
-                                 instructions=inst, idle_timeout=idle,
-                                 command=o.OFPFC_ADD if cmd is None else cmd,
-                                 flags=o.OFPFF_SEND_FLOW_REM))
+        msg = p.OFPFlowMod(datapath=dp, priority=priority, match=match,
+                           instructions=inst, idle_timeout=idle,
+                           command=o.OFPFC_ADD if cmd is None else cmd,
+                           flags=o.OFPFF_SEND_FLOW_REM)
+        dp.send_msg(msg)                      # assigns msg.xid
+        return msg
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def features(self, ev):
@@ -154,7 +157,8 @@ class LoftController(app_manager.RyuApp):
                 self.key_of.append(k)
                 self.src_of[fid] = ip2int(ip.src)
             idle = self.t_short if fid in self.demoted else self.idle
-            self._send_flow(dp, self._match(p, k), actions, idle)
+            fm = self._send_flow(dp, self._match(p, k), actions, idle)
+            self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
             self.cnt["installs"] += 1
             self.fw.writerow([round(time.time() - self.t0, 3), "install", *k])
             # Packet-Out through the table so the triggering packet is counted.
@@ -177,6 +181,9 @@ class LoftController(app_manager.RyuApp):
         o = ev.msg.datapath.ofproto
         if ev.msg.type == o.OFPET_FLOW_MOD_FAILED and ev.msg.code == o.OFPFMFC_TABLE_FULL:
             self.cnt["table_full"] += 1
+            k = self.xid_key.pop(ev.msg.xid, None)
+            if k is not None:
+                self.fw.writerow([round(time.time() - self.t0, 3), "refused", *k])
 
     # ------------------------------------------------------------------
     def _monitor(self):

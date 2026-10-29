@@ -77,9 +77,15 @@ def main():
         t, fid, size = t[keep], fid[keep], size[keep]
     else:
         v = VARIANTS[a.variant]
-        v1 = v.__class__(**{**v.__dict__, "n_attackers": 1})
-        t, fid, size, src, _ = generate_attack(v1, a.start, a.duration, didx, 0,
-                                               _rng("attack", prof.name, v.name, a.seed, a.attacker))
+        # Generate the whole attack exactly as the simulator does (same random stream,
+        # all attackers), then keep this attacker's flows. Each attacker therefore sends
+        # its own source address and 5-tuples, packet for packet as in the simulator.
+        owner = []
+        t, fid, size, src, _ = generate_attack(v, a.start, a.duration, didx, 0,
+                                               _rng("attack", prof.name, v.name, a.seed),
+                                               owner_out=owner)
+        keep = np.asarray(owner)[fid] == a.attacker
+        t, fid, size = t[keep], fid[keep], size[keep]
     order = np.argsort(t, kind="stable")
     t, fid, size = t[order], fid[order], np.clip(size[order], 60, 1500)
 

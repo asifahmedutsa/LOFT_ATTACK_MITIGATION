@@ -1068,3 +1068,26 @@ No TABLE_FULL errors; ping 300/300 received, RTT 38.1 ms (the topology's 2 × 19
 all 25,354 benign flows sent and installed (25,366 distinct entries including pings);
 controller decision time mean 10 ms, max 48 ms. The simulator's table semantics (one entry
 per 5-tuple, 10 s idle timeout) reproduce on real OVS.
+
+### 16.2 Acceptance run 2: attack A2, no defense (D1, seed 4000)
+
+The first attempt (`tb_D1_A2_none`) exposed a third bug: each attacker host regenerated the
+attack as if it were alone, so both sent identical 5-tuples and only 1,700 distinct attack
+flows existed. The driver now generates the full two-attacker attack with the simulator's
+random stream and each host sends its own flows (88,400 attack packets, identical to the
+simulator). Rerun (`tb_D1_A2_none_v2`):
+
+| Seconds | Simulator entries | Testbed entries |
+|---|---|---|
+| 0–50 | 1,008 | 983 |
+| 50–100 | 2,131 | 2,097 |
+| 100–150 | 3,366 | 3,232 |
+| 150–300 | 3,499 | 3,491–3,496 |
+
+First overflow: 137 s on the testbed vs 123 s in the simulator; from 60 s, testbed occupancy
+is 98.9 % of the simulator's (RMSE 81 entries). TABLE_FULL errors: 36,082 vs 70,529 (the
+simulator assumes every packet of a refused flow is retried at once). 24.0 % of benign flows
+never received an entry (6,097 of 25,354); 3,394 of 3,400 attack flows did. The ping probe
+keeps its own refreshed entry, so its RTT does not change (38.1 ms); harm falls on new flows.
+The controller now logs which flow each TABLE_FULL refers to, so the simulator's harm metric
+(benign flows refused at least once; simulator 47.5 %) can be computed on the testbed.

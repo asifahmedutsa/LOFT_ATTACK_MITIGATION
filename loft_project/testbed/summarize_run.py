@@ -38,11 +38,14 @@ def summarize(d, attack_start):
         with open(log.replace(".csv", "_flows.csv")) as f:
             ev = list(csv.DictReader(f))
         inst = [e for e in ev if e["event"] == "install"]
-        keys = {tuple(e[k] for k in ("src", "dst", "proto", "sport", "dport")) for e in inst}
+        key = lambda e: tuple(e[k] for k in ("src", "dst", "proto", "sport", "dport"))  # noqa: E731
+        keys = {key(e) for e in inst}
+        refused = {key(e) for e in ev if e["event"] == "refused"}
         info = dict(seconds=round(last.get("t", 0)), entries_before_attack=_stats(pre),
                     entries_after_attack=_stats(post), table_full=int(last.get("table_full", 0)),
                     packet_in=int(last.get("packet_in", 0)), installs=len(inst),
-                    distinct_flows_installed=len(keys), deletes=int(last.get("deletes", 0)),
+                    distinct_flows_installed=len(keys), distinct_flows_refused=len(refused),
+                    deletes=int(last.get("deletes", 0)),
                     demotes=int(last.get("demotes", 0)),
                     decision_ms=_stats([x["decision_ms"] for x in r]))
         ping = os.path.join(d, f"ping_{dom}.txt")
@@ -57,12 +60,22 @@ def summarize(d, attack_start):
         ff = os.path.join(d, f"final_flows_{dom}.txt")
         if os.path.exists(ff):
             info["final_dump_flows_lines"] = open(ff).read().strip()
+        info["_refused"], info["_installed"] = refused, keys
         out[dom] = info
-    hosts = {}
+    hosts, benign = {}, set()
     for t in sorted(glob.glob(os.path.join(d, "truth_*.csv"))):
         with open(t) as f:
             rows = list(csv.DictReader(f))
         hosts[os.path.basename(t)[6:-4]] = (len(rows), sum(r["label"] == "1" for r in rows))
+        benign |= {tuple(r[k] for k in ("src", "dst", "proto", "sport", "dport"))
+                   for r in rows if r["label"] == "0"}
+    # Benign flows refused an entry at least once (the simulator's rejection harm), and
+    # benign flows that never got an entry (needs no refusal log).
+    for info in out.values():
+        info["benign_refused_at_least_once_pct"] = round(
+            100 * len(benign & info.pop("_refused")) / max(len(benign), 1), 2)
+        info["benign_never_installed_pct"] = round(
+            100 * len(benign - info.pop("_installed")) / max(len(benign), 1), 2)
     return out, hosts
 
 
