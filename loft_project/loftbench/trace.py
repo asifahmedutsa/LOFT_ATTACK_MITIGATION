@@ -49,7 +49,29 @@ def load(file):
         raise FileNotFoundError(f"{path} missing: convert the pcap with loftbench.pcapflows "
                                 f"(see docs/traces.md)")
     z = np.load(path)
-    return {k: z[k] for k in ("pkt_t", "pkt_fid", "pkt_size", "flow_src", "flow_dst")}
+    tr = {k: z[k] for k in ("pkt_t", "pkt_fid", "pkt_size", "flow_src", "flow_dst")}
+    return longest_segment(tr)
+
+
+MAX_GAP_S = 10.0
+
+
+def longest_segment(tr, max_gap=MAX_GAP_S):
+    """Keep the longest stretch of the capture with no silence longer than max_gap.
+
+    Capture artefacts (the univ2 window starts with one packet followed by 51.7 s of
+    silence) would otherwise become minutes of empty replay at low rates. Flow ids are
+    renumbered; times restart at 0."""
+    t = tr["pkt_t"]
+    cut = np.flatnonzero(np.diff(t) > max_gap) + 1
+    if len(cut) == 0:
+        return tr
+    edges = np.r_[0, cut, len(t)]
+    k = int(np.argmax(np.diff(edges)))
+    a, b = edges[k], edges[k + 1]
+    used, fid = np.unique(tr["pkt_fid"][a:b], return_inverse=True)
+    return dict(pkt_t=t[a:b] - t[a], pkt_fid=fid.astype(np.int64), pkt_size=tr["pkt_size"][a:b],
+                flow_src=tr["flow_src"][used], flow_dst=tr["flow_dst"][used])
 
 
 def is_private(ip):

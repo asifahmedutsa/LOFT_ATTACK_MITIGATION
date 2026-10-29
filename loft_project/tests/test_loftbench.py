@@ -410,3 +410,13 @@ def test_trace_anchor_keeps_both_directions_of_a_client_together():
     tr = dict(flow_src=np.array([c, server, c, inner]), flow_dst=np.array([server, c, inner, c]))
     assert anchors(tr, "private").tolist() == [c, c, c, inner]
     assert anchors(tr, "src").tolist() == tr["flow_src"].tolist()
+
+
+def test_trace_keeps_longest_segment_without_long_silence():
+    from loftbench.trace import longest_segment
+    t = np.r_[0.0, 60.0 + np.arange(10) * 0.5]                 # lone packet, 60 s gap, real start
+    tr = dict(pkt_t=t, pkt_fid=np.r_[0, np.arange(10) % 3 + 1], pkt_size=np.full(11, 100),
+              flow_src=np.arange(4), flow_dst=np.arange(4) + 10)
+    out = longest_segment(tr)
+    assert len(out["pkt_t"]) == 10 and out["pkt_t"][0] == 0.0
+    assert out["flow_src"].tolist() == [1, 2, 3] and out["pkt_fid"].max() == 2
