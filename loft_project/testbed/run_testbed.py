@@ -60,6 +60,12 @@ def main():
     ap.add_argument("--ryu", default=os.path.expanduser("~utsa/ryu-env/bin/ryu-manager"))
     ap.add_argument("--python", default=os.path.expanduser("~utsa/ryu-env/bin/python"))
     ap.add_argument("--out", required=True)
+    ap.add_argument("--no-diag", action="store_true",
+                    help="skip Open vSwitch counters and CPU sampling")
+    ap.add_argument("--legacy-controller", action="store_true",
+                    help="Packet-In handling of acceptance runs 1-3 (LOFT_LEAN=0)")
+    ap.add_argument("--controller-queue", type=int, default=512,
+                    help="Open vSwitch queue to each controller, messages (OVS default 100; 0 = leave)")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
 
@@ -73,6 +79,7 @@ def main():
                    LOFT_CAPACITY=str(a.capacity),
                    LOFT_MODEL=os.path.join(a.model_dir, f"{a.model_prefix}_{dm['name']}.json"),
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),
+                   LOFT_LEAN="0" if a.legacy_controller else "1",
                    PYTHONPATH=ROOT)
         ctrl.append(subprocess.Popen(
             [a.ryu, "--ofp-tcp-listen-port", str(dm["port"]), os.path.join(HERE, "loft_ryu_app.py")],
@@ -92,8 +99,25 @@ def main():
                 ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",
                  f"flow_limit={a.capacity}", "overflow_policy=refuse", "--",
                  "set", "Bridge", br, "flow_tables:0=@t"])
+            if a.controller_queue:
+                for sw in (dm["s1"].name, dm["s2"].name):
+                    for uuid in subprocess.check_output(
+                            ["ovs-vsctl", "get", "Bridge", sw, "controller"]).decode().strip("[]\n ").split(","):
+                        if uuid.strip():
+                            subprocess.check_call(["ovs-vsctl", "set", "Controller", uuid.strip(),
+                                                   f"controller_queue_size={a.controller_queue}"])
         time.sleep(3)
         net.pingAll(timeout="1")
+        diag = None
+        if not a.no_diag:
+            # Where do Packet-Ins go missing? Open vSwitch coverage counters (e.g. rconn_overflow:
+            # messages to a controller dropped because its queue was full) before and after the
+            # traffic, and per-second CPU of each controller and of ovs-vswitchd.
+            subprocess.call(f"ovs-appctl coverage/show > {a.out}/ovs_coverage_before.txt", shell=True)
+            pids = [str(c.pid) for c in ctrl] + subprocess.check_output(
+                ["pidof", "ovs-vswitchd"]).decode().split()
+            diag = subprocess.Popen(f"pidstat -u -h -p {','.join(pids)} 1 > {a.out}/cpu_pidstat.txt",
+                                    shell=True)
         procs = []
         drv = os.path.join(HERE, "traffic_driver.py")
         for dm in doms:
@@ -117,6 +141,16 @@ def main():
                 f"ping -i 1 -c {int(a.duration)} {dst} > {a.out}/ping_{dm['name']}.txt", shell=True))
         for p in procs:
             p.wait()
+        if diag is not None:
+            diag.terminate()
+            subprocess.call("pkill -f '^pidstat -u -h -p'", shell=True)
+            for cmd, f in (("ovs-appctl coverage/show", "ovs_coverage_after.txt"),
+                           ("ovs-appctl upcall/show", "ovs_upcall.txt"),
+                           ("ovs-vsctl list controller", "ovs_controllers.txt")):
+                subprocess.call(f"{cmd} > {a.out}/{f}", shell=True)
+            for dm in doms:
+                subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-tables {dm['s1'].name} | head -8 "
+                                f"> {a.out}/ovs_tables_{dm['name']}.txt", shell=True)
         for dm in doms:
             subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-flows {dm['s1'].name} | wc -l "
                             f"> {a.out}/final_flows_{dm['name']}.txt", shell=True)

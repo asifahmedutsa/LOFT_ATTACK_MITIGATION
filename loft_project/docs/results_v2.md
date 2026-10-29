@@ -1144,3 +1144,35 @@ the machine's capacity, not the attack or the defense, and is not used.
 controller protects its own switch, so concurrent domains are not required by the design. Before
 the larger matrix, locate the Packet-In drops (Open vSwitch coverage counters) and reduce the Ryu
 controller's per-second cost.
+
+### 16.5 Where Packet-Ins are lost, and a leaner controller
+
+A diagnostic run (`tb_D1_A2_none_diag`, D1, A2, no defense) recorded Open vSwitch coverage counters,
+per-second CPU (pidstat) and the controller's event backlog (`testbed/diagnose_run.py`):
+
+- **Ryu is the bottleneck.** During the attack (120–300 s) `ryu-manager` used 97.5 % of one core
+  (≥ 95 % in 93 % of seconds) and its event queue stayed full (114 events on average, max 122).
+- **Open vSwitch drops what Ryu cannot read.** `rconn_overflow` counted 124,701 messages dropped
+  because the queue to the controller was full. `ovs-vswitchd` was busy (96 % of one core on
+  average, on four cores) but showed no upcall drops.
+- **Ryu was doing avoidable work:** about 96,000 Packet-Ins for about 29,000 flows, one flow-mod per
+  Packet-In, 39,461 TABLE_FULL errors to parse, and refused packets resubmitted to the table, where
+  they missed again.
+
+**Lean controller** (`LOFT_LEAN=1`, now the default; `--legacy-controller` reproduces runs 1–3): no
+repeat install of a flow within 0.5 s, a 1 s back-off after TABLE_FULL, slow-path packets output
+directly (the first packet of an install still goes through the table, as in the simulator), and
+the Open vSwitch queue to the controller raised from 100 to 512 messages. Same run (`tb_D1_A2_none_lean`):
+
+| D1, A2, no defense | Legacy controller | Lean controller | Simulator |
+|---|---|---|---|
+| `rconn_overflow` (messages dropped) | 124,701 | 23,812 | — |
+| Packet-Ins handled / install attempts | 95,847 / 95,741 | 166,309 / 49,863 | — |
+| Benign flows never installed | 24.1 % | 3.6 % (none before 200 s) | — |
+| Benign flows refused at least once | 21.6 % | **41.9 %** | **47.5 %** |
+| Ping | 0–45 % loss across runs | 0 % loss, 38.1 ms | — |
+
+Lost Packet-Ins had been hiding the attack's harm: a flow whose Packet-In is dropped is never
+refused. With the lean controller the testbed's benign harm (41.9 %) approaches the simulator's
+(47.5 %). Ryu still runs near saturation (94.8 % CPU) and loses 19 % of the flows that start after
+250 s, so Packet-In loss is reported as its own metric.

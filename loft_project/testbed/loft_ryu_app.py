@@ -13,6 +13,9 @@ Environment variables:
   LOFT_LOG       CSV path for the per-second controller log
   LOFT_CAPACITY  flow-table capacity (default 3500)
   LOFT_IDLE      idle timeout seconds (default 10)
+  LOFT_LEAN      1 (default) = lean Packet-In handling, 0 = acceptance runs 1-3 behaviour:
+                 no repeat install of a flow within 0.5 s, 1 s back-off after TABLE_FULL,
+                 and slow-path packets output directly instead of resubmitted to the table
 """
 import csv
 import json
@@ -83,6 +86,8 @@ class LoftController(app_manager.RyuApp):
         self.demoted = set()
         self._parts = []
         self.xid_key = {}
+        self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
+        self.last_install, self.refused_until = {}, {}
         self._installs_seen = 0
         self.dp = None
         self.t0 = time.time()
@@ -91,7 +96,7 @@ class LoftController(app_manager.RyuApp):
         self.log = open(log, "w", newline="")
         self.w = csv.writer(self.log)
         self.w.writerow(["t", "entries", "packet_in", "table_full", "installs", "deletes",
-                         "demotes", "decision_ms"])
+                         "demotes", "decision_ms", "event_backlog"])
         self.flowlog = open(log.replace(".csv", "_flows.csv"), "w", newline="")
         self.fw = csv.writer(self.flowlog)
         self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport"])
@@ -156,13 +161,21 @@ class LoftController(app_manager.RyuApp):
                 self.fid_of[k] = fid
                 self.key_of.append(k)
                 self.src_of[fid] = ip2int(ip.src)
-            idle = self.t_short if fid in self.demoted else self.idle
-            fm = self._send_flow(dp, self._match(p, k), actions, idle)
-            self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
-            self.cnt["installs"] += 1
-            self.fw.writerow([round(time.time() - self.t0, 3), "install", *k])
-            # Packet-Out through the table so the triggering packet is counted.
-            actions = [p.OFPActionOutput(o.OFPP_TABLE)]
+            now = time.time()
+            if self.lean and (now - self.last_install.get(k, -1e9) < 0.5
+                              or now < self.refused_until.get(k, 0.0)):
+                # Install already in flight, or refused moments ago: forward this packet
+                # on the slow path without another flow-mod.
+                pass
+            else:
+                idle = self.t_short if fid in self.demoted else self.idle
+                fm = self._send_flow(dp, self._match(p, k), actions, idle)
+                self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
+                self.last_install[k] = now
+                self.cnt["installs"] += 1
+                self.fw.writerow([round(now - self.t0, 3), "install", *k])
+                # Packet-Out through the table so the triggering packet is counted.
+                actions = [p.OFPActionOutput(o.OFPP_TABLE)]
         elif out != o.OFPP_FLOOD and dp.id != self.dpid:
             # Access switches: plain L2 forwarding for everything.
             self._send_flow(dp, p.OFPMatch(in_port=in_port, eth_dst=eth.dst), actions, 30,
@@ -183,7 +196,11 @@ class LoftController(app_manager.RyuApp):
             self.cnt["table_full"] += 1
             k = self.xid_key.pop(ev.msg.xid, None)
             if k is not None:
-                self.fw.writerow([round(time.time() - self.t0, 3), "refused", *k])
+                now = time.time()
+                self.fw.writerow([round(now - self.t0, 3), "refused", *k])
+                if self.lean:
+                    self.refused_until[k] = now + 1.0
+                    self.last_install.pop(k, None)
 
     # ------------------------------------------------------------------
     def _monitor(self):
@@ -242,8 +259,11 @@ class LoftController(app_manager.RyuApp):
                     self.cnt["deletes"] += 1
         ms = 1000 * (time.perf_counter() - t_start)
         c = self.cnt
+        # Events waiting in this app's queue: a growing backlog means the controller is
+        # the bottleneck (Packet-Ins wait here before Open vSwitch starts dropping them).
+        backlog = self.events.qsize() if hasattr(self, "events") else -1
         self.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
-                         c["deletes"], c["demotes"], round(ms, 2)])
+                         c["deletes"], c["demotes"], round(ms, 2), backlog])
         self.log.flush()
         self.flowlog.flush()
 
@@ -251,6 +271,7 @@ class LoftController(app_manager.RyuApp):
         dp = self.dp
         p, o = dp.ofproto_parser, dp.ofproto
         k = self.key_of[fid]
+        self.last_install.pop(k, None)        # a demoted flow may reinstall at once
         dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE_STRICT, priority=PRIO,
                                  match=self._match(p, k), out_port=o.OFPP_ANY,
                                  out_group=o.OFPG_ANY))
