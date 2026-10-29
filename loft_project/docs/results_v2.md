@@ -1204,3 +1204,34 @@ controller capacity used.
 
 **Still to do on the testbed.** D2 and D3 one at a time; the unseen variant A6 and the fast-refresh
 attacker; and a Ryu implementation of PortGuard (only DualGuard is implemented in the controller app).
+
+### 16.7 All three domains, one at a time (A2, seed 4000, lean controller)
+
+Runs `tb_D2_A2_{none,dualguard}_lean`, `tb_D3_A2_{none,dualguard}_lean` and the D1 runs of §16.5–16.6.
+Simulator references use the same traffic and seed.
+
+| Domain | Defense | Refused at least once: testbed / simulator | Never installed (Packet-In lost) | TABLE_FULL | Demotions (attack share) | Ping loss |
+|---|---|---|---|---|---|---|
+| D1 enterprise | none | 41.9 % / 47.5 % | 3.6 % | 28,046 | — | 0 % |
+| D1 enterprise | FL-DualGuard | **0.02 %** / 0.26 % | 5.9 % | 165 | 18,706 (94.7 %) | 9 % |
+| D2 IoT | none | 48.3 % / 54.6 % | 4.3 % | 35,323 | — | 29 % |
+| D2 IoT | FL-DualGuard | **0.03 %** / 2.50 % | 4.1 % | 174 | 26,714 (89.1 %) | 27 % |
+| D3 cloud | none | 37.7 % / 52.7 % | 9.0 % | 20,635 | — | 0 % |
+| D3 cloud | FL-DualGuard | **0.00 %** / 1.16 % | 7.6 % | 0 | 14,019 (92.3 %) | 4 % |
+
+**Table-level result reproduces in every domain.** FL-DualGuard cuts benign flows refused an entry
+from 38–48 % to at most 0.03 %, and TABLE_FULL errors by two orders of magnitude. The testbed's
+no-defense harm is 6–15 points below the simulator's, because some flows that the simulator would
+refuse are lost before reaching the controller instead (never-installed column), and refusals are
+counted only once per flow back-off period.
+
+**Demotion precision is lower than in simulation** (89–95 % of demotions on attack flows against
+about 99 %), consistent with the controller's coarser view under load (stats replies arrive late
+and 1 s polls stretch).
+
+**The control plane remains the limit.** Ryu runs at 98–100 % of one core in every attacked run and
+Open vSwitch drops 23,000–72,000 controller messages per run. Packet-In loss is 3.6–9.0 % of benign
+flows without a defense and 4.1–7.6 % with FL-DualGuard: the defense neither causes nor cures it.
+The ping, which needs no new entry, still loses up to 29 % of probes in D2, where the IoT traffic's
+many periodic flows keep the controller busiest. Total benign impact (refused or never installed)
+falls from 42–53 % to 4–8 % with FL-DualGuard.
