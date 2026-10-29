@@ -11,9 +11,17 @@ import numpy as np
 
 from .config import DOMAINS, VARIANTS, SimConfig
 from .sim import run_episode
+from .trace import TRACE_DOMAIN_IDX, TRACE_DOMAINS
 from .traffic import build_traffic
 
 DOMAIN_IDX = {d: i for i, d in enumerate(DOMAINS)}
+
+
+def profile_of(domain):
+    """(profile, domain index) for a synthetic domain (D1-D3) or a trace domain (T1, T2)."""
+    if domain in TRACE_DOMAINS:
+        return TRACE_DOMAINS[domain], TRACE_DOMAIN_IDX[domain]
+    return DOMAINS[domain], DOMAIN_IDX[domain]
 
 
 @dataclass
@@ -42,12 +50,12 @@ class Dataset:
 
 
 def run_id_of(domain, variant, seed):
-    return DOMAIN_IDX[domain] * 10_000_000 + (0 if variant is None else int(variant[1:])) * 100_000 + seed
+    return profile_of(domain)[1] * 10_000_000 + (0 if variant is None else int(variant[1:])) * 100_000 + seed
 
 
 def collect_run(domain, variant, seed, cfg: SimConfig, frac=0.03):
-    tr = build_traffic(DOMAINS[domain], DOMAIN_IDX[domain],
-                       VARIANTS[variant] if variant else None, seed, cfg.duration,
+    prof, idx = profile_of(domain)
+    tr = build_traffic(prof, idx, VARIANTS[variant] if variant else None, seed, cfg.duration,
                        cfg.attack_start)
     rid = run_id_of(domain, variant, seed)
     rng = np.random.default_rng(rid)

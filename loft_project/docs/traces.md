@@ -38,7 +38,7 @@ python -m loftbench.pcapflows "traces/univ2/univ2_pt*" --out traces/univ2.npz
 | Trace | IPv4 packets kept | Skipped | Directional flows | Span | Native rate | Mean size | sha256 |
 |---|---|---|---|---|---|---|---|
 | bigFlows | 790,893 | 722 | 40,547 | 300 s | 2,636 pps, 135 flows/s | 449 B | `2b630291…c42dc141` |
-| univ2 | pending download | | | | | | |
+| univ2 (`univ2_pt1`, first 3,000,000 packets) | 3,000,000 | 38,559 | 17,437 | 332 s | 9,033 pps, 52.5 flows/s | 749 B | `3da91e8f…` (whole `univ2_trace.tgz`) |
 
 Sanity check (training seeds 1000–1001, no defense, 300 s): bigFlows replayed at 1,200 pps
 keeps about 1,400 benign entries in the table before the attack (synthetic D1: about 980),

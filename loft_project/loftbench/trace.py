@@ -34,10 +34,12 @@ class TraceProfile:
 TRACE_DOMAINS = {
     # DMS-BTT: bigFlows.pcap replayed by 4 user hosts at 300 pps each.
     "T1": TraceProfile("T1-bigflows", "bigflows.npz", 1200.0, anchor="private"),
-    # FTOP: IMC-10 univ2 replayed at 1,000 pps.
+    # FTOP: IMC-10 univ2 replayed at 1,000 pps (light: about 6 new flows/s).
     "T2": TraceProfile("T2-univ2", "univ2.npz", 1000.0),
+    # The same univ2 window at its native rate (about 9,000 pps, 52 new flows/s).
+    "T3": TraceProfile("T3-univ2-native", "univ2.npz", 9000.0),
 }
-TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4}       # after D1-D3, for attacker address ranges
+TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5}  # after D1-D3, for attacker address ranges
 
 
 @lru_cache(maxsize=4)
