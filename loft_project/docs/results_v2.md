@@ -1176,3 +1176,31 @@ Lost Packet-Ins had been hiding the attack's harm: a flow whose Packet-In is dro
 refused. With the lean controller the testbed's benign harm (41.9 %) approaches the simulator's
 (47.5 %). Ryu still runs near saturation (94.8 % CPU) and loses 19 % of the flows that start after
 250 s, so Packet-In loss is reported as its own metric.
+
+### 16.6 FL-DualGuard with the lean controller (`tb_D1_A2_dg_lean`, D1, A2, seed 4000)
+
+| D1, A2 | No defense (lean) | FL-DualGuard v2.1 (lean) | Simulator: none / v2.1 |
+|---|---|---|---|
+| Benign flows refused at least once | 41.9 % | **0.02 %** | 47.5 % / 0.26 % |
+| Benign flows never installed (Packet-In lost) | 3.6 % | 5.9 % | not modelled |
+| TABLE_FULL errors | 28,046 | 165 | 70,529 / 1,661 |
+| Demotions (share on attack flows) | — | 18,706 (94.7 %) | — / 27,903 (99.9 %) |
+| Table entries 150–300 s, mean | ≈ 3,490 (full) | 2,070 | 3,499 / ≈ 2,000 |
+| `rconn_overflow` (messages dropped) | 23,812 | 46,935 | — |
+| Ryu CPU 120–300 s | 94.8 % | 101.4 % | — |
+| Ping | 0 % loss | 9 % loss, RTT up to 23.5 s | — |
+
+**Result.** On real Open vSwitch with a real controller, FL-DualGuard removes table-level harm almost
+entirely (41.9 % → 0.02 % of benign flows refused, simulator 47.5 % → 0.26 %), keeps the table
+around 2,070 entries (simulator about 2,000), and 94.7 % of its demotions hit attack flows.
+
+**Cost on the control plane.** Each demoted attack flow reinstalls through the controller, so
+DualGuard doubles the messages Open vSwitch drops (23,812 → 46,935) and raises Packet-In loss from
+3.6 % to 5.9 % of benign flows (all after 150 s). Total benign impact (refused or never installed)
+falls from about 45 % to about 6 %. The ping, never demoted, lost 9 % of probes to the saturated
+controller queue. On this hardware the controller, not the flow table, becomes the limiting resource
+once the table is defended; the paper must report Packet-In loss next to table harm and the
+controller capacity used.
+
+**Still to do on the testbed.** D2 and D3 one at a time; the unseen variant A6 and the fast-refresh
+attacker; and a Ryu implementation of PortGuard (only DualGuard is implemented in the controller app).
