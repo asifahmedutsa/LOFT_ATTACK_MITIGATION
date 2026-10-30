@@ -78,7 +78,7 @@ code { font-family: var(--mono); font-size: 13px; }
   <ol>
     <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
     <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
-    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Training longer (100 rounds) or FedProx recovers most of the offline gap. The online check of these fixes is still running.</li>
+    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). FedProx or 100 rounds recover most of the offline gap and cut online harm to about 7 %, but the remaining gap to pooled is still open.</li>
     <li><b>Model family matters less than federation.</b> Random Forest leads offline by about 1 point of F1, but the MLP protects users best online (1.4 % harm against 4.8 % for Random Forest) and is 2.4 KB against 16 MB.</li>
   </ol>
 </section>
@@ -132,9 +132,9 @@ code { font-family: var(--mono); font-size: 13px; }
   </table></div>
   <p class="note">Online harm %, mean over all controllers × 7 attacks × seeds. FedAvg always beats local, but at K = 6 and 9 it demotes about 10× more benign entries than pooled training. The worst are the IoT controllers C2, C5 and C8 (16–26 % harm), whose many low-rate periodic flows look like attack flows.</p>
   <div class="callout">
-    <h3>Diagnosis: FedAvg is under-trained on non-IID clients, not wrong in principle</h3>
+    <h3>Diagnosis: partly under-training on non-IID clients, partly an open problem</h3>
     <p>Same data, K = 6 / 9, offline F1: FedAvg 30 rounds <span class="num">91.5 / 89.5</span>; <b>100 rounds <span class="num">94.4 / 92.7</span></b>; FedProx <span class="num">93.1 / 92.1</span>; 3 local epochs <span class="num">90.1 / 88.6</span>; local fine-tuning <span class="num">88.0 / 86.2</span>; pooled <span class="num">95.6 / 93.8</span>. More rounds closes most of the gap; fine-tuning hurts because it forgets other controllers' attacks.</p>
-    <p id="fedonline"><span class="chip run">running</span> Online harm of these variants: results will be added to this page when the run finishes.</p>
+    <p id="fedonline"><b>Online, the fixes help but do not close the gap.</b> Harm % at K = 6 / 9 (2 episode seeds): FedAvg 30 rounds <span class="num">11.0 / 8.5</span>; FedProx <span class="num">7.5 / 6.9</span>; 100 rounds <span class="num">7.3 / 7.7</span>; 3 local epochs <span class="num">10.3 / 7.5</span>; fine-tuning <span class="num">10.4 / 9.3</span>; pooled <span class="num">2.6 / 2.9</span>; local <span class="num">13.5 / 11.3</span>. On the IoT controllers every federated variant stays at 13–23 % against 4–6 % pooled. Offline every model keeps the 1 % benign budget per sampled entry, yet online FedAvg demotes 4,000–7,000 benign entries per episode against about 400–600 for pooled. A likely cause is that long-lived periodic IoT flows are scored at every poll and sit near the federated threshold. Next steps to try: calibrate on whole flows instead of single polls, and weight the federated average so the IoT clients' benign data counts more.</p>
   </div>
 </section>
 
