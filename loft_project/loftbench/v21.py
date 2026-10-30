@@ -204,21 +204,26 @@ def stage_test(src, out, workers):
 
 
 def stage_export(out):
-    """Export the selected v2.1 model and knobs for the Ryu testbed."""
+    """Export the selected v2.1 model and knobs for the Ryu testbed.
+
+    Also exports each controller's local model (trained on its own data only) with the same
+    policy as local_<D>.json, for the testbed's local-vs-federated comparison."""
     models, taus = pickle.load(open(os.path.join(out, "models.pkl"), "rb"))
     sel = json.load(open(os.path.join(out, "selected.json")))["selected"]
-    m = models[sel["detector"]]
-    idx = m.idx if isinstance(m, SubsetModel) else None
-    base = m.m if isinstance(m, SubsetModel) else m
     pol = _policy(sel)
     ed = os.path.join(out, "exported")
     os.makedirs(ed, exist_ok=True)
     for d in DOMAINS:
-        _dump(ed, f"v21_{d}.json", dict(
-            weights=[w.tolist() for w in base.get_weights()], mean=base.scaler.mean.tolist(),
-            std=base.scaler.std.tolist(), tau=taus[f"{sel['detector']}/{d}"],
-            feature_idx=idx, features=FEATURE_NAMES, rho=pol["rho"], t_short=int(pol["t_short"]),
-            h_crit=pol["h_crit"] if pol["hard"] else 2.0, target=0.80))
+        for prefix, key in (("v21", sel["detector"]), ("local", f"local/{d}")):
+            m = models[key]
+            idx = m.idx if isinstance(m, SubsetModel) else None
+            base = m.m if isinstance(m, SubsetModel) else m
+            _dump(ed, f"{prefix}_{d}.json", dict(
+                weights=[w.tolist() for w in base.get_weights()], mean=base.scaler.mean.tolist(),
+                std=base.scaler.std.tolist(), tau=taus[f"{key.split('/')[0]}/{d}"],
+                feature_idx=idx, features=FEATURE_NAMES, rho=pol["rho"],
+                t_short=int(pol["t_short"]), h_crit=pol["h_crit"] if pol["hard"] else 2.0,
+                target=0.80))
 
 
 def stage_report(out):

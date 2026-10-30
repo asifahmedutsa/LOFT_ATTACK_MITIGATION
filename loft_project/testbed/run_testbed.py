@@ -54,7 +54,8 @@ def main():
                     choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
-                    help="model file prefix: v21 (results/v21/exported) or fedprox (results/v2/exported)")
+                    help="model file prefix: v21 (federated) or local (this controller only), both in "
+                         "results/v21/exported; fedprox in results/v2/exported")
     ap.add_argument("--capacity", type=int, default=3500)
     ap.add_argument("--duration", type=float, default=300)
     ap.add_argument("--attack-start", type=float, default=50)

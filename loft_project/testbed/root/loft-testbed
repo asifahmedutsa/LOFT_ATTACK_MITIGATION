@@ -38,6 +38,8 @@ while [ $# -gt 0 ]; do
         --seed)      [[ "$val" =~ ^[0-9]{1,6}$ ]] || die "bad --seed" ;;
         --attack-start|--duration)
                      [[ "$val" =~ ^[0-9]{1,6}(\.[0-9]{1,3})?$ ]] || die "bad $opt" ;;
+        --model-prefix)
+                     [[ "$val" =~ ^(v21|local)$ ]] || die "bad --model-prefix" ;;
         --install-clock)
                      [[ "$val" =~ ^(controller|switch)$ ]] || die "bad --install-clock" ;;
         --capacity|--controller-queue)
