@@ -1,0 +1,14 @@
+{
+  "rf": {
+    "train_seconds": 158.8,
+    "model_bytes": 16335396
+  },
+  "hgb": {
+    "train_seconds": 33.8,
+    "model_bytes": 650801
+  },
+  "mlp": {
+    "model_bytes": 2436
+  },
+  "total_seconds": 582
+}
