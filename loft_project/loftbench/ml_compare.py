@@ -8,9 +8,11 @@ alternative: each controller trains locally and shares its model, and a controll
 the three models' probabilities. Thresholds are calibrated per controller at the 1 % benign
 budget on local validation data, as for v2.1.
 
-  PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.ml_compare
+  PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.ml_compare [--seed S]
 
-Writes results/ml_compare/{offline.csv, online.csv, train_info.json}.
+Seed 0 uses the deployed v2.1 MLPs; another seed retrains the MLPs (local, FedAvg, pooled) and
+the trees with that seed. Writes results/ml_compare/{offline.csv, online.csv, train_info.json}
+(seed 0) or results/ml_compare/seed<S>/.
 """
 import json
 import os
@@ -24,7 +26,7 @@ from . import v21
 from .config import DOMAINS, EXPOSURE, UNSEEN_VARIANTS, VARIANTS, SimConfig
 from .data import DOMAIN_IDX
 from .defenses import DualGuard
-from .models import SkWrap, threshold_at_fpr
+from .models import SkWrap, threshold_at_fpr, train_federated, train_local
 from .ports import assign_ports
 from .sim import run_episode
 from .traffic import build_traffic
@@ -35,6 +37,7 @@ BUDGET = 0.01
 CELLS = {"D1": ["A2", "A3", "A6"], "D2": ["A1", "A3", "A6"], "D3": ["A1", "A2", "A6"]}
 SEEDS = [8000, 8001, 8002]
 _M = {}
+SEED = 0
 
 
 class Mean:
@@ -49,24 +52,31 @@ class Mean:
 
 def _rf():
     from sklearn.ensemble import RandomForestClassifier
-    return RandomForestClassifier(100, min_samples_leaf=5, n_jobs=4, random_state=0)
+    return RandomForestClassifier(100, min_samples_leaf=5, n_jobs=4, random_state=SEED)
 
 
 def _hgb():
     from sklearn.ensemble import HistGradientBoostingClassifier
-    return HistGradientBoostingClassifier(max_iter=200, random_state=0)
+    return HistGradientBoostingClassifier(max_iter=200, random_state=SEED)
 
 
 def train(data):
     models, info = {}, {}
-    mlp, mtaus = pickle.load(open("results/v21/models.pkl", "rb"))
+    tr = {d: data[("train", d)] for d in DOMAINS}
+    allX = np.concatenate([tr[d].X for d in DOMAINS])
+    ally = np.concatenate([tr[d].y for d in DOMAINS])
+    if SEED == 0:
+        mlp = pickle.load(open("results/v21/models.pkl", "rb"))[0]
+    else:
+        mlp = {f"local/{d}": train_local(tr[d].X, tr[d].y, epochs=30, seed=SEED) for d in DOMAINS}
+        mlp["pooled"] = train_local(allX, ally, epochs=30, seed=SEED)
+        mlp["fedavg"] = train_federated([(tr[d].X, tr[d].y) for d in DOMAINS], rounds=30,
+                                        mu=0.0, seed=SEED)[0]
+        print("  trained mlp", flush=True)
     for d in DOMAINS:
         models[("mlp", "local", d)] = mlp[f"local/{d}"]
         models[("mlp", "federated", d)] = mlp["fedavg"]
         models[("mlp", "pooled", d)] = mlp["pooled"]
-    tr = {d: data[("train", d)] for d in DOMAINS}
-    allX = np.concatenate([tr[d].X for d in DOMAINS])
-    ally = np.concatenate([tr[d].y for d in DOMAINS])
     for fam, make in (("rf", _rf), ("hgb", _hgb)):
         t0 = time.time()
         local = {d: SkWrap(make().fit(tr[d].X, tr[d].y)) for d in DOMAINS}
@@ -114,7 +124,7 @@ def offline(data, models, taus):
                 mask = (var == v) | (ben_run & (D.y == 0))
                 yt, pv = D.y[mask], p[mask]
                 yp = (pv >= taus[(fam, how, d)]).astype(int)
-                rows.append(dict(model=fam, training=how, domain=d, variant=v,
+                rows.append(dict(model=fam, training=how, train_seed=SEED, domain=d, variant=v,
                                  exposure=_exposure(d, v), auc=roc_auc_score(yt, pv),
                                  accuracy=float((yp == yt).mean()),
                                  precision=precision_score(yt, yp, zero_division=0),
@@ -134,12 +144,19 @@ def _episode(args):
                                     cfg.attack_start), "dedicated")
     r = run_episode(tr, cfg, dg, record_ts=False).summary
     return dict(model=fam, training=how, domain=d, variant=v, seed=s,
-                harmed=100 * r["benign_flows_harmed_frac"], attack_demotes=r["attack_demotes"],
+                train_seed=SEED, harmed=100 * r["benign_flows_harmed_frac"], attack_demotes=r["attack_demotes"],
                 benign_demotes=r["benign_demotes"], decision_ms=1000 * r["decision_ms_mean"])
 
 
 def main():
+    import argparse
     import pandas as pd
+    global OUT, SEED
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--seed", type=int, default=0)
+    SEED = ap.parse_args().seed
+    if SEED:
+        OUT = os.path.join(OUT, f"seed{SEED}")
     os.makedirs(OUT, exist_ok=True)
     t0 = time.time()
     data = pickle.load(open("results/v2/datasets.pkl", "rb"))
