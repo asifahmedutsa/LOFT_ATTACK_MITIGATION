@@ -117,8 +117,11 @@ def train_local(X, y, epochs=30, seed=0, hidden=32):
 
 
 def train_federated(client_data, rounds=30, local_epochs=1, mu=0.0, seed=0, hidden=32,
-                    log=None):
+                    log=None, weights=None):
     """FedAvg (mu=0) or FedProx (mu>0) over clients [(X, y), ...].
+
+    Updates are averaged with weights proportional to the clients' row counts, or to
+    `weights` when given (one per client).
 
     Returns the global model and a communication/convergence log.
     """
@@ -127,7 +130,7 @@ def train_federated(client_data, rounds=30, local_epochs=1, mu=0.0, seed=0, hidd
     # Round 0: federated normalization from sufficient statistics.
     glob.scaler = Standardizer.from_stats([Standardizer.stats(X) for X, _ in client_data])
     stats_bytes = len(client_data) * (1 + 2 * d) * 8
-    n = np.array([len(y) for _, y in client_data], float)
+    n = np.array([len(y) for _, y in client_data] if weights is None else weights, float)
     history = []
     up_bytes = down_bytes = 0
     for r in range(rounds):
