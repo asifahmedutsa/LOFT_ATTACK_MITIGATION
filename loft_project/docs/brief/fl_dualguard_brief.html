@@ -79,7 +79,7 @@ code { font-family: var(--mono); font-size: 13px; }
     <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
     <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
     <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). FedProx or 100 rounds recover most of the offline gap and cut online harm to about 7 %, but the remaining gap to pooled is still open.</li>
-    <li><b>Model family matters less than federation.</b> Random Forest leads offline by about 1 point of F1, but the MLP protects users best online (1.4 % harm against 4.8 % for Random Forest) and is 2.4 KB against 16 MB.</li>
+    <li><b>Model family matters less than federation.</b> Over 3 training seeds Random Forest leads offline (F1 96.5 against 94.7) and is more stable, but the MLP protects users best online on every seed (1.3 % harm against 4.9 %) and is 2.4 KB against 16 MB.</li>
   </ol>
 </section>
 
@@ -139,20 +139,20 @@ code { font-family: var(--mono); font-size: 13px; }
 </section>
 
 <section>
-  <h2>3 · Does the model family change the outcome? <span class="chip done">done · seed 0</span></h2>
-  <p>Our MLP against Random Forest and histogram gradient boosting (the families used by FTOP/FTMaster and SFTO-Guard). Trees cannot be weight-averaged, so their federated version averages the three controllers' local model outputs. Offline means over 3 controllers × 7 attacks; online harm from DualGuard episodes on unseen-by-self attacks.</p>
+  <h2>3 · Does the model family change the outcome? <span class="chip done">done · 3 training seeds</span></h2>
+  <p>Our MLP against Random Forest and histogram gradient boosting (the families used by FTOP/FTMaster and SFTO-Guard). Trees cannot be weight-averaged, so their federated version averages the three controllers' local model outputs. Offline means over 3 controllers × 7 attacks; online harm from DualGuard episodes on unseen-by-self attacks. Values are mean ± standard deviation over 3 training seeds.</p>
   <div class="tablewrap"><table>
     <thead><tr><th class="l">Model</th><th class="l">Training</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>F1, zero-day A6</th><th>Online harm %</th><th>Model size</th></tr></thead>
     <tbody>
-      <tr><td class="l">MLP (ours)</td><td class="l">local</td><td>90.95</td><td>84.26</td><td>71.07</td><td>71.76</td><td>—</td><td>3.83</td><td rowspan="1">2.4 KB</td></tr>
-      <tr class="fed"><td class="l">MLP (ours)</td><td class="l">federated</td><td>98.12</td><td class="hi">97.45</td><td>94.85</td><td>95.86</td><td>79.8</td><td class="hi">1.39</td><td>2.4 KB</td></tr>
-      <tr><td class="l">Random Forest</td><td class="l">local</td><td>95.57</td><td>97.18</td><td>86.17</td><td>89.36</td><td>—</td><td>4.39</td><td>16 MB</td></tr>
-      <tr class="fed"><td class="l">Random Forest</td><td class="l">federated</td><td class="hi">98.35</td><td>97.35</td><td class="hi">96.17</td><td class="hi">96.60</td><td class="hi">84.5</td><td>4.83</td><td>16 MB</td></tr>
-      <tr><td class="l">Gradient boosting</td><td class="l">local</td><td>90.72</td><td>72.26</td><td>69.06</td><td>69.73</td><td>—</td><td>8.26</td><td>650 KB</td></tr>
-      <tr class="fed"><td class="l">Gradient boosting</td><td class="l">federated</td><td>97.86</td><td>97.29</td><td>93.52</td><td>94.77</td><td>71.1</td><td>5.49</td><td>650 KB</td></tr>
+      <tr><td class="l">MLP (ours)</td><td class="l">local</td><td>91.3 ± 0.3</td><td>87.4 ± 2.8</td><td>72.1 ± 1.0</td><td>73.3 ± 1.4</td><td>33.7 ± 1.4</td><td>2.99 ± 0.77</td><td>2.4 KB</td></tr>
+      <tr class="fed"><td class="l">MLP (ours)</td><td class="l">federated</td><td>97.8 ± 0.6</td><td>97.2 ± 0.3</td><td>93.5 ± 2.7</td><td>94.7 ± 2.2</td><td>72.2 ± 14.5</td><td class="hi">1.33 ± 0.08</td><td>2.4 KB</td></tr>
+      <tr><td class="l">Random Forest</td><td class="l">local</td><td>94.8 ± 1.9</td><td>96.3 ± 1.4</td><td>83.8 ± 5.6</td><td>86.8 ± 5.7</td><td>72.1 ± 3.1</td><td>4.05 ± 0.49</td><td>16 MB</td></tr>
+      <tr class="fed"><td class="l">Random Forest</td><td class="l">federated</td><td class="hi">98.3 ± 0.1</td><td class="hi">97.4 ± 0.1</td><td class="hi">95.9 ± 0.4</td><td class="hi">96.5 ± 0.3</td><td class="hi">83.1 ± 1.8</td><td>4.89 ± 0.06</td><td>16 MB</td></tr>
+      <tr><td class="l">Gradient boosting</td><td class="l">local</td><td>90.7 ± 0.0</td><td>72.2 ± 0.2</td><td>69.2 ± 0.2</td><td>69.8 ± 0.1</td><td>24.1 ± 0.1</td><td>8.31 ± 0.13</td><td>650 KB</td></tr>
+      <tr class="fed"><td class="l">Gradient boosting</td><td class="l">federated</td><td>97.9 ± 0.0</td><td>97.3 ± 0.0</td><td>93.4 ± 0.2</td><td>94.7 ± 0.2</td><td>70.7 ± 1.1</td><td>5.45 ± 0.11</td><td>650 KB</td></tr>
     </tbody>
   </table></div>
-  <p class="note">Federation lifts every family by 8–25 points of recall; the gap between families is at most 1.3 points. Random Forest leads offline; the MLP leads online, because the trees demote about 15× more benign entries on the IoT domain. <span id="mlseeds"><span class="chip run">running</span> Training seeds 1 and 2, for error bars, are queued.</span></p>
+  <p class="note">Federation lifts the MLP and gradient boosting by about 21–25 points of recall and Random Forest by 12. Random Forest is the best and most stable model offline, by about 2 points of F1 over the MLP; the MLP varies more between training seeds, mostly on the zero-day attack A6. Online the ranking reverses on every seed: the federated MLP harms 1.3 % of benign flows against 4.9 % for Random Forest, because the trees demote many more benign entries on the IoT domain. For Random Forest, output-averaging federation is even slightly worse online than local training.</p>
 </section>
 
 <section>
