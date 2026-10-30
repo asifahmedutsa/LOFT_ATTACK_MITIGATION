@@ -2,3 +2,16 @@
 __pycache__/
 *.pyc
 
+
+# LOFT-Bench large intermediates (regenerate with python -m loftbench.experiment)
+loft_project/results/v2*/datasets.pkl
+loft_project/results/v2*/models.pkl
+loft_project/results/v2*/roc.pkl
+loft_project/results/v2*/*_timeseries.pkl
+.pytest_cache/
+catboost_info/
+loft_project/catboost_info/
+loft_project/results/revision*/models.pkl
+loft_project/results/revision*/train_runs.pkl
+loft_project/traces/
+loft_project/results/revision*/trace_runs.pkl

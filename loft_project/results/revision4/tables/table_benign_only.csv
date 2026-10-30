@@ -1,0 +1,4 @@
+scenario,DMS-BTT tuned + blocklist,DMS-BTT tuned + blocklist + PortGuard,No defense,PortGuard alone,FL-DualGuard v2.1,v2.1 + PortGuard
+dedicated,0.001,0.001,0.0,0.0,0.03,0.03
+distributed,0.0,0.0,0.0,0.0,0.033,0.033
+shared,0.0,0.0,0.0,0.0,0.033,0.033

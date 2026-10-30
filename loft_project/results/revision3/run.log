@@ -1,0 +1,108 @@
+  [train] lovo A3 done, 351s
+  [train] lovo A2 done, 352s
+  [train] lovo A1 done, 355s
+  [train] main None done, 373s
+  [train] lovo A4 done, 759s
+  [train] lovo A5 done, 764s
+  [train] lovo A6 done, 774s
+  [train] lovo A7 done, 806s
+  [train] sweep (0.05, 0) done, 962s
+  [train] sweep (0.05, 1) done, 976s
+  [train] sweep (0.05, 2) done, 993s
+  [train] sweep (0.2, 0) done, 1055s
+  [train] sweep (0.2, 1) done, 1278s
+  [train] sweep (0.2, 2) done, 1287s
+  [train] sweep (1.0, 0) done, 1306s
+  [train] sweep (1.0, 1) done, 1362s
+  [train] sweep (5.0, 0) done, 1528s
+  [train] sweep (5.0, 1) done, 1532s
+  [train] sweep (1.0, 2) done, 1533s
+  [train] sweep (5.0, 2) done, 1598s
+  [train] sweep ('inf', 0) done, 1700s
+  [train] sweep ('inf', 1) done, 1701s
+  [train] sweep ('inf', 2) done, 1703s
+  [online] 300/2550 episodes, 160s
+  [online] 600/2550 episodes, 376s
+  [online] 900/2550 episodes, 628s
+  [online] 1200/2550 episodes, 850s
+  [online] 1500/2550 episodes, 1057s
+  [online] 1800/2550 episodes, 1268s
+  [online] 2100/2550 episodes, 1465s
+  [online] 2400/2550 episodes, 1682s
+== cluster_paired_tests_main.csv
+                      metric                              baseline  mean_cluster_diff  fedavg_wins  fedavg_losses            p       p_holm
+    benign_flows_harmed_frac                            No defense          -0.406807           30              0 1.862645e-09 1.303852e-08
+    benign_flows_harmed_frac             DMS-BTT tuned + blocklist          -0.029603           28              2 4.656613e-08 1.862645e-07
+    benign_flows_harmed_frac                            Local only          -0.063592           30              0 1.862645e-09 1.303852e-08
+    benign_flows_harmed_frac              Pooled raw data (oracle)          -0.001521           12             18 4.399668e-01 8.799335e-01
+    benign_flows_harmed_frac              Ensemble of local models           0.001127           10             20 2.478605e-02 7.435815e-02
+    benign_flows_harmed_frac        Local + public library (A1-A3)          -0.042122           28              2 9.313226e-09 4.656613e-08
+    benign_flows_harmed_frac Local + library of all known variants           0.000469           20             10 8.393927e-01 8.799335e-01
+         avg_attack_occ_post                            No defense          -0.387954           30              0 1.862645e-09 1.303852e-08
+         avg_attack_occ_post             DMS-BTT tuned + blocklist           0.007001           10             20 1.141767e-01 2.283533e-01
+         avg_attack_occ_post                            Local only          -0.086074           30              0 1.862645e-09 1.303852e-08
+         avg_attack_occ_post              Pooled raw data (oracle)           0.007902            0             30 1.862645e-09 1.303852e-08
+         avg_attack_occ_post              Ensemble of local models          -0.006303           30              0 1.862645e-09 1.303852e-08
+         avg_attack_occ_post        Local + public library (A1-A3)          -0.053767           30              0 1.862645e-09 1.303852e-08
+         avg_attack_occ_post Local + library of all known variants          -0.010165           20             10 1.141767e-01 2.283533e-01
+overflow_seconds_post_attack                            No defense        -142.706190           30              0 1.862645e-09 1.303852e-08
+overflow_seconds_post_attack             DMS-BTT tuned + blocklist           0.939524           10             20 6.435078e-01 6.435078e-01
+overflow_seconds_post_attack                            Local only         -24.457143           30              0 1.862645e-09 1.303852e-08
+overflow_seconds_post_attack              Pooled raw data (oracle)           1.603333            0             30 1.862645e-09 1.303852e-08
+overflow_seconds_post_attack              Ensemble of local models          -0.929524           28              2 1.638602e-05 4.915806e-05
+overflow_seconds_post_attack        Local + public library (A1-A3)         -15.097619           30              0 1.862645e-09 1.303852e-08
+overflow_seconds_post_attack Local + library of all known variants          -0.550952           20             10 1.518869e-01 3.037738e-01
+== lovo_online_tests.csv
+                             baseline  pairs  mean_diff_points  fedavg_wins  fedavg_losses            p       p_holm
+                           Local only    105         -8.067033           69             36 2.671380e-07 1.068552e-06
+       Local + public library (A1-A3)    105         -5.919060           50             55 3.285337e-02 9.856012e-02
+             Ensemble of local models    105         -0.321144           44             61 2.275105e-01 4.550210e-01
+Local + library of all known variants    105          1.071195           26             79 1.756882e-08 8.784409e-08
+             Pooled raw data (oracle)    105          0.354145           42             61 2.799096e-01 4.550210e-01
+== table_lovo_offline_tpr.csv
+variant  local  fedavg  pooled  ensemble  lib-dms  lib-all
+     A1  0.695   0.992   0.998     0.986    0.999    0.999
+     A2  0.631   0.991   1.000     1.000    0.642    1.000
+     A3  0.354   0.877   0.996     0.999    0.999    0.999
+     A4  0.206   0.832   0.310     0.460    0.259    0.490
+     A5  0.720   0.971   0.998     0.991    0.996    0.995
+     A6  0.280   0.693   0.725     0.680    0.237    0.817
+     A7  0.544   1.000   0.999     0.998    1.000    1.000
+== table_lovo_online_harmed.csv
+held_out          Local only     FedAvg (v2.1) Pooled raw data (oracle) Ensemble of local models Local + public library (A1-A3) Local + library of all known variants
+      A1                2.46              7.37                     1.25                     1.57                           6.56                                  1.61
+      A2               18.32              1.67                     0.78                     1.07                          18.15                                  0.98
+      A3                9.68              1.65                     1.31                     1.68                           1.38                                  1.62
+      A4               26.07              3.33                     5.37                    12.23                          24.68                                  3.68
+      A5                2.23              1.63                     4.17                     1.47                           2.79                                  1.55
+      A6                4.67               0.9                     1.21                     0.63                           5.66                                  0.45
+      A7               11.56              1.96                     1.96                      2.1                           0.73                                  1.12
+    mean 10.71 [9.31, 12.15] 2.64 [1.59, 3.84]        2.29 [1.44, 3.25]        2.97 [2.42, 3.62]             8.56 [6.35, 10.90]                     1.57 [1.00, 2.22]
+== table_main_by_variant.csv
+                              defense    A1    A2    A3    A4    A5    A6    A7
+                           No defense 45.08 50.17 52.99 51.36 50.38 13.13 32.40
+            DMS-BTT tuned + blocklist  0.30  0.30  0.26 21.15  0.22  9.05  0.17
+                           Local only  1.53  5.85  1.44 29.79  1.60  4.32 10.73
+                        FedAvg (v2.1)  1.49  1.37  1.60  2.68  1.53  0.88  1.19
+             Pooled raw data (oracle)  1.51  1.48  1.53  3.07  1.64  1.23  1.35
+             Ensemble of local models  1.34  1.13  1.41  3.04  1.46  0.61  0.97
+       Local + public library (A1-A3)  1.13  0.94  1.16 29.65  1.27  5.31  0.76
+Local + library of all known variants  1.59  1.03  1.49  3.35  1.60  0.46  0.88
+== table_main_online.csv
+                               method           harmed (%)          mal_occ (%)  overflow_mean  overflow_p90  share_gt_5s  benign_only_harmed_pct
+                           No defense 42.21 [41.08, 43.39] 53.29 [52.02, 54.46]         147.41        188.30        1.000                   0.000
+            DMS-BTT tuned + blocklist    4.49 [3.45, 5.52] 13.79 [12.53, 15.06]           3.77          5.47        0.110                   0.002
+                           Local only    7.89 [7.25, 8.57] 23.10 [22.47, 23.74]          29.16        119.58        0.610                   0.008
+                        FedAvg (v2.1)    1.53 [1.12, 1.98] 14.49 [13.93, 15.04]           4.71          9.31        0.362                   0.038
+             Pooled raw data (oracle)    1.69 [1.14, 2.27] 13.70 [13.18, 14.19]           3.10          5.72        0.119                   0.058
+             Ensemble of local models    1.42 [1.06, 1.82] 15.12 [14.55, 15.68]           5.64         11.23        0.410                   0.027
+       Local + public library (A1-A3)    5.75 [4.33, 7.15] 19.87 [19.06, 20.66]          19.80         44.49        0.424                   0.008
+Local + library of all known variants    1.49 [1.17, 1.83] 15.51 [14.63, 16.42]           5.26         12.22        0.305                   0.048
+== table_skew_sweep_offline.csv
+ alpha  mean_tpr_ensemble  mean_tpr_fedavg  mean_tpr_local  mean_fpr_ensemble  mean_fpr_fedavg  mean_fpr_local  tpr_low_exposure_ensemble  tpr_low_exposure_fedavg  tpr_low_exposure_local  fed_minus_local_tpr_mean  fed_minus_local_tpr_std
+  0.05             0.8807           0.8821          0.7451             0.0094           0.0080          0.0098                     0.8469                   0.8503                  0.6724                    0.1371                   0.2865
+  0.20             0.9674           0.9743          0.9322             0.0120           0.0111          0.0097                     0.9507                   0.9617                  0.8961                    0.0421                   0.1611
+  1.00             0.9755           0.9742          0.9586             0.0085           0.0110          0.0096                     0.9320                   0.9302                  0.8826                    0.0155                   0.0905
+  5.00             0.9802           0.9788          0.9784             0.0094           0.0100          0.0099                     0.8945                   0.8904                  0.8806                    0.0004                   0.0173
+   inf             0.9810           0.9762          0.9755             0.0089           0.0097          0.0091                     0.8758                   0.8478                  0.8335                    0.0008                   0.0172
+{'rule': 'If lib-dms is not worse than fedavg on benign flows harmed (cluster Wilcoxon, Holm p >= 0.05, or mean difference < 0.5 points), federation is not necessary given a public attack library: re-scope the paper to the mitigation policy with federation as an optional deployment. lib-all is reported as an upper bound for libraries but is not part of the decision, because it assumes generators for every attack variant are public.', 'fedavg_minus_libdms_points': -4.212161845775823, 'p_holm': 4.6566128730773926e-08, 'federation_necessary': True}

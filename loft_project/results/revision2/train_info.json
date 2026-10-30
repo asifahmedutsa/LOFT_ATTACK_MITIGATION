@@ -1,0 +1,21 @@
+{
+  "fed_dms_comm": {
+    "rounds": 30,
+    "model_bytes": 644,
+    "uplink_bytes": 57960,
+    "downlink_bytes": 57960,
+    "normalization_bytes": 168,
+    "total_bytes": 116088
+  },
+  "taus": {
+    "flow/bytes/D1": 0.7452684310722687,
+    "flow/packets/D1": 0.7411352536160092,
+    "fed_dms/D1": 0.6848996887670288,
+    "flow/bytes/D2": 0.00038976250160544716,
+    "flow/packets/D2": 3.398476837312134e-05,
+    "fed_dms/D2": 0.32146194677217105,
+    "flow/bytes/D3": 0.0002966961979581093,
+    "flow/packets/D3": 0.00014808438744137845,
+    "fed_dms/D3": 0.47025764088494876
+  }
+}

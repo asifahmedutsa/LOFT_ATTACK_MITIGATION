@@ -1,0 +1,37 @@
+=== [1/18] fl_D1_A2_local_s4000 16:13:19
+ table_full 8862  benign_packet_in_lost_pct 3.49  benign_harmed_pct 13.78
+=== [2/18] fl_D1_A2_v21_s4000 16:19:06
+ table_full 176  benign_packet_in_lost_pct 4.65  benign_harmed_pct 0.36
+=== [3/18] fl_D1_A3_local_s4000 16:24:48
+ table_full 0  benign_packet_in_lost_pct 7.77  benign_harmed_pct 0.01
+=== [4/18] fl_D1_A3_v21_s4000 16:30:01
+ table_full 0  benign_packet_in_lost_pct 4.2  benign_harmed_pct 0.47
+=== [5/18] fl_D1_A6_local_s4000 16:36:25
+ table_full 0  benign_packet_in_lost_pct 1.37  benign_harmed_pct 0.02
+=== [6/18] fl_D1_A6_v21_s4000 16:41:38
+ table_full 0  benign_packet_in_lost_pct 2.54  benign_harmed_pct 0.04
+=== [7/18] fl_D2_A1_local_s4000 16:46:51
+ table_full 283  benign_packet_in_lost_pct 3.49  benign_harmed_pct 0.19
+=== [8/18] fl_D2_A1_v21_s4000 16:53:32
+ table_full 85  benign_packet_in_lost_pct 3.86  benign_harmed_pct 2.61
+=== [9/18] fl_D2_A3_local_s4000 16:59:21
+ table_full 471  benign_packet_in_lost_pct 2.93  benign_harmed_pct 0.3
+=== [10/18] fl_D2_A3_v21_s4000 17:05:40
+ table_full 311  benign_packet_in_lost_pct 3.77  benign_harmed_pct 2.8
+=== [11/18] fl_D2_A6_local_s4000 17:11:50
+ table_full 4371  benign_packet_in_lost_pct 0.0  benign_harmed_pct 6.13
+=== [12/18] fl_D2_A6_v21_s4000 17:17:44
+ table_full 0  benign_packet_in_lost_pct 0.0  benign_harmed_pct 3.08
+=== [13/18] fl_D3_A1_local_s4000 17:23:32
+ table_full 0  benign_packet_in_lost_pct 7.32  benign_harmed_pct 0.52
+=== [14/18] fl_D3_A1_v21_s4000 17:29:25
+ table_full 0  benign_packet_in_lost_pct 10.06  benign_harmed_pct 0.5
+=== [15/18] fl_D3_A2_local_s4000 17:34:39
+ table_full 0  benign_packet_in_lost_pct 8.58  benign_harmed_pct 0.22
+=== [16/18] fl_D3_A2_v21_s4000 17:39:52
+ table_full 226  benign_packet_in_lost_pct 8.38  benign_harmed_pct 0.36
+=== [17/18] fl_D3_A6_local_s4000 17:45:06
+ table_full 0  benign_packet_in_lost_pct 3.8  benign_harmed_pct 0.69
+=== [18/18] fl_D3_A6_v21_s4000 17:50:19
+ table_full 0  benign_packet_in_lost_pct 2.46  benign_harmed_pct 0.1
+matrix done 17:55:32

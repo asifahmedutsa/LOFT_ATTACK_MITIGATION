@@ -1,0 +1,10 @@
+[train] data loaded in 0 s
+  trained mlp
+  trained rf in 165.8 s
+  trained hgb in 34.1 s
+[offline]
+  offline D1 done
+  offline D2 done
+  offline D3 done
+[online] 162 episodes
+done in 638 s

@@ -1,0 +1,236 @@
+<title>FL-DualGuard Progress Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of findings; each finding = claim, evidence table or chart, caveat. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #17202b; --muted: #5b6573; --line: #dde1e7;
+  --accent: #1f5f8b; --accent-soft: #e3eef6;
+  --local: #b9c2cd; --fed: #1f5f8b; --pooled: #7a9b3a; --warn: #a35a00; --warn-soft: #fbefdf;
+  --good: #2c7a4b;
+  --sans: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --surface: #18202a; --fg: #e6eaef; --muted: #9aa5b3; --line: #2a3542;
+  --accent: #6fb0e0; --accent-soft: #1c3346;
+  --local: #56616e; --fed: #6fb0e0; --pooled: #a7c76a; --warn: #f0b060; --warn-soft: #3a2a14;
+  --good: #6cc28f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #18202a; --fg: #e6eaef; --muted: #9aa5b3; --line: #2a3542;
+  --accent: #6fb0e0; --accent-soft: #1c3346;
+  --local: #56616e; --fed: #6fb0e0; --pooled: #a7c76a; --warn: #f0b060; --warn-soft: #3a2a14;
+  --good: #6cc28f; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 44px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(28px, 4.5vw, 38px); line-height: 1.15; margin: 0; text-wrap: balance; font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 22px; margin: 0; text-wrap: balance; font-weight: 600; }
+h3 { font-size: 15px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: grid; gap: 14px; }
+.takeaways { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; display: grid; gap: 12px; }
+.takeaways ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+.takeaways li { max-width: 72ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+thead th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; background: var(--bg); }
+tbody tr:last-child td { border-bottom: 0; }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.l { font-family: var(--sans); }
+tr.fed td { background: var(--accent-soft); }
+.hi { color: var(--good); font-weight: 600; }
+.bad { color: var(--warn); font-weight: 600; }
+.note { font-size: 14px; color: var(--muted); max-width: 72ch; }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; display: grid; gap: 6px; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); vertical-align: middle; }
+.chip.done { color: var(--good); border-color: currentColor; }
+.chip.run { color: var(--warn); border-color: currentColor; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 14px 10px; display: grid; gap: 8px; min-width: 0; }
+figcaption { font-size: 13px; color: var(--muted); }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+svg .val { fill: var(--fg); font-size: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.next { display: grid; gap: 8px; padding-left: 22px; margin: 0; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+code { font-family: var(--mono); font-size: 13px; }
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">FL-DualGuard · progress brief · 30 Oct 2026</div>
+  <h1>Federated defense against low-rate flow-table overflow: what the new experiments show</h1>
+  <p class="lede">Three new experiments today: local versus federated detectors on Mininet/Ryu, scaling the federation from 3 to 9 controllers in the simulator, and a model-family comparison (MLP, Random Forest, gradient boosting). Harm throughout means benign flows refused or evicted while active, as a % of benign flows.</p>
+</header>
+
+<section class="takeaways" aria-label="Key results">
+  <h2>Key results</h2>
+  <ol>
+    <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
+    <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
+    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls cuts FedAvg harm to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. But on the main three-controller setup it leaves harm unchanged and lengthens overflow from 4.7 to 6.6 s (fresh seeds), so it is not the default. IoT controllers remain the open part.</li>
+    <li><b>Model family matters less than federation.</b> Over 3 training seeds Random Forest leads offline (F1 96.5 against 94.7) and is more stable, but the MLP protects users best online on every seed (1.3 % harm against 4.9 %) and is 2.4 KB against 16 MB.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1 · Local vs federated detector on Mininet/Ryu <span class="chip done">done · 18 runs</span></h2>
+  <p>Each controller is attacked with variants it never trained on: one seen by another controller, and A6, which no controller saw. Same DualGuard policy; only the model changes. OVS 3.3.9 with a 3,500-entry table, Ryu 4.34, 300 s per run, seed 4000.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Controller</th><th class="l">Attack</th><th class="l">Model</th><th>Testbed harm %</th><th>Simulator, same seed</th><th>Simulator mean [min, max]</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td class="l">A2 (seen by D2)</td><td class="l">local</td><td class="bad">13.78</td><td>13.72</td><td>13.16 [7.97, 17.11]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A2 (seen by D2)</td><td class="l">federated</td><td class="hi">0.36</td><td>0.30</td><td>0.33 [0.11, 0.55]</td></tr>
+      <tr><td>D1</td><td class="l">A3 (seen by D3)</td><td class="l">local</td><td>0.01</td><td>0.14</td><td>0.68 [0.22, 1.25]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A3 (seen by D3)</td><td class="l">federated</td><td>0.47</td><td>0.15</td><td>0.58 [0.20, 1.15]</td></tr>
+      <tr><td>D1</td><td class="l">A6 (unseen)</td><td class="l">local</td><td>0.02</td><td>0.04</td><td>0.10 [0.02, 0.29]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td>0.04</td><td>0.05</td><td>0.12 [0.04, 0.30]</td></tr>
+      <tr><td>D2</td><td class="l">A1 (seen by D1)</td><td class="l">local</td><td>0.19</td><td>3.49</td><td>3.09 [2.35, 4.01]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A1 (seen by D1)</td><td class="l">federated</td><td>2.61</td><td>3.33</td><td>2.88 [2.60, 3.26]</td></tr>
+      <tr><td>D2</td><td class="l">A3 (seen by D3)</td><td class="l">local</td><td>0.30</td><td>3.83</td><td>2.68 [2.17, 3.33]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A3 (seen by D3)</td><td class="l">federated</td><td>2.80</td><td>3.87</td><td>2.96 [2.49, 3.63]</td></tr>
+      <tr><td>D2</td><td class="l">A6 (unseen)</td><td class="l">local</td><td class="bad">6.13</td><td>9.58</td><td>7.58 [6.47, 8.46]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td class="hi">3.08</td><td>2.27</td><td>2.26 [1.94, 2.75]</td></tr>
+      <tr><td>D3</td><td class="l">A1 (seen by D1)</td><td class="l">local</td><td>0.52</td><td>1.18</td><td>0.84 [0.11, 2.72]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A1 (seen by D1)</td><td class="l">federated</td><td>0.50</td><td>1.38</td><td>0.91 [0.10, 2.89]</td></tr>
+      <tr><td>D3</td><td class="l">A2 (seen by D2)</td><td class="l">local</td><td>0.22</td><td>1.28</td><td>0.64 [0.08, 1.84]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A2 (seen by D2)</td><td class="l">federated</td><td>0.36</td><td>1.38</td><td>0.74 [0.12, 1.97]</td></tr>
+      <tr><td>D3</td><td class="l">A6 (unseen)</td><td class="l">local</td><td class="bad">0.69</td><td>3.53</td><td>3.42 [0.66, 11.1]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td class="hi">0.10</td><td>0.34</td><td>0.36 [0.04, 2.08]</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Federation helps in the three cells where the simulator predicted it (D1 A2, D2 A6, D3 A6) and changes nothing elsewhere. One deviation: on D2 with attacks A1 and A3, the local model harms 0.2–0.3 % on the testbed against about 3 % simulated. Not yet explained; it does not change the conclusion. Benign Packet-In loss was 0–10 % per run and is reported separately, not as harm.</p>
+</section>
+
+<section>
+  <h2>2 · More controllers: 3 → 6 → 9 <span class="chip done">done · simulator</span></h2>
+  <p>Nine controller domains (three variants each of enterprise, IoT and cloud traffic), nested so K = 3 ⊂ 6 ⊂ 9. Each controller trains on <b>one</b> attack variant (A1, A2, A3, A4, A5, A7, then repeating), so a bigger federation also pools more attack knowledge. Local, FedAvg and pooled MLPs, 3 training seeds, threshold at 1 % benign per controller, 4,032 online episodes.</p>
+  <div class="legend"><span style="--c: var(--local)">Local only</span><span style="--c: var(--fed)">FedAvg</span><span style="--c: var(--pooled)">Pooled (all raw data, upper bound)</span></div>
+  <div class="charts">
+    <figure><svg id="c1" viewBox="0 0 340 220" role="img" aria-label="F1 on attacks seen by another controller"></svg>
+      <figcaption>Detection F1 on attacks this controller never saw, but another controller in the federation did.</figcaption></figure>
+    <figure><svg id="c2" viewBox="0 0 340 220" role="img" aria-label="F1 on attacks seen by no controller"></svg>
+      <figcaption>Detection F1 on attacks no controller in the federation saw (zero-day for everyone).</figcaption></figure>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Controllers (K)</th><th>No defense</th><th>Local</th><th>FedAvg</th><th>Pooled</th><th>FedAvg benign demotes / episode</th></tr></thead>
+    <tbody>
+      <tr><td>3</td><td>42.6</td><td>11.9</td><td class="hi">5.1</td><td>7.8</td><td>519</td></tr>
+      <tr><td>6</td><td>44.3</td><td>13.4</td><td class="bad">11.0</td><td>2.6</td><td>6,148</td></tr>
+      <tr><td>9</td><td>43.3</td><td>11.3</td><td class="bad">8.5</td><td>2.9</td><td>5,018</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Online harm %, mean over all controllers × 7 attacks × seeds. FedAvg always beats local, but at K = 6 and 9 it demotes about 10× more benign entries than pooled training. The worst are the IoT controllers C2, C5 and C8 (16–26 % harm), whose many low-rate periodic flows look like attack flows.</p>
+  <div class="callout">
+    <h3>Diagnosis: partly under-training on non-IID clients, partly an open problem</h3>
+    <p>Same data, K = 6 / 9, offline F1: FedAvg 30 rounds <span class="num">91.5 / 89.5</span>; <b>100 rounds <span class="num">94.4 / 92.7</span></b>; FedProx <span class="num">93.1 / 92.1</span>; 3 local epochs <span class="num">90.1 / 88.6</span>; local fine-tuning <span class="num">88.0 / 86.2</span>; pooled <span class="num">95.6 / 93.8</span>. More rounds closes most of the gap; fine-tuning hurts because it forgets other controllers' attacks.</p>
+    <p id="fedonline"><b>Online, the fixes help but do not close the gap.</b> Harm % at K = 6 / 9 (2 episode seeds): FedAvg 30 rounds <span class="num">11.0 / 8.5</span>; FedProx <span class="num">7.5 / 6.9</span>; 100 rounds <span class="num">7.3 / 7.7</span>; 3 local epochs <span class="num">10.3 / 7.5</span>; fine-tuning <span class="num">10.4 / 9.3</span>; pooled <span class="num">2.6 / 2.9</span>; local <span class="num">13.5 / 11.3</span>. On the IoT controllers every federated variant stays at 13–23 % against 4–6 % pooled. Offline every model keeps the 1 % benign budget per sampled entry, yet online FedAvg demotes 4,000–7,000 benign entries per episode against about 400–600 for pooled. A likely cause is that long-lived periodic IoT flows are scored at every poll, so each one gets hundreds of chances to cross the threshold.</p>
+  </div>
+  <div class="callout">
+    <h3>Fix tested: calibrate the threshold on whole flows <span class="chip done">done · 5,544 episodes</span></h3>
+    <p>Instead of flagging at most 1 % of sampled benign <i>rows</i>, each controller sets its threshold so that at most 1 % of benign <i>flows</i> ever cross it during its validation episodes (each flow's maximum score over all polls). The old row budget turned out to let about 5 % of benign flows cross. Also tested: weighting the federated average by each client's benign rows (favours IoT) or uniformly. Mean online harm %, 2 training seeds × 2 episode seeds:</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Model</th><th>K = 6, row budget</th><th>K = 6, flow 1 %</th><th>K = 9, row budget</th><th>K = 9, flow 1 %</th><th>IoT controllers, K = 9, flow 1 %</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Local</td><td>13.6</td><td>16.0</td><td>11.4</td><td>13.8</td><td>23.0</td></tr>
+        <tr class="fed"><td class="l">FedAvg</td><td>9.4</td><td>6.7</td><td>6.9</td><td class="hi">4.2</td><td>8.9</td></tr>
+        <tr class="fed"><td class="l">FedProx</td><td>8.5</td><td class="hi">5.4</td><td>8.6</td><td>5.8</td><td>11.3</td></tr>
+        <tr class="fed"><td class="l">FedProx, benign-weighted</td><td>10.3</td><td>6.4</td><td>9.1</td><td>5.9</td><td>11.3</td></tr>
+        <tr class="fed"><td class="l">FedProx, uniform weights</td><td>8.9</td><td>6.0</td><td>6.9</td><td>4.5</td><td>8.7</td></tr>
+        <tr><td class="l">Pooled (upper bound)</td><td>2.8</td><td>2.1</td><td>2.8</td><td>2.1</td><td>3.6</td></tr>
+      </tbody>
+    </table></div>
+    <p>Flow-level calibration cuts federated harm by about a third (FedAvg 6.9 → 4.2 % at K = 9) and halves benign demotes, while F1 on attacks seen by another controller stays at about 97. The cost is offline F1 on the attack no one saw (FedAvg 49 → 35 at K = 9). It helps pooled training too, but makes local models worse because they lose recall. Weighting by benign rows does not help. The gap to pooled training shrinks from about 6 points to about 2–3, and the IoT controllers (9–11 % against 3.6 %) remain the open part. These runs did not record attack containment.</p>
+  </div>
+  <div class="callout">
+    <h3>Check on the main three-controller setup: not adopted as default <span class="chip done">done · 480 episodes, unused seeds 10000–10009</span></h3>
+    <p>v2.1 with its current threshold against the same model with the flow-level threshold (fixed earlier on validation seeds, not retuned). Attacked episodes, means with 95 % cluster-bootstrap intervals; the paired test is over 30 controller × seed clusters.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Threshold</th><th>Benign harmed %</th><th>Evicted while active %</th><th>Attack's table share %</th><th>Overflow after attack, s (mean / p90)</th><th>D2 overflow, s</th></tr></thead>
+      <tbody>
+        <tr class="fed"><td class="l">Current (per poll)</td><td>1.56 [1.15, 2.01]</td><td>0.61</td><td>14.5</td><td class="hi">4.7 / 8.8</td><td>8.2</td></tr>
+        <tr><td class="l">Flow-level 1 %</td><td>1.49 [1.13, 1.88]</td><td>0.15</td><td>16.2</td><td>6.6 / 11.3</td><td>12.8</td></tr>
+      </tbody>
+    </table></div>
+    <p>With three controllers, harm does not change (p = 0.34) but containment gets worse in all 30 clusters: the attack holds 1.7 points more of the table and overflow lasts 1.9 s longer, above the 5 s limit set when v2.1 was chosen. This matches the earlier validation check. So the current threshold stays the default at K = 3. Flow-level calibration helps harm at K = 6 / 9, but whether it costs containment there too is not yet measured.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Does the model family change the outcome? <span class="chip done">done · 3 training seeds</span></h2>
+  <p>Our MLP against Random Forest and histogram gradient boosting (the families used by FTOP/FTMaster and SFTO-Guard). Trees cannot be weight-averaged, so their federated version averages the three controllers' local model outputs. Offline means over 3 controllers × 7 attacks; online harm from DualGuard episodes on unseen-by-self attacks. Values are mean ± standard deviation over 3 training seeds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Model</th><th class="l">Training</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>F1, zero-day A6</th><th>Online harm %</th><th>Model size</th></tr></thead>
+    <tbody>
+      <tr><td class="l">MLP (ours)</td><td class="l">local</td><td>91.3 ± 0.3</td><td>87.4 ± 2.8</td><td>72.1 ± 1.0</td><td>73.3 ± 1.4</td><td>33.7 ± 1.4</td><td>2.99 ± 0.77</td><td>2.4 KB</td></tr>
+      <tr class="fed"><td class="l">MLP (ours)</td><td class="l">federated</td><td>97.8 ± 0.6</td><td>97.2 ± 0.3</td><td>93.5 ± 2.7</td><td>94.7 ± 2.2</td><td>72.2 ± 14.5</td><td class="hi">1.33 ± 0.08</td><td>2.4 KB</td></tr>
+      <tr><td class="l">Random Forest</td><td class="l">local</td><td>94.8 ± 1.9</td><td>96.3 ± 1.4</td><td>83.8 ± 5.6</td><td>86.8 ± 5.7</td><td>72.1 ± 3.1</td><td>4.05 ± 0.49</td><td>16 MB</td></tr>
+      <tr class="fed"><td class="l">Random Forest</td><td class="l">federated</td><td class="hi">98.3 ± 0.1</td><td class="hi">97.4 ± 0.1</td><td class="hi">95.9 ± 0.4</td><td class="hi">96.5 ± 0.3</td><td class="hi">83.1 ± 1.8</td><td>4.89 ± 0.06</td><td>16 MB</td></tr>
+      <tr><td class="l">Gradient boosting</td><td class="l">local</td><td>90.7 ± 0.0</td><td>72.2 ± 0.2</td><td>69.2 ± 0.2</td><td>69.8 ± 0.1</td><td>24.1 ± 0.1</td><td>8.31 ± 0.13</td><td>650 KB</td></tr>
+      <tr class="fed"><td class="l">Gradient boosting</td><td class="l">federated</td><td>97.9 ± 0.0</td><td>97.3 ± 0.0</td><td>93.4 ± 0.2</td><td>94.7 ± 0.2</td><td>70.7 ± 1.1</td><td>5.45 ± 0.11</td><td>650 KB</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Federation lifts the MLP and gradient boosting by about 21–25 points of recall and Random Forest by 12. Random Forest is the best and most stable model offline, by about 2 points of F1 over the MLP; the MLP varies more between training seeds, mostly on the zero-day attack A6. Online the ranking reverses on every seed: the federated MLP harms 1.3 % of benign flows against 4.9 % for Random Forest, because the trees demote many more benign entries on the IoT domain. For Random Forest, output-averaging federation is even slightly worse online than local training.</p>
+</section>
+
+<section>
+  <h2>4 · Already established (testbed matrix, 29 Oct)</h2>
+  <p>48 Mininet/Ryu runs reproduce the simulator on D1–D3 for every defense, after we found and fixed a controller timing bug (entries dated by a lagging poll clock lost their per-flow history). DualGuard v2.1 alone: 0.26–5.3 % harm against 34–45 % with no defense. Open problem: on the bigFlows trace with the mimicry attack A4, DualGuard alone harms 40.9 % (27 % simulated); with PortGuard it is 3.2 %.</p>
+</section>
+
+<section>
+  <h2>What I'd like to discuss</h2>
+  <ul class="next">
+    <li>Does the scaling result plus the FedAvg diagnosis make a stronger paper story than a fixed 3-controller setup? It lets us claim FL keeps paying off as controllers join, and to show the convergence fix.</li>
+    <li>Which baselines are a must for the target venue: rDefender, FTMaster-style trees, and SFTO-Guard (see the revision plan).</li>
+    <li>Next: a concurrent multi-controller Mininet topology, the automatic PortGuard switch, and the fair-share guarantee with a weight-inflation attacker.</li>
+  </ul>
+</section>
+
+<footer>Code and data: branch <code>loft-v2</code>. Scaling in <code>loftbench/scale.py</code>, <code>scale_fed.py</code>, results in <code>results/scale/</code>; Mininet runs in <code>results/testbed_fl/</code>; model comparison in <code>results/ml_compare/</code>; testbed matrix in <code>docs/results_v2.md</code> §18.</footer>
+</main>
+
+<script>
+(function () {
+  var data = {
+    c1: { K3: [67.5, 99.1, 99.1], K6: [47.2, 96.7, 98.0], K9: [52.7, 96.1, 98.0] },
+    c2: { K3: [36.9, 55.2, 50.9], K6: [19.1, 59.9, 80.8], K9: [14.5, 48.7, 67.8] }
+  };
+  var colors = ["var(--local)", "var(--fed)", "var(--pooled)"];
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  Object.keys(data).forEach(function (id) {
+    var svg = document.getElementById(id), L = 34, R = 330, T = 14, B = 186;
+    var y = function (v) { return B - (B - T) * v / 100; };
+    [0, 25, 50, 75, 100].forEach(function (t) {
+      svg.appendChild(el("line", { x1: L, x2: R, y1: y(t), y2: y(t), stroke: "var(--line)", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end" }, t));
+    });
+    var groups = Object.keys(data[id]), gw = (R - L) / groups.length, bw = 22;
+    groups.forEach(function (g, gi) {
+      var x0 = L + gi * gw + (gw - 3 * bw - 8) / 2;
+      data[id][g].forEach(function (v, i) {
+        var x = x0 + i * (bw + 4);
+        svg.appendChild(el("rect", { x: x, y: y(v), width: bw, height: B - y(v), fill: colors[i], rx: 2 }));
+        svg.appendChild(el("text", { x: x + bw / 2, y: y(v) - 4, "text-anchor": "middle", "class": "val" }, Math.round(v)));
+      });
+      svg.appendChild(el("text", { x: L + gi * gw + gw / 2, y: B + 18, "text-anchor": "middle" }, "K = " + g.slice(1)));
+    });
+  });
+})();
+</script>

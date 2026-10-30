@@ -1,0 +1,834 @@
+{
+  "created_utc": "2026-10-26T03:49:47.861841+00:00",
+  "purpose": "Fair DMS-BTT comparison: same validation selection budget/rule as v2.1",
+  "n_candidates": 96,
+  "families": {
+    "A": 48,
+    "B": 24,
+    "C": 16,
+    "D": 6,
+    "E": 2
+  },
+  "v21_candidates_for_reference": 24,
+  "candidates": [
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.85,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.6,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.6,h1=0.95,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.85,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.7,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.7,h1=0.95,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.85,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.75,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.75,h1=0.95,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.85,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.85,p=0.7,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.3,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.3,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.3,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.5,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.5,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.5,numb=packets"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.7,numb=bytes"
+    },
+    {
+      "family": "A",
+      "h2": 0.8,
+      "h1": 0.95,
+      "p": 0.7,
+      "numb": "packets",
+      "id": "family=A,h2=0.8,h1=0.95,p=0.7,numb=packets"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 10,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=bytes,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 10,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=packets,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 30,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=bytes,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 30,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=packets,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=bytes,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.5,numb=packets,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 10,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 10,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=packets,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 30,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 30,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=packets,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=packets,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 10,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=bytes,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 10,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=packets,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 30,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=bytes,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 30,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=packets,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=bytes,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "packets",
+      "block": 60,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.5,numb=packets,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 10,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=bytes,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 10,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=packets,block=10"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 30,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=bytes,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 30,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=packets,block=30"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=bytes,block=60"
+    },
+    {
+      "family": "B",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "packets",
+      "block": 60,
+      "id": "family=B,h2=0.75,h1=0.9,p=0.7,numb=packets,block=60"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": true,
+      "hard": "off",
+      "numb": "bytes",
+      "id": "family=C,rho=0.5,gate=True,hard=off,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": true,
+      "hard": "off",
+      "numb": "packets",
+      "id": "family=C,rho=0.5,gate=True,hard=off,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": true,
+      "hard": "h0.90",
+      "numb": "bytes",
+      "id": "family=C,rho=0.5,gate=True,hard=h0.90,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": true,
+      "hard": "h0.90",
+      "numb": "packets",
+      "id": "family=C,rho=0.5,gate=True,hard=h0.90,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": false,
+      "hard": "off",
+      "numb": "bytes",
+      "id": "family=C,rho=0.5,gate=False,hard=off,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": false,
+      "hard": "off",
+      "numb": "packets",
+      "id": "family=C,rho=0.5,gate=False,hard=off,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": false,
+      "hard": "h0.90",
+      "numb": "bytes",
+      "id": "family=C,rho=0.5,gate=False,hard=h0.90,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.5,
+      "gate": false,
+      "hard": "h0.90",
+      "numb": "packets",
+      "id": "family=C,rho=0.5,gate=False,hard=h0.90,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": true,
+      "hard": "off",
+      "numb": "bytes",
+      "id": "family=C,rho=0.7,gate=True,hard=off,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": true,
+      "hard": "off",
+      "numb": "packets",
+      "id": "family=C,rho=0.7,gate=True,hard=off,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": true,
+      "hard": "h0.90",
+      "numb": "bytes",
+      "id": "family=C,rho=0.7,gate=True,hard=h0.90,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": true,
+      "hard": "h0.90",
+      "numb": "packets",
+      "id": "family=C,rho=0.7,gate=True,hard=h0.90,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": false,
+      "hard": "off",
+      "numb": "bytes",
+      "id": "family=C,rho=0.7,gate=False,hard=off,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": false,
+      "hard": "off",
+      "numb": "packets",
+      "id": "family=C,rho=0.7,gate=False,hard=off,numb=packets"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": false,
+      "hard": "h0.90",
+      "numb": "bytes",
+      "id": "family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes"
+    },
+    {
+      "family": "C",
+      "rho": 0.7,
+      "gate": false,
+      "hard": "h0.90",
+      "numb": "packets",
+      "id": "family=C,rho=0.7,gate=False,hard=h0.90,numb=packets"
+    },
+    {
+      "family": "D",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=D,h2=0.6,h1=0.9,p=0.3,numb=bytes"
+    },
+    {
+      "family": "D",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=D,h2=0.6,h1=0.9,p=0.5,numb=bytes"
+    },
+    {
+      "family": "D",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=D,h2=0.6,h1=0.9,p=0.7,numb=bytes"
+    },
+    {
+      "family": "D",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.3,
+      "numb": "bytes",
+      "id": "family=D,h2=0.75,h1=0.9,p=0.3,numb=bytes"
+    },
+    {
+      "family": "D",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.5,
+      "numb": "bytes",
+      "id": "family=D,h2=0.75,h1=0.9,p=0.5,numb=bytes"
+    },
+    {
+      "family": "D",
+      "h2": 0.75,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "id": "family=D,h2=0.75,h1=0.9,p=0.7,numb=bytes"
+    },
+    {
+      "family": "E",
+      "rho": 0.5,
+      "numb": "bytes",
+      "id": "family=E,rho=0.5,numb=bytes"
+    },
+    {
+      "family": "E",
+      "rho": 0.7,
+      "numb": "bytes",
+      "id": "family=E,rho=0.7,numb=bytes"
+    }
+  ],
+  "rule": {
+    "objective": "minimize mean benign_flows_impacted_frac over attacked validation episodes",
+    "constraints": {
+      "avg_attack_occ_post_max": 0.15,
+      "overflow_seconds_post_attack_max": 5.0,
+      "benign_only_impacted_max": 0.01
+    },
+    "tie_break": "prefer hard=off, then *_noctx, then fedavg (simpler)",
+    "fallback": "if no candidate in a family is feasible, minimize the summed relative constraint violation, then the objective (v2.1 never reached its fallback, so this does not change v2.1's selection)"
+  },
+  "selection": "per family, validation seeds only",
+  "validation_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    5000,
+    5001,
+    5002,
+    5003,
+    5004,
+    5005,
+    5006,
+    5007,
+    5008,
+    5009
+  ],
+  "test_reuse_note": "Seeds 5000-5009 were used to test v2.1 but never to tune any DMS-BTT configuration; v2.1 rows are reused from results/revision1.",
+  "calibration_budget": 0.01,
+  "numb_note": "Both Numb definitions are tuned; report the one matching the DMS-BTT paper (Section 4) as primary once checked."
+}

@@ -1,0 +1,20 @@
+[online]
+  DualGuard policy knobs: {'rho': 0.7, 't_short': 1.0}
+  [online] 200/3360 episodes, 96s
+  [online] 400/3360 episodes, 200s
+  [online] 600/3360 episodes, 298s
+  [online] 800/3360 episodes, 418s
+  [online] 1000/3360 episodes, 937s
+  [online] 1200/3360 episodes, 1971s
+  [online] 1400/3360 episodes, 2111s
+  [online] 1600/3360 episodes, 2240s
+  [online] 1800/3360 episodes, 2372s
+  [online] 2000/3360 episodes, 2502s
+  [online] 2200/3360 episodes, 2636s
+  [online] 2400/3360 episodes, 2784s
+  [online] 2600/3360 episodes, 2919s
+  [online] 2800/3360 episodes, 3050s
+  [online] 3000/3360 episodes, 3184s
+  [online] 3200/3360 episodes, 3314s
+[report]
+tables -> results/v2/tables; figures -> results/v2/figures

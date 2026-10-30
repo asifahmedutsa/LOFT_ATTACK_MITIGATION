@@ -1,0 +1,1418 @@
+# FL-DualGuard v2 — results (simulation track)
+
+Run: `results/v2/` (see `manifest.json` for package versions, splits, and
+configuration). `manifest.json` records base commit 4843620 with a dirty tree, because
+the run was made before this code was committed. The code that produced it is the
+commit that adds this file. The only edit after the online run is the figure-scaling and
+layout fix in `report.py`, which does not change any numbers. Generated 25 October 2026 on Ubuntu 24.04 (4 CPU cores) with Python 3.12.3.
+Methodology: `docs/methodology_v2.md`. Every number below can be regenerated with the
+commands in methodology §8.
+
+**Scope of these results.** They come from the LOFT-Bench discrete-time simulator
+(bounded OpenFlow tables, reactive install, idle timeouts, 1 s stats polling). They are
+not yet confirmed on Mininet/OVS; see §7. Each online condition was run on 10
+independent seeds (4000–4009) × 3 domains. Brackets give 95 % bootstrap CIs over
+episodes. p-values come from paired Wilcoxon tests on identical traffic, Holm-corrected
+(`tables/paired_tests.csv`).
+
+## 1. Sanity: the attack is real and the no-defense baseline is honest
+
+- **Benign-only, no defense:**
+  - Peak occupancy (seed 4000): 46 % (D1) and 64 % (D2), plus 75 % during a D3
+    flash crowd.
+  - No TABLE_FULL events in any of the 30 benign-only episodes.
+- **DMS-BTT parameter sets (A1–A3), no defense:**
+  - The table overflows 39–108 s after onset.
+  - 45–54 % of benign flows are refused admission at least once.
+- **Reimplemented DMS-BTT state classifier:**
+  - Three-state accuracy is 88–96 % and attack detection rate (ADR) is 92–97 %
+    (`offline_dms_state.csv`), the same range as the paper's 86.89 % / 94 %.
+  - This supports the reimplementation without proving equivalence.
+- **Calibration:**
+  - A 1 % benign flag-rate budget fixed on validation runs gave 1.0–1.1 % FPR on
+    held-out test runs.
+
+## 2. Offline detection: federation transfers attack knowledge across controllers
+
+Per-entry ROC AUC on offline-test runs, averaged over domains, grouped by whether the
+evaluating controller saw the variant in training (`tables/table_offline_by_exposure.csv`,
+Fig. 3):
+
+| Detector | Seen locally | Seen only by other controllers | Unseen by all (A6) |
+|---|---|---|---|
+| DMS-BTT flow classifier (local CatBoost) | 0.995 | 0.884 | 0.620 |
+| Local MLP | 1.000 | 0.884 | 0.681 |
+| Local SVM-RF (legacy FL-DualGuard) | 1.000 | 0.973 | 0.958 |
+| FedAvg MLP | 1.000 | 0.999 | 0.980 |
+| **FedProx MLP (FL-DualGuard)** | 1.000 | 0.999 | 0.972 |
+| Pooled raw data (oracle) | 1.000 | 1.000 | 0.986 |
+
+At the calibrated threshold, TPR on A6 is 0.57 (FedProx) and 0.68 (FedAvg), compared
+with 0.30 (local MLP) and 0.17 (DMS-BTT).
+
+**Communication.** Federation needs 30 rounds × 3 clients with a 2,436-byte model, plus
+normalization statistics: **439 KB in total** for the whole training. Validation AUC
+reaches 0.999 by about round 15 (Fig. 4).
+
+## 3. Online defense: main comparison (attacked episodes, n = 210 per defense)
+
+`tables/table_main_attack.csv`, Fig. 2:
+
+| Defense | Benign flows impacted (%) | Malicious occupancy after onset (%) | Overflow (s / 300 s) | Decision loop (ms) |
+|---|---|---|---|---|
+| No defense | 42.27 [40.34, 44.23] | 53.31 | 147.3 | 0.07 |
+| OVS evict | 58.78 [56.71, 60.87] | 51.04 | 158.2 | 0.07 |
+| Threshold-LRU | 36.24 [34.66, 37.93] | 40.79 | 17.1 | 0.16 |
+| DMS-BTT (reimpl.) | 11.96 [9.90, 14.12] | 24.93 | 13.3 | 4.21 |
+| Local SVM-RF + DG policy | 8.14 [6.53, 9.94] | 21.87 | 4.3 | 84.36 |
+| Local MLP + DG policy | 19.25 [16.83, 21.84] | 25.73 | 4.1 | 2.93 |
+| FedAvg + DG policy | 4.65 [3.85, 5.57] | 15.08 | 3.1 | 2.59 |
+| **FL-DualGuard (FedProx)** | **5.51 [4.57, 6.57]** | **14.96** | **3.0** | **2.55** |
+| Centralized pooled (oracle) | 4.85 [3.97, 5.84] | 13.84 | 2.4 | 2.51 |
+
+**Compared with DMS-BTT**, FL-DualGuard impacts 2.2× fewer benign flows: −6.5 points,
+better in 160 of 210 paired episodes, p_Holm < 1e-4. It also leaves 1.7× less malicious
+occupancy (200 of 210 wins). On the three DMS-BTT parameter sets and the
+fixed-size variants (A1–A3, A5, A7), the two are close (2–5 % vs 4–5 %). The gap
+comes from mimicry (A4: 17.7 % vs 41.9 %) and the unseen slow-fill variant
+(A6: 3.9 % vs 17.9 %), where DMS-BTT is worse than no defense (12.2 %) because it
+evicts benign flows.
+
+**Compared with local learning**, the same policy with a local MLP impacts 19.3 %, which
+federation cuts by 3.5×. By exposure group (online):
+
+| Exposure | Local MLP | FL-DualGuard | Pooled oracle |
+|---|---|---|---|
+| Seen locally | 11.2 % | 4.3 % | 4.1 % |
+| Seen only by others | 25.1 % | 6.5 % | 5.4 % |
+| Unseen by all (A6) | 12.0 % | 3.9 % | 4.2 % |
+
+**Compared with the oracle**, federation reaches within about 0.7 points of centralized
+pooled training without moving any flow records.
+
+**Hardest case.** Mimicry (A4) remains the hardest for every method, including the
+oracle (16–18 % benign impact).
+
+## 4. Ablation (`tables/table_ablation.csv`, Fig. 5)
+
+| Variant | Benign impacted (%) | Malicious occ. (%) | Overflow (s) |
+|---|---|---|---|
+| FL-DualGuard (full) | 5.51 | 14.96 | 3.0 |
+| w/o soft demotion (hard delete only) | 8.87 | 28.54 | 9.6 |
+| w/o hard overflow guard | **2.44** | 14.45 | 4.7 |
+| w/o budget calibration (τ = 0.5) | 5.22 | 16.21 | 3.6 |
+| w/o source features | 4.79 | 15.08 | 2.8 |
+| w/o context features | **3.75** | **12.96** | 2.2 |
+
+What the ablation shows:
+
+- **Soft demotion is the essential mitigation primitive.** Without it, malicious
+  occupancy doubles and overflow time triples (210 of 210 paired wins for the full
+  method).
+- **Calibration** mainly lowers malicious occupancy (207 of 210 wins). Benign impact
+  is comparable either way.
+- **Source features** are not needed: the federated detector works without them, which
+  matters because spoofing defeats them.
+
+## 5. Negative and mixed findings (report these in the paper)
+
+1. **FedProx did not beat FedAvg.** FedProx was pre-declared as the proposed optimizer,
+   but FedAvg impacted fewer benign flows (4.65 % vs 5.51 %; FedProx lost 146 of 210
+   pairs, p_Holm < 1e-4). Malicious occupancy was equal (p = 0.09). With three clients
+   and moderate heterogeneity, the proximal term gives no measurable benefit.
+2. **The hard overflow guard costs more than it saves at the current settings.**
+   Removing it lowers benign impact from 5.5 % to 2.4 %, but overflow time rises from
+   3.0 s to 4.7 s. The guard trades benign evictions for overflow seconds, and the
+   operator should be able to choose that trade-off. Its h_crit/target values were not
+   tuned.
+3. **Context features (occupancy, install rate, table APIT) hurt.** The detector is
+   trained on undefended runs, where attack phases coincide with near-full tables. A
+   defended table stays at about 60–80 % occupancy, so these features shift between
+   training and deployment. Dropping them improves every metric.
+4. **The legacy SVM-RF detector is competitive on benign impact but costly.** It is not
+   significantly different from FL-DualGuard on benign impact (8.1 % vs 5.5 %,
+   p = 0.65), but leaves more malicious occupancy (21.9 % vs 15.0 %) and its decision
+   loop is 33× slower (84 ms mean). Federation still needs a weight-sharing model.
+5. **Overheads.**
+   - Demotion raises Packet-In volume by 24.9 % relative to no defense, since demoted
+     flows reinstall.
+   - On benign-only runs, FL-DualGuard demotes 0.52 % of benign flows and rejects
+     none.
+   - The p99 decision loop is 6.4 ms, well within the 1 s poll interval.
+
+Findings 2 and 3 were observed on **test** data. The configuration must not be changed
+based on them and then re-reported on the same seeds. The correct next step is §6.
+
+## 6. Recommended next experiment (pre-declare before running) — done, see §8
+
+Make the following candidate changes, and select among them on **validation seeds
+only** with `loftbench.tune`:
+
+- Drop context features.
+- Make the hard guard optional, or tune h_crit ∈ {0.9, 0.95, 1.0} on validation.
+- Use FedAvg as the optimizer.
+
+Then evaluate the selected configuration once on **fresh** online seeds (e.g. 5000–5009)
+and report both runs.
+
+Add robustness checks:
+
+- More controllers (5–10) with Dirichlet-skewed exposure.
+- Replay of real benign traces (bigFlows.pcap, CAIDA).
+- An adaptive attacker that knows the demotion timeout.
+
+## 7. What is still missing before submission
+
+1. **Emulation confirmation (sudo needed).** Run `testbed/README.md` acceptance runs
+   1–4 on Mininet/OVS. Report whether the no-defense overflow and the FL-DualGuard
+   occupancy reduction reproduce. This is the largest gap.
+2. **DMS-BTT fidelity check.** Check the reimplementation against Section 4 of the
+   paper (the PDF was not in the workspace).
+3. **Related work.** Cite adaptive and dynamic idle-timeout prior art, and position soft
+   demotion relative to it.
+4. **Legacy results.** The legacy `results/*.png` and `paper_results_section.md`
+   (98 % accuracy on synthetic shortcut data) must not be used.
+
+## 8. v2.1 — validation-selected configuration, one-shot test on fresh seeds
+
+Protocol (`loftbench/v21.py`, artifacts in `results/v21/`):
+
+1. **Pre-registration.** The candidate set, selection rule, and fresh test seeds were
+   written to `preregistration.json` and committed (`39e36af`) before any v2.1
+   episode ran.
+   - **Candidates (24):** detector ∈ {FedProx, FedAvg, FedProx without context
+     features, FedAvg without context features} × hard guard ∈ {0.90, 0.95, off} ×
+     ρ ∈ {0.5, 0.7}, with t_short = 1 s.
+   - **Rule:** minimize benign flows impacted on attacked validation episodes, subject
+     to malicious occupancy ≤ 15 %, overflow ≤ 5 s, and benign-only impact ≤ 1 %.
+2. **Selection** on validation seeds 2000–2002 only (1,728 episodes,
+   `selection_table.csv`). It chose **FedAvg, hard guard off, ρ = 0.7, t_short = 1 s**,
+   with validation benign impact 1.92 %, malicious occupancy 14.5 %, and overflow
+   4.55 s. The choice was committed (`51df171`) before testing.
+3. **One-shot test** on fresh seeds 5000–5009, which no earlier stage touched. The
+   script refuses to rerun it. All 7 defenses ran on identical traffic: 210 attacked
+   plus 30 benign-only episodes each.
+
+### 8.1 Main result (attacked episodes, n = 210)
+
+| Defense | Benign flows impacted (%) | Malicious occ. (%) | Overflow (s) | Decision p99 (ms) |
+|---|---|---|---|---|
+| No defense | 42.77 [40.96, 44.61] | 53.45 | 147.4 | 0.7 |
+| DMS-BTT (reimpl.) | 12.09 [9.96, 14.28] | 24.93 | 13.3 | 14.3 |
+| Local MLP + v2 policy | 19.61 [17.20, 22.11] | 25.89 | 4.2 | 10.8 |
+| Local MLP (no ctx) + v2.1 policy | 8.95 [7.13, 10.91] | 20.74 | 24.7 | 10.5 |
+| FL-DualGuard v2 | 5.91 [4.96, 6.94] | 14.97 | 3.2 | 9.9 |
+| **FL-DualGuard v2.1** | **2.24 [1.99, 2.51]** | **14.43** | **4.9** | **7.5** |
+| Pooled oracle (v2 policy) | 5.30 [4.37, 6.30] | 13.93 | 2.5 | 8.1 |
+
+Paired Wilcoxon tests, Holm-corrected (`results/v21/tables/paired_tests.csv`), for
+benign flows impacted:
+
+| v2.1 vs | Mean difference | Paired wins / losses | p_Holm |
+|---|---|---|---|
+| DMS-BTT | −9.9 points (5.4× fewer) | 160 / 50 | < 1e-4 |
+| Local no-ctx, same policy | −6.7 points (4.0× fewer) | 183 / 27 | < 1e-4 |
+| v2 | −3.7 points | 210 / 0 | < 1e-4 |
+
+**The federation effect under identical policy and features** is the v2.1 versus
+local no-ctx row: 2.24 % vs 8.95 % benign impact. Local training also leaves overflow
+at 24.7 s against 4.9 s, because local detectors miss variants seen only elsewhere.
+The occupancy difference against local no-ctx is not significant by paired test
+(p = 0.78). Its mean gap of −6.3 points comes from a minority of episodes where
+local detectors fail badly, so report the means *and* the paired counts.
+
+**Per variant** (benign impacted %, `table_test_by_variant.csv`, Fig. 7):
+
+| Defense | A1 | A2 | A3 | A4 | A5 | A6 (unseen) | A7 |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT | 4.9 | 5.1 | 5.1 | 42.2 | 4.9 | 18.1 | 4.3 |
+| v2 | 4.6 | 2.5 | 4.7 | 17.8 | 4.1 | 5.5 | 2.4 |
+| **v2.1** | **2.0** | **1.9** | **2.1** | **3.9** | **2.0** | **1.9** | **1.9** |
+
+Mimicry (A4), the hardest case in v2, falls from 17.8 % to 3.9 %. Most of the v2
+damage on A4 came from the hard guard evicting benign entries.
+
+### 8.2 Costs and caveats
+
+- **Overflow time rises.** It goes from 3.2 s (v2) to 4.9 s (v2.1), losing 177 of 210
+  pairs, p_Holm < 1e-4. This is the declared trade-off of dropping the hard guard, and
+  it is within the pre-registered 5 s limit. v2.1 is still 8.4 s better than DMS-BTT.
+- **The comparison with the pooled oracle is not like-for-like.** The oracle row uses
+  the v2 policy, so "v2.1 beats pooled" must not be claimed. A pooled model under the
+  v2.1 policy was not part of the pre-registered test set.
+- **Benign-only cost.** v2.1 demotes 0.45 % of benign flows on benign-only seeds, with
+  no rejections. One fresh D3 benign-only seed shows 0.07 s of overflow under *every*
+  defense, from a flash crowd that briefly reaches capacity.
+- **Packet-In** is +23.7 % relative to no defense, about the same as v2.
+- **Testbed.** The v2.1 model is exported for the testbed as
+  `results/v21/exported/v21_<D>.json`. It reproduces the Python model exactly (max
+  difference 0), and `run_testbed.py` now uses it by default.
+
+### 8.3 What the paper should claim
+
+FL-DualGuard v2.1 is the proposed configuration, and v2 serves as the pre-declared
+first design, with its ablation evidence. The claims supported in simulation:
+
+1. Federated detectors with soft demotion reduce benign disruption by 5.4× relative
+   to a DMS-BTT reimplementation, and by 4× relative to local training under the
+   identical policy.
+2. The gain is largest on mimicry and never-seen variants.
+3. These claims hold on a pre-registered, one-shot test.
+
+Emulation confirmation (§7.1) remains the main open item. An independent review
+(§9) qualifies claims 1–3; read it before using them.
+
+## 9. Independent review findings (26 October 2026)
+
+A critical review of the v2/v2.1 artifacts. Two probes were added and run on fresh
+test seeds. They report only and change no configuration:
+`loftbench/probe_harm.py` and `loftbench/probe_adaptive.py`, with outputs in
+`results/review/`.
+
+### 9.1 What was verified
+
+- Every §8.1 number recomputes from `results/v21/test_episodes.csv`.
+- `preregistration.json` matches `preregistration.sha256`. After the test, the only
+  changes to `v21.py` are the export and figure code; selection and test logic are
+  unchanged.
+- The exported v2.1 model matches the Python model (max difference 0, identical τ).
+- **Clustering does not change significance.** The 210 attacked episodes share benign
+  traffic across the 7 variants of each (domain, seed), so they are not independent.
+  Averaging within the 30 (domain, seed) clusters, v2.1 still wins 30/30 against
+  every comparator (Wilcoxon p ≈ 2e-9).
+
+### 9.2 Problems, most serious first
+
+1. **An adaptive attacker defeats soft demotion.** Demotion removes a flow only if
+   its refresh gap exceeds t_short = 1 s. Every variant A1–A7 refreshes every
+   5–10 s. Attackers that refresh every 0.8–0.95 s use about 8× the packet rate
+   (3.8k–7.5k pps). This is still small against a 250 Mbps link.
+
+   `probe_adaptive.csv`: 3 seeds × 3 domains, means.
+
+   | Variant | Defense | Benign impacted (%) | Malicious occ. (%) | Overflow (s) |
+   |---|---|---|---|---|
+   | fast-refresh (3.8k pps) | No defense | 78.8 | 86.9 | 240.4 |
+   | | DMS-BTT | 75.6 | 84.8 | 160.5 |
+   | | v2.1 | 75.4 | 84.7 | 203.1 |
+   | fast-mimic (7.5k pps) | No defense | 79.6 | 88.8 | 240.4 |
+   | | DMS-BTT | 79.2 | 88.3 | 169.8 |
+   | | v2.1 | 79.4 | 87.1 | 215.7 |
+
+   DMS-BTT fails too, so the relative claim survives. However, the claim that
+   demotion "defeats the low-rate premise" holds only for attackers slower than
+   t_short. The paper needs a bounded threat model and an occupancy-versus-attacker
+   packet-budget curve.
+
+2. **"Benign flows impacted" overstates harm.** The metric counts a benign flow
+   once its entry is deleted or demoted, even if the flow never sends again.
+
+   `probe_harm.csv`: A1/A4/A6 × 3 domains × 2 seeds. Only 44 % (DMS-BTT), 55 % (v2)
+   and 49 % (v2.1) of the benign flows acted on had any later packet. The rest were
+   stale entries, and removing them cost nothing.
+
+   "Rejected" flows are still forwarded through the controller slow path. No goodput
+   or latency is measured. The ranking is unaffected, but the absolute numbers are
+   proxies, not lost service. For example, "42.8 % with no defense" should be
+   worded as admission failures.
+
+3. **The one-shot test is weaker than "pre-registered" suggests.** The v2.1
+   candidate set was designed from v2 *test-set* ablations (§5). The fresh seeds are
+   new draws from the same generator, so design knowledge from the test set carries
+   over.
+
+   The pre-registration, selection and test commits are self-authored and 50 minutes
+   apart. The rerun guard only checks whether a file exists. Describe it as "design
+   informed by an earlier test run; seeds fresh", not as independent confirmation.
+
+4. **The DMS-BTT baseline is disadvantaged.**
+   - DualGuard's knobs were tuned on validation (9 policy settings, then
+     24 candidates); DMS-BTT's H1/H2 = 0.90/0.75 were not tuned.
+   - DMS-BTT has no memory: a deleted attack flow reinstalls with the full 10 s
+     timeout on its next refresh, while DualGuard remembers demoted flows.
+   - `Numb` is computed from the byte count (`features.py`, the `dms` matrix). Check
+     against the paper whether it should be the packet count.
+   - An ADR "in the paper's range" from simulated data does not establish fidelity.
+   - The 5.4× gap is concentrated in A4 and A6. On A1–A3, A5 and A7 it is
+     4.88 % vs 1.97 % (2.5×).
+
+5. **The federation gain is a training-coverage effect by construction.** Each
+   domain trains on only 2 of the 7 variants, so local models miss the others.
+   - No pooled model was run under the v2.1 policy.
+   - A6 recombines existing traits: A4's benign sizes, A5's spoofing, and slower
+     timing.
+   - The missing comparator is a local model trained on a shared public library of
+     attack variants. If it matches federation, the contribution is attack coverage,
+     not federated learning.
+
+6. **The 1 % budget is per entry-poll, not per flow.** τ is calibrated on sampled
+   (entry, poll) rows. A benign flow is scored at every poll while installed, so its
+   chance of being flagged at some point is higher.
+   - With ρ = 0.5, benign-only impact is 3.7 % (`results/v21/selection_table.csv`).
+   - v2.1's 0.45 % benign-only cost comes mainly from the ρ = 0.7 gate: benign-only
+     occupancy peaks at 46–64 % in D1/D2, so the policy rarely acts there.
+
+7. **The overflow limit is met only on the mean.**
+   - 41 % of v2.1 attacked episodes exceed 5 s of overflow (maximum 27.7 s).
+   - The CI [4.25, 5.60] straddles the limit.
+   - On A4, v2.1 averages 12.5 s of overflow and 22 % malicious occupancy, above the
+     15 % limit.
+
+8. **Results vary by domain and are simulation-only.**
+   - v2.1 impacts 0.58 % (D1), 4.00 % (D2) and 2.13 % (D3) of benign flows; report
+     per domain.
+   - Decision-loop times are Python timings inside the simulator.
+   - The exported τ was calibrated on simulated benign traffic and will need
+     recalibration on Mininet traffic.
+
+### 9.3 What to change before submission
+
+- Add the adaptive attacker (refresh gap ≤ t_short) to the threat-model section and
+  report its result.
+- Report goodput/latency on the testbed, and count only harm to flows that are still
+  active.
+- Tune DMS-BTT's thresholds on the same validation budget, and give it a
+  blocklist/memory variant.
+- Add a "local + shared attack library" comparator, and a pooled model under the
+  v2.1 policy.
+- State the budget as a per-poll rate, and report per-flow flag rates.
+- Report overflow tails (median, p90, share > 5 s) and per-domain tables.
+- Reword §8.3 claim 3 as in item 3 above.
+
+## 10. Revision step 1 — service-level harm, tails, cluster CIs, per-flow calibration
+
+These changes respond to review items 2, 6, 7 and 8.
+
+- Code: `loftbench/revision1.py`, plus the harm accounting in `loftbench/sim.py`.
+- Tables: `results/revision1/tables/`.
+- **No configuration was selected or changed.** The v2.1 test configuration was
+  re-measured on the same seeds (5000–5009) with the extra metrics. All 1,680 episodes
+  reproduce every original metric exactly (`determinism_check.json`).
+- The per-flow-calibrated variant was evaluated on **validation seeds only**, so seeds
+  6000+ remain unused.
+
+### 10.1 New harm metric
+
+A benign flow is **harmed** in either of two cases:
+
+1. It was refused a table entry at least once, which puts it on the controller slow
+   path.
+2. Its entry was removed while the flow was still active, meaning its next packet
+   arrived before the entry would have idled out.
+
+Removing a stale entry is counted separately and is not harm. Extra Packet-In is
+measured against the same benign traffic with no attack and no defense, paired on
+(domain, seed). Unit tests: `test_active_vs_stale_eviction_harm` and
+`test_rejection_counts_as_harm`.
+
+**Confidence intervals and tests from here on resample whole (domain, seed)
+clusters**: 30 clusters of 7 attacked episodes each, which share benign traffic.
+Tests are cluster-level Wilcoxon with Holm correction (`cluster_paired_tests.csv`).
+
+| Defense | Harmed (%) | Refused (%) | Evicted while active (%) | Stale removed (%) | Old "impacted" (%) | Extra Packet-In / 1k benign pkts | Malicious occ. (%) |
+|---|---|---|---|---|---|---|---|
+| No defense | 42.77 [41.63, 43.90] | 42.77 | 0.00 | 0.00 | 42.77 | 132.7 | 53.45 |
+| DMS-BTT | 7.92 [6.57, 9.32] | 4.73 | 3.80 | 4.33 | 12.09 | 21.1 | 24.93 |
+| Local MLP + v2 policy | 11.19 [8.57, 13.96] | 2.04 | 10.29 | 8.50 | 19.61 | 54.5 | 25.89 |
+| Local MLP (no ctx) + v2.1 policy | 7.61 [6.59, 8.62] | 7.13 | 0.65 | 1.38 | 8.95 | 23.3 | 20.74 |
+| FL-DualGuard v2 | 3.63 [2.60, 4.72] | 0.94 | 2.92 | 2.30 | 5.91 | 10.6 | 14.97 |
+| **FL-DualGuard v2.1** | **1.73 [1.27, 2.18]** | 1.20 | 0.61 | 0.52 | 2.24 | **5.4** | **14.43** |
+| Pooled oracle (v2 policy) | 2.81 [1.98, 3.70] | 0.75 | 2.21 | 2.51 | 5.30 | 10.9 | 13.93 |
+
+**v2.1 compared with each baseline on harmed flows** (cluster level):
+
+| Baseline | Cluster wins | p_Holm | Ratio |
+|---|---|---|---|
+| DMS-BTT | 30/30 | 1e-8 | 4.6× fewer harmed flows, down from 5.4× under the old metric |
+| Local no-ctx, same policy | 30/30 | 1e-8 | 4.4× |
+| v2 | 28/30 | 7e-8 | |
+| Pooled (v2 policy) | 27/30 | 6e-5 | |
+
+The ranking is unchanged. The gap to DMS-BTT narrows because more of DMS-BTT's
+removals were stale entries.
+
+### 10.2 Overflow tails (`table_overflow_tails.csv`)
+
+| Defense | Mean [cluster CI] | Median | p90 | p99 | Max | > 5 s | > 10 s |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT | 13.27 [8.93, 17.75] | 5.8 | 33.1 | 72.2 | 77.2 | 55.7 % | 35.7 % |
+| Local no-ctx, same policy | 24.68 [21.97, 27.43] | 3.3 | 104.3 | 179.6 | 181.6 | 33.3 % | 26.7 % |
+| FL-DualGuard v2 | 3.18 [2.48, 3.90] | 2.4 | 6.9 | 12.8 | 14.8 | 21.4 % | 3.8 % |
+| **FL-DualGuard v2.1** | 4.89 [3.94, 5.85] | 3.9 | 8.8 | 26.2 | 27.7 | 41.4 % | 7.6 % |
+| Pooled (v2 policy) | 2.47 [2.12, 2.83] | 2.2 | 4.7 | 10.3 | 13.4 | 7.1 % | 1.4 % |
+
+**Corrections to earlier claims:**
+
+1. **Overflow compared with DMS-BTT.** The improvement is **not significant at the
+   cluster level**: −8.4 s mean, 20/30 cluster wins, p_Holm = 0.13. The earlier
+   episode-level test (§8.2) overstated this. Report v2.1's tails as better (p90 8.8 s
+   vs 33.1 s) but do not claim a significant mean difference.
+2. **Overflow compared with v2 and pooled.** v2.1 is significantly worse (0/30 cluster
+   wins). This is the price of dropping the hard guard.
+3. **The 5 s overflow limit holds on the mean only.** Its CI is [3.94, 5.85], and
+   41 % of episodes exceed it.
+4. **Malicious occupancy compared with v2** is not significantly different
+   (p_Holm = 0.26).
+
+### 10.3 Per variant (v2.1, `table_v21_by_variant.csv`)
+
+| | A1 | A2 | A3 | A4 | A5 | A6 | A7 |
+|---|---|---|---|---|---|---|---|
+| Harmed (%) | 1.66 | 1.46 | 1.66 | 3.17 | 1.58 | 1.10 | 1.44 |
+| Malicious occ. (%) | 14.2 | 13.0 | 13.4 | **22.1** | 13.7 | 12.4 | 12.3 |
+| Overflow mean / p90 (s) | 4.9 / 8.3 | 3.5 / 6.9 | 4.8 / 8.4 | **12.5 / 22.4** | 4.5 / 7.9 | 1.0 / 3.2 | 3.0 / 5.8 |
+
+Against mimicry (A4), v2.1 exceeds both the occupancy limit and the overflow limit: it
+keeps benign harm low but lets the attacker hold a larger share of the table. State
+this in the main text.
+
+### 10.4 Per domain (harmed %, cluster CIs, `table_harm_by_domain.csv`)
+
+| Defense | D1 | D2 (IoT) | D3 (cloud) |
+|---|---|---|---|
+| DMS-BTT | 3.60 | 8.10 | 12.05 |
+| Local no-ctx, same policy | 4.08 | 10.29 | 8.45 |
+| **v2.1** | **0.47** | **3.09** | **1.61 [0.87, 2.45]** |
+
+D2 is the hard domain: its periodic IoT telemetry flows resemble LFTO refreshes.
+
+### 10.5 Per-flow calibration (review item 6; `table_flow_calibration.csv`)
+
+The v2.1 threshold τ was calibrated per (entry, poll). Re-measuring it as a per-flow
+quantity, meaning the fraction of benign flows that ever score ≥ τ while installed,
+gives:
+
+| Domain | τ per poll | τ per flow | Validation flows ≥ τ_poll | Test flows ≥ τ_poll (attacked / benign-only) | Test flows ≥ τ_flow (attacked / benign-only) |
+|---|---|---|---|---|---|
+| D1 | 0.0070 | 0.132 | 4.7 % | 2.6 % / 2.6 % | 0.7 % / 0.6 % |
+| D2 | 0.0030 | 0.473 | 5.0 % | 6.3 % / 3.6 % | 1.5 % / 0.7 % |
+| D3 | 0.0031 | 0.136 | 5.0 % | 4.0 % / 6.9 % | 0.6 % / 0.8 % |
+
+**What this shows:**
+
+- The declared "1 % budget" was in fact about 5 % per flow. Per-flow calibration holds
+  1 % on validation, and 0.6–1.5 % on test runs. The D2 attacked case slightly exceeds
+  the budget, because attack traffic shifts the score distribution.
+- Under v2.1, the realized benign *action* rate on benign-only runs is 0–1.2 %. That
+  is lower than the flag rate because the ρ = 0.7 occupancy gate keeps the policy idle.
+
+**Validation-only comparison** (`table_flowcal_validation.csv`; 63 attacked plus 9
+benign-only episodes):
+
+| Variant | Harmed (%) | Benign flows acted on (%) | Malicious occ. (%) | Overflow mean / p90 (s) |
+|---|---|---|---|---|
+| v2.1 (τ per poll) | 1.45 [0.69, 2.32] | 1.11 | 14.47 | 4.55 / 9.4 |
+| v2.1 (τ per flow) | 1.38 [0.70, 2.17] | 0.25 | 16.11 | 6.81 / 12.4 |
+
+Per-flow calibration acts on 4× fewer benign flows at the same harm. However, it
+breaks the pre-registered limits for malicious occupancy (≤ 15 %) and overflow (≤ 5 s).
+Under the v2.1 rule it would not have been selected, so it is **not adopted here**.
+Carry it as a candidate into the step-4 pre-registration, together with the
+adaptive-attacker mechanism. The paper must state the budget correctly: either a
+per-(entry, poll) rate of 1 % (about 5 % per flow), or per-flow calibration.
+
+### 10.6 Wording changes required in the paper
+
+- **No defense.** "42.8 % of benign flows impacted with no defense" becomes "42.8 % of
+  benign flows were refused a table entry at least once". These flows were
+  slow-pathed, not dropped.
+- **Headline metric.** Use *harmed* (1.73 % for v2.1). Keep "impacted" only as a
+  secondary column.
+- **Ratios.** Use 4.6× fewer harmed flows than DMS-BTT and 4.4× fewer than local
+  training under the identical policy. The earlier ratios were 5.4× and 4.0×.
+- **Intervals and tests.** All CIs and tests become cluster-level.
+- **Overflow.** Drop any claim of significantly lower mean overflow than DMS-BTT.
+- **Still unmeasured.** Goodput and latency need the controller service model
+  (plan P0-2 part 2) or the testbed.
+
+## 11. Revision step 2 — a fair DMS-BTT comparison (review item 4)
+
+Code: `loftbench/revision2.py`. Artifacts: `results/revision2/`.
+
+**Protocol:**
+
+1. **Pre-registration** (`0b7ede6`), committed before any selection episode: 96
+   DMS-BTT candidates in five families, against v2.1's 24.
+2. **Selection.** Each family was selected on validation seeds 2000–2002 using v2.1's
+   rule (`7a1b1c1`). v2.1 never needed its fallback; the fallback here (least
+   constraint violation, then the objective) applies only to DMS-BTT families that
+   have no feasible candidate.
+3. **One-shot test** on seeds 5000–5009. These seeds were never used to tune any
+   DMS-BTT configuration. The v2.1, local, and no-defense rows are the deterministic
+   re-measurement from §10, paired on identical traffic.
+4. **Statistics:** cluster-bootstrap CIs and cluster-level Wilcoxon tests (Holm),
+   with 30 (domain, seed) clusters.
+
+**Families:**
+
+| Family | What it is |
+|---|---|
+| A | DMS-BTT tuned: H2, H1, flow threshold, and Numb ∈ {bytes, packets} |
+| B | A plus a blocklist: flows deleted as malicious are refused re-admission for T s, and their packets are dropped at the controller |
+| C | DMS-BTT detector with the DualGuard policy (soft demotion), with an optional state gate |
+| D | Federated DMS-BTT: a FedAvg MLP over (Numb, PIT, Sizep) with the two-level policy |
+| E | Federated DMS features with the v2.1 policy |
+
+**Validation selection** (`selection_table.csv`). Only family B has a configuration
+that satisfies all of v2.1's limits.
+
+| Family | Selected | Feasible | Val. impacted | Val. malicious occ. | Val. overflow |
+|---|---|---|---|---|---|
+| A | H2 = 0.6, H1 = 0.85, p = 0.7, bytes | no | 12.1 % | 21.8 % | 10.9 s |
+| B | H2 = 0.6, H1 = 0.9, p = 0.7, bytes, T = 60 s | **yes** | 8.1 % | 13.9 % | 3.9 s |
+| C | ρ = 0.7, no gate, hard guard 0.90, bytes | no | 8.7 % | 18.4 % | 2.6 s |
+| D | H2 = 0.6, H1 = 0.9, p = 0.3 | no | 12.3 % | 21.9 % | 11.6 s |
+| E | ρ = 0.7 | no | 10.4 % | 21.9 % | 31.3 s |
+
+### 11.1 Test results (attacked episodes, n = 210 per defense)
+
+| Defense | Harmed (%) | Malicious occ. (%) | Overflow mean / p90 (s) | > 5 s |
+|---|---|---|---|---|
+| No defense | 42.77 [41.63, 43.90] | 53.45 | 147.4 / 186.0 | 100 % |
+| DMS-BTT, original knobs | 7.92 [6.57, 9.32] | 24.93 | 13.3 / 33.1 | 56 % |
+| A: DMS-BTT tuned | 7.86 [6.38, 9.37] | 21.90 | 11.6 / 32.6 | 36 % |
+| **B: DMS-BTT tuned + blocklist** | **4.71 [3.65, 5.73]** | **13.83 [12.60, 15.08]** | **4.1 / 6.7** | **12 %** |
+| C: DMS-BTT detector + DualGuard policy | 4.13 [3.15, 5.17] | 18.25 | 2.8 / 5.5 | 11 % |
+| D: DMS-BTT federated | 7.43 [5.93, 8.94] | 21.97 | 12.4 / 32.9 | 42 % |
+| E: federated DMS features + v2.1 policy | 9.59 [8.94, 10.25] | 21.91 | 31.4 / 159.2 | 32 % |
+| Local MLP (no ctx) + v2.1 policy | 7.61 [6.59, 8.62] | 20.74 | 24.7 / 104.3 | 33 % |
+| **FL-DualGuard v2.1** | **1.73 [1.27, 2.18]** | 14.43 [13.90, 14.94] | 4.9 / 8.8 | 41 % |
+
+**v2.1 against the strongest fair baseline (B).** Cluster-level Holm-corrected tests,
+from `cluster_paired_tests.csv`:
+
+| Metric | v2.1 vs B | Cluster wins | p_Holm | Verdict |
+|---|---|---|---|---|
+| Benign flows harmed | 1.73 % vs 4.71 % (2.7× fewer) | 30/30 | 1.5e-8 | v2.1 better |
+| Malicious occupancy | 14.4 % vs 13.8 % | 11/30 | 0.12 | no difference |
+| Mean overflow | 4.9 s vs 4.1 s | 10/30 | 1.0 | no difference |
+
+B has better overflow tails: 12 % of episodes exceed 5 s, against 41 % for v2.1.
+
+**Harmed % by variant** (`table_harmed_by_variant.csv`):
+
+| Defense | A1 | A2 | A3 | A4 | A5 | A6 | A7 |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT, original | 4.51 | 4.71 | 4.70 | 24.29 | 4.52 | 8.70 | 3.99 |
+| B: tuned + blocklist | **0.46** | **0.41** | **0.30** | 21.74 | **0.44** | 9.25 | **0.33** |
+| C: DMS detector + DG policy | 1.40 | 1.41 | 1.45 | 15.60 | 1.40 | 6.38 | 1.26 |
+| E: fed DMS features + v2.1 policy | 1.24 | 1.22 | 1.25 | 50.36 | 1.23 | 10.77 | 1.08 |
+| **v2.1** | 1.66 | 1.46 | 1.66 | **3.17** | 1.58 | **1.10** | 1.44 |
+
+### 11.2 What this changes
+
+1. **The DMS-BTT baseline in the paper must be the tuned-plus-blocklist variant (B).**
+   - Against B, v2.1 harms **2.7×** fewer benign flows. The earlier figure, against the
+     untuned DMS-BTT, was 4.6×.
+   - v2.1 contains the attack **no better** than B: occupancy and mean overflow are not
+     significantly different, and B's overflow tail is better.
+   - Tuning DMS-BTT's thresholds alone barely helps (7.92 % → 7.86 %). The blocklist
+     is what helps.
+2. **On DMS-BTT's own attack settings, B beats v2.1 on benign harm.**
+   - On A1–A3, A5 and A7, B harms 0.3–0.5 % of benign flows, against 1.4–1.7 % for
+     v2.1.
+   - v2.1's entire advantage comes from mimicry (A4: 3.2 % vs 21.7 %) and the
+     variant unseen by any controller (A6: 1.1 % vs 9.3 %).
+   - The paper's claim must therefore be **robustness to attack variants a controller
+     has not seen, or that mimic benign traffic**, not general superiority.
+3. **Decomposing the gain over DMS-BTT** (harmed %):
+
+   | Step | Change | Harmed |
+   |---|---|---|
+   | DMS-BTT | — | 7.9 % |
+   | C | Replace its policy with soft demotion | 4.1 % |
+   | v2.1 | Our 17 features and federation | 1.7 % |
+
+   Federating DMS-BTT's own 3 features barely helps (D: 7.4 %). With the v2.1 policy
+   they fail badly on A4 (E: 50 %). Federation transfers cross-variant knowledge only
+   with sufficiently rich features. This also previews step 3: the federation benefit
+   is conditional, and it has to be shown against a shared-attack-library baseline.
+4. **The Numb definition barely matters.** On validation (bytes vs packets), the best
+   configuration's impacted % moves 12.1 → 13.2 (A), 8.1 → 8.8 (B), and
+   8.7 → 9.5 (C). Feasibility is unchanged
+   (`table_numb_sensitivity_validation.csv`). Whichever definition the paper uses, the
+   conclusions hold. Report the paper's definition as primary once it is checked.
+5. **Implication for step 4 (adaptive attacker).**
+   - The blocklist's refuse-re-admission mechanism directly addresses the
+     fast-refresh attacker: demotion only removes flows that refresh more slowly than
+     t_short.
+   - Combining DualGuard's calibrated scoring with a blocklist for repeatedly demoted
+     flows is the obvious step-4 candidate.
+   - It must be pre-registered and tested on seeds 6000+.
+   - Note the blocklist's cost: it drops benign flows outright (0.30 % of benign flows
+     were blocked in B), whereas demotion only slow-paths them.
+
+## 12. Revision step 3 — is federation necessary? (review item 5)
+
+Pre-registered in `results/revision3/preregistration.json` (commit `491d95f`, sha256
+in `preregistration.sha256`) before any model was trained. Code:
+`loftbench/revision3.py`. Tables: `results/revision3/tables/`.
+
+**Design.** Every method uses the same 17 features, the same MLP, the same v2.1 policy
+(ρ = 0.7, t_short = 1 s, no hard guard) and the same calibration (1 % budget on its own
+domain's validation benign). Only the training data each controller can use differs:
+
+| Method | Training data per controller |
+|---|---|
+| Local only | Own domain (2 of 7 variants) |
+| FedAvg (v2.1) | Own domain; weights averaged across the 3 controllers |
+| Pooled raw data (oracle) | All three domains' raw records |
+| Ensemble of local models | Own domain; at test time, mean score of the 3 local models |
+| Local + public library (A1–A3) | Own domain + the three published DMS-BTT settings |
+| Local + library of all known variants | Own domain + every variant except A6 (upper bound) |
+
+Fresh evaluation seeds 7000–7009 (never used before); 30 (domain, seed) clusters;
+cluster Wilcoxon with Holm correction. Seeds 6000+ remain untouched for step 4.
+
+**Post-registration bug fixes (implementation only, design unchanged).** The first
+run crashed in the exposure-skew sweep. (1) The attack-row budget `n_att` was summed
+with Python's built-in `sum` over an int8 label array, which overflowed and went
+negative. (2) Each variant's sample was capped at the rows available, so the
+pre-registered fixed total was not honoured. Both are fixed in `_sweep_task`; the
+main and leave-one-variant-out code paths were not affected. All stages were rerun
+from training.
+
+### 12.1 Pre-registered decision
+
+| Comparison (benign flows harmed) | FedAvg − comparator | FedAvg wins / losses (30 clusters) | Holm p |
+|---|---|---|---|
+| Local + public library (A1–A3) | **−4.21 points** | 28 / 2 | 5 × 10⁻⁸ |
+
+**Federation is necessary relative to a public attack library** (rule: Holm p < 0.05
+and difference ≥ 0.5 points). The paper keeps cross-controller learning as a core
+claim. The re-scope to a mitigation-only paper is **not** triggered.
+
+### 12.2 Main comparison (attacked episodes, seeds 7000–7009)
+
+| Method | Harmed % [95 % cluster CI] | Malicious occupancy % | Overflow mean / p90 (s) | Share > 5 s |
+|---|---|---|---|---|
+| No defense | 42.21 [41.08, 43.39] | 53.29 | 147.4 / 188.3 | 1.00 |
+| DMS-BTT tuned + blocklist | 4.49 [3.45, 5.52] | 13.79 | 3.77 / 5.47 | 0.11 |
+| Local only | 7.89 [7.25, 8.57] | 23.10 | 29.2 / 119.6 | 0.61 |
+| **FedAvg (v2.1)** | **1.53 [1.12, 1.98]** | 14.49 | 4.71 / 9.31 | 0.36 |
+| Pooled raw data (oracle) | 1.69 [1.14, 2.27] | 13.70 | 3.10 / 5.72 | 0.12 |
+| Ensemble of local models | 1.42 [1.06, 1.82] | 15.12 | 5.64 / 11.23 | 0.41 |
+| Local + public library (A1–A3) | 5.75 [4.33, 7.15] | 19.87 | 19.8 / 44.5 | 0.42 |
+| Local + all known variants | 1.49 [1.17, 1.83] | 15.51 | 5.26 / 12.22 | 0.31 |
+
+Paired against FedAvg (`cluster_paired_tests_main.csv`):
+
+- **vs public library:** FedAvg better on harm (−4.2 points), occupancy (−5.4 points)
+  and overflow (−15.1 s); all 28–30 / 30, Holm p < 10⁻⁷. The library fails exactly
+  where it has no coverage: A4 mimicry (29.7 % harmed) and A6 slow-fill (5.3 %).
+- **vs pooled oracle:** harm not different (12 / 18, p = 0.88): H4 holds. Pooled has
+  lower occupancy (0.8 points) and overflow (1.6 s), 30 / 30.
+- **vs ensemble of local models:** harm not different (−0.11 points in the
+  ensemble's favour, 10 / 20, Holm p = 0.074). FedAvg is better on occupancy
+  (−0.6 points, 30 / 30) and overflow (−0.9 s, 28 / 2). **H2 is not supported.**
+- **vs library of all known variants:** no difference on any metric (H3 not
+  supported). This upper bound assumes a generator for every variant is public.
+- **vs DMS-BTT tuned + blocklist:** 2.9× fewer harmed (28 / 2, Holm p = 2 × 10⁻⁷);
+  occupancy and overflow not significantly different. This reproduces §11 on fresh
+  seeds.
+
+### 12.3 Leave-one-variant-out (each variant withheld from every controller)
+
+Online, benign harmed % on the withheld variant (5 seeds × 3 domains per variant):
+
+| Held out | Local | FedAvg | Pooled | Ensemble | Library A1–A3 | Library all |
+|---|---|---|---|---|---|---|
+| A1 | 2.46 | 7.37 | 1.25 | 1.57 | 6.56 | 1.61 |
+| A2 | 18.32 | 1.67 | 0.78 | 1.07 | 18.15 | 0.98 |
+| A3 | 9.68 | 1.65 | 1.31 | 1.68 | 1.38 | 1.62 |
+| A4 | 26.07 | 3.33 | 5.37 | 12.23 | 24.68 | 3.68 |
+| A5 | 2.23 | 1.63 | 4.17 | 1.47 | 2.79 | 1.55 |
+| A6 | 4.67 | 0.90 | 1.21 | 0.63 | 5.66 | 0.45 |
+| A7 | 11.56 | 1.96 | 1.96 | 2.10 | 0.73 | 1.12 |
+| **Mean [CI]** | 10.71 [9.31, 12.15] | **2.64 [1.59, 3.84]** | 2.29 [1.44, 3.25] | 2.97 [2.42, 3.62] | 8.56 [6.35, 10.90] | 1.57 [1.00, 2.22] |
+
+(Library columns exclude the withheld variant from the library as well.)
+
+Paired tests over 105 (variant, domain, seed) pairs (`lovo_online_tests.csv`):
+FedAvg beats local by 8.1 points (69 / 36, Holm p = 10⁻⁶). Against the public library
+the mean gap is 5.9 points but the pairs split 50 / 55 (Holm p = 0.099): FedAvg wins
+by large margins on A2, A4 and A6 and loses on A1 and A7. **H5 holds against local
+training, not against the library.**
+
+The A1 row is a real weakness: with A1 withheld, FedAvg harms 7.4 % against 2.5 % for
+local. The averaged model generalises worse to that variant than a local model does.
+It should be reported.
+
+Offline, held-out TPR (`table_lovo_offline_tpr.csv`): FedAvg is ≥ 0.83 on every
+withheld variant except A6 (0.69); local ranges 0.21–0.72. The hardest variant is A4
+mimicry, where FedAvg (0.83) beats even the pooled oracle (0.31).
+
+### 12.4 Exposure-skew sweep (offline, `table_skew_sweep_offline.csv`)
+
+Each controller's attack rows are a Dirichlet(α) mix of the six known variants with a
+fixed total; 3 draws per α.
+
+| α | Skew | FedAvg − local TPR (mean ± sd) | TPR on rarely seen variants (w < 5 %): local / FedAvg / ensemble |
+|---|---|---|---|
+| 0.05 | extreme | **+0.137 ± 0.287** | 0.672 / 0.850 / 0.847 |
+| 0.2 | high | +0.042 ± 0.161 | 0.896 / 0.962 / 0.951 |
+| 1.0 | moderate | +0.016 ± 0.091 | 0.883 / 0.930 / 0.932 |
+| 5.0 | low | +0.000 ± 0.017 | 0.881 / 0.890 / 0.895 |
+| ∞ | uniform | +0.001 ± 0.017 | 0.834 / 0.848 / 0.876 |
+
+**H6 holds:** the federation gain grows monotonically with skew and vanishes when
+every controller sees every variant. FPR stays at 0.8–1.2 % throughout.
+
+### 12.5 Hypotheses
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | FedAvg harms fewer than the public library (main) | **Supported** (−4.2 points, Holm p = 5 × 10⁻⁸) |
+| H2 | FedAvg harms fewer than the ensemble of local models | **Not supported** (no difference; FedAvg better on occupancy/overflow) |
+| H3 | FedAvg harms fewer than the library of all known variants | **Not supported** (no difference) |
+| H4 | FedAvg within 1 point of pooled | **Supported** (−0.15 points, n.s.) |
+| H5 | On withheld variants, FedAvg beats local and the public library | **Partly**: vs local yes; vs library n.s. (50 / 55) |
+| H6 | The gain shrinks as exposure skew decreases | **Supported** |
+
+### 12.6 What the paper should claim
+
+1. **Keep cross-controller learning as a core contribution.** A controller that sees
+   only some variants, even with the published DMS-BTT attack settings added, harms
+   3.8× more benign flows than FedAvg and overflows 4× longer.
+2. **Claim sharing of learned knowledge, not FedAvg specifically.** A one-shot
+   ensemble of the three local models matches FedAvg on harm. FedAvg's advantages
+   over it are smaller: lower occupancy and overflow, and one model to run per poll
+   instead of three. Write the method as "cross-controller model sharing, instantiated
+   with FedAvg", with the ensemble as an ablation row.
+3. **State the regime.** The gain exists only when controllers see different attack
+   variants (α ≤ 1). Under uniform exposure, local training is enough. Frame
+   federation as the answer to heterogeneous exposure, not as a universal improvement.
+4. **Do not claim generalisation to unseen variants in general.** Against local
+   training it holds; against a public library it is not significant, and A1 is a
+   counter-example.
+5. **Equivalence with the pooled oracle is now like-for-like** (same v2.1 policy):
+   FedAvg matches pooled on harm, with slightly worse occupancy and overflow.
+
+## 13. DMS-BTT fidelity check against the paper (review item 4)
+
+Source: Tang et al., "DMS-BTT", Expert Systems with Applications 293 (2025) 128685,
+§4.1–4.2, Table 1, Algorithms 1–2 and §5 (PDF supplied by the authors of this work).
+
+**Numb is the cumulative byte count** (Table 1: "Cumulative number of bytes";
+§4.2.1). Our primary configuration (`numb_mode="bytes"`, `features.py`) is therefore
+the paper's definition, and every DMS-BTT number in §3, §8, §11 and §12 stands. The
+packet-count variant from step 2 is only a sensitivity check (it moved validation
+harm by under 1 point).
+
+| Detail | Paper | Ours | Status |
+|---|---|---|---|
+| Numb | Cumulative bytes | Bytes | Matches |
+| PIT | Duration / packets; duration if no packets (Alg. 1, l. 9–13) | Duration / max(packets, 1) | Matches |
+| Sizep | Bytes / packets; 0 if no packets | Bytes / max(packets, 1) | Matches |
+| State features | FN and APIT = mean PIT; three classes | Same | Matches |
+| Thresholds | H2 = 75 %, H1 = 90 % of the table | 0.75 / 0.90 | Matches |
+| Table, idle timeout, polling | 3,500, 10 s, 1 s | Same | Matches |
+| Attack settings | Table 2: T1 ∈ [5, 8.5], [5.5, 9], [6, 9.5]; S = 75, 100, 125; M = 1,700 | A1–A3 | Matches |
+| Between H2 and H1 | State classifier; if attack, evict flows labelled malicious | Same | Matches |
+| Above H1 | No state check; evict top Pe × FN by probability (Pe ∈ 15–30 %, value for Table 6 not stated) | State check required; evict labelled + descending probability until below H2 | **Deviation** |
+| Elephant protection | Keep if Numb, PIT and Sizep all exceed their 90th percentile (Alg. 2; text says "or") | Keep if Numb ≥ 90th percentile | **Deviation** |
+| CatBoost settings | Not reported | 300 iterations, default depth; flow threshold tuned in step 2 | Unspecified |
+
+**Assessment.**
+
+- The two deviations are both in the overflow-prevention branch above 90 %
+  occupancy. Our gating can only make DMS-BTT act *less* often above H1. Our
+  eviction amount (to below 75 %, about 15–17 % of entries) is comparable to the
+  paper's smallest Pe.
+- The step-2 baseline (tuned + blocklist) already searched thresholds on validation,
+  so DMS-BTT was not handicapped by an untuned operating point.
+- To close the question for reviewers, add a paper-faithful mode (no gating above H1,
+  Pe ∈ {15, 20, 25, 30} %, three-feature elephant rule), select Pe on validation seeds
+  only, and test it once on fresh seeds alongside v2.1. Until then, describe our
+  baseline as "a reimplementation following Algorithms 1–2, with the two deviations
+  listed".
+
+## 14. Revision step 4 — the adaptive fast-refresh attacker (review item 1)
+
+Pre-registered in `results/revision4/preregistration.json` (commit `e0fc2ff`) before any
+run. Code: `loftbench/revision4.py`, `defenses.PortGuard`, `ports.py`. Tables:
+`results/revision4/tables/`.
+
+**Why v2.1 fails.** Against an attacker refreshing every 0.8–0.95 s, the v2.1 detector
+flags about 2 % of attack entries while flagging 8–16 % of benign entries under pressure
+(diagnostic on a training seed). Fast-refresh entries look like busy benign flows, so
+demotion never reaches them. A detection-only fix would invite the next variant.
+
+**Mechanism: PortGuard.** In the DMS-BTT topology every host has its own access port, and
+spoofing does not change the port. Under table pressure, each ingress port gets a max-min
+fair share of a target occupancy q · capacity, enforced at admission (the controller
+counts its own installs between polls); ports above the level are trimmed (highest
+detector score first, or lowest packet rate without a detector) and refused new entries.
+A refused port's demand is treated as unbounded. Guarantee: every honest port keeps
+min(demand, q · C / n_ports) entries whatever the attacker's rate, sizes or addresses.
+
+**Port scenarios** (`ports.py`): *dedicated* (4 benign ports, each attacker on its own
+port: the DMS-BTT topology, main), *shared* (benign clients also behind the attacker
+ports), *distributed* (attack flows enter on every port).
+
+**Attacker-budget sweep.** Spoofing, size-mimicking attackers with refresh gap
+g ∈ {0.25, 0.5, 0.8, 1, 2, 5, 9} s. Attack rate needed (two attackers, 1,700 flows each):
+
+| Gap (s) | 0.25 | 0.5 | 0.8 | 1 | 2 | 5 | 9 |
+|---|---|---|---|---|---|---|---|
+| Attack packets/s | 14,203 | 7,045 | 4,360 | 3,464 | 1,676 | 604 | 287 |
+
+### 14.1 Selection (validation seeds 2000–2002, dedicated ports)
+
+Twelve candidates: q ∈ {0.85, 0.90, 0.95} × trigger ρ_q ∈ {q, q − 0.05} × hold
+∈ {10, 30} s. Only q = 0.95 met the pre-registered constraint (harm on A1–A7 at most
+0.5 points above v2.1's 1.45 %). q = 0.90 protected better against gaps ≤ 0.5 s (22–25 %
+vs 46–56 % harmed) but cost 2.16 % on A1–A7 and was infeasible. Selected:
+**q = 0.95, ρ_q = 0.90, hold 30 s** (`selection_table.csv`).
+
+### 14.2 One-shot test (fresh seeds 6000–6009 dedicated; 6000–6004 shared, distributed)
+
+Benign flows harmed, % [95 % cluster CI] (`table_summary.csv`):
+
+| Dedicated ports | A1–A7 | Fast (gap ≤ 1 s) | All gaps | Overflow s (fast) | Packet-In/s (fast) |
+|---|---|---|---|---|---|
+| No defense | 42.11 [41.09, 43.13] | 80.63 | 71.99 | 243.4 | 928 |
+| DMS-BTT tuned + blocklist | 4.46 [3.43, 5.48] | 61.80 | 47.71 | 159.1 | 1,467 |
+| FL-DualGuard v2.1 | **1.49** [1.07, 1.93] | 72.43 | 55.49 | 223.3 | 969 |
+| PortGuard alone | 5.95 [4.18, 7.80] | **6.18** [3.79, 8.68] | **6.40** | 0.2 | 3,025 |
+| **v2.1 + PortGuard (pre-registered)** | 1.67 [1.14, 2.23] | 35.60 [34.79, 36.27] | 23.57 | 59.7 | 1,123 |
+| DMS-BTT + blocklist + PortGuard | 3.74 [2.74, 4.82] | 35.76 | 28.73 | 78.2 | 2,002 |
+
+Attacker-budget curve, dedicated ports, harmed % (`table_budget_curve_harm.csv`):
+
+| Gap (s) | No defense | DMS-BTT + bl. | v2.1 | PortGuard alone | v2.1 + PortGuard |
+|---|---|---|---|---|---|
+| 0.25 | 82.3 | 74.9 | 81.2 | 6.2 | 58.7 |
+| 0.5 | 81.2 | 66.8 | 76.9 | 6.2 | 47.0 |
+| 0.8 | 79.9 | 55.6 | 66.7 | 6.2 | 20.0 |
+| 1 | 79.1 | 49.9 | 64.9 | 6.1 | 16.7 |
+| 2 | 74.9 | 49.3 | 52.2 | 6.1 | 10.5 |
+| 5 | 61.7 | 22.7 | 30.8 | 7.5 | 7.3 |
+| 9 | 44.9 | 14.7 | 15.7 | 6.5 | 4.8 |
+
+Other scenarios (harmed %, A1–A7 / fast):
+
+| | Shared | Distributed |
+|---|---|---|
+| v2.1 | 1.43 / 72.6 | 1.43 / 72.6 |
+| PortGuard alone | 14.09 / 26.1 | **45.06** / 82.0 |
+| v2.1 + PortGuard | 2.05 / 49.7 | 2.82 / 75.3 |
+
+### 14.3 Pre-registered hypotheses (`hypothesis_tests.csv`, `outcomes.json`)
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | Dedicated, gaps ≤ 1 s: v2.1 + PortGuard harms fewer than v2.1 | **Supported** (−36.8 points, 30 / 30, Holm p = 9 × 10⁻⁹) |
+| H2 | Dedicated, A1–A7: non-inferior to v2.1 (≤ 0.5 points) | **Supported** (+0.18 points) |
+| H3 | Dedicated, A1–A7: v2.1 + PortGuard harms fewer than PortGuard alone | **Supported** (−4.3 points, 30 / 30) |
+| H4 | Dedicated, all attacks: fewer than DMS-BTT + blocklist + PortGuard | **Not supported** (−3.6 points, 20 / 10, Holm p = 0.11) |
+| H5 | Dedicated: harm ≤ 3 % at every gap | **Not supported** (58.7 % at 0.25 s; 4.8 % even at 9 s) |
+| H6 | Distributed, fast: no reduction vs v2.1 (expected negative) | **Confirmed** (PortGuard adds 2.7 points, 0 / 15) |
+
+### 14.4 Why the combination underperforms PortGuard alone (post hoc, exploratory)
+
+Traced on one validation episode (D1, gap 1 s, seed 2000):
+
+- PortGuard alone: 0 % harmed, attackers held at about 900 entries each, no overflow.
+- v2.1 + PortGuard: 12.9 % harmed, attackers at about 1,250 each, and **26,082 benign
+  demotions** in the episode.
+- Mechanism: PortGuard holds the table at 95 %, so DualGuard's pressure trigger (ρ = 0.7)
+  never releases. Under sustained high occupancy the context features push benign scores
+  over τ, and DualGuard demotes many benign entries every second. Those demotions harm
+  active flows directly, and the slots they free are handed by water-filling to the
+  attacker ports, whose demand is unbounded.
+
+This is a composition failure, not an implementation bug: each component behaves as
+specified. It was not anticipated in the pre-registration.
+
+### 14.5 What this means
+
+1. **The adaptive attacker is bounded only by port isolation.** PortGuard alone holds
+   harm at 6–7.5 % at every refresh gap from 0.25 s to 9 s in the DMS-BTT topology,
+   against 15–81 % for every learned or threshold defense. This is the first mechanism in
+   the project whose harm does not grow with the attacker's rate.
+2. **No single configuration wins everywhere.** v2.1 is best on the standard and mimicry
+   variants (1.5 %), PortGuard alone on fast attackers (6 %). The pre-registered
+   combination sits in between and should not be presented as the solution.
+3. **PortGuard has clear limits.** It is harmful when attackers are on every port
+   (45 % on A1–A7 alone, worse than no defense) and costly when attackers share ports with
+   users (14 %). It also turns refused attack packets into Packet-Ins (about 3,000/s);
+   hardware deployment needs a per-port meter for table misses.
+4. **Next (step 4b, needs a new pre-registration and fresh seeds 8000+):** compose the two
+   so that they do not fight. Candidates: DualGuard acts only while PortGuard is inactive,
+   or only inside over-quota ports; demoted entries keep their port's quota; DualGuard's
+   trigger set above PortGuard's target. Choose on validation, test once.
+5. **Paper framing until then.** State the adaptive attacker as a measured limitation of
+   learned defenses; show the attacker-budget curve; present PortGuard as a bounded-harm
+   guard for port-isolated attackers, with the distributed and shared cases as its
+   limits. Do not claim the combination solves the fast attacker.
+
+## 15. Revision step 4b — making DualGuard and PortGuard cooperate
+
+Pre-registered in `results/revision4b/preregistration.json` (commit `8447e0f`); the
+validation-only selection was committed (`7bed23d`) before any test result existed. A first
+test run was interrupted at about 1,200 of 6,300 episodes when the machine restarted; nothing
+from it was written (`test_interrupted.log`), and the test was rerun from the start on the
+same fresh seeds. Code: `loftbench/revision4b.py`, `PortGuard(mode=…, share=…)`. Tables:
+`results/revision4b/tables/`.
+
+**Changes from step 4.** Two compositions that keep DualGuard from fighting PortGuard
+(*gated*: DualGuard pauses while PortGuard enforces; *scoped*: DualGuard only sees entries
+of ports above their fair level), and **weighted max-min shares**: each port is weighted by
+its entry count averaged over polls without table pressure (time constant 60 s). Calm-period
+demand fits in the table by construction, and a port that only grows under pressure, as an
+attacker's does, earns little weight. Mode and share rules were developed on training seed
+1000 only.
+
+### 15.1 Selection (validation seeds 2000–2002, dedicated ports)
+
+| Candidate | Harm A1–A7 | Mean harm, gap sweep | Feasible |
+|---|---|---|---|
+| gated, equal, q 0.90 / 0.95 | 3.90 / 3.35 % | 8.7 / 6.6 % | no / no |
+| **gated, weighted, q 0.90** | **1.37 %** | **0.94 %** | yes (selected) |
+| gated, weighted, q 0.95 | 1.84 % | 1.11 % | yes |
+| scoped, equal, q 0.90 / 0.95 | 2.23 / 1.81 % | 8.4 / 6.3 % | no / yes |
+| scoped, weighted, q 0.90 / 0.95 | 1.09 / 1.30 % | 1.15 / 1.29 % | yes / yes |
+
+v2.1 reference: 1.45 % on A1–A7. Weighted shares are what matter: every weighted candidate
+holds the sweep near 1 %, every equal-share one at 6–9 %.
+
+### 15.2 One-shot test (fresh seeds 8000–8009 dedicated; 8000–8004 shared, distributed)
+
+Benign flows harmed, % [95 % cluster CI] (`table_summary.csv`):
+
+| | Dedicated A1–A7 | Dedicated fast (≤ 1 s) | Dedicated all gaps | Shared fast | Distributed A1–A7 | Distributed fast |
+|---|---|---|---|---|---|---|
+| No defense | 42.12 | 80.74 | 72.03 | 80.95 | 42.35 | 80.95 |
+| DMS-BTT tuned + blocklist | 4.47 | 61.94 | 47.78 | 62.20 | 4.53 | 62.20 |
+| FL-DualGuard v2.1 | **1.53** [1.12, 1.98] | 72.53 | 55.43 | 72.74 | **1.59** | 72.74 |
+| PortGuard alone (step 4) | 6.14 | 6.52 | 6.69 | 26.26 | 45.60 | 82.13 |
+| PortGuard alone, weighted q 0.90 | 1.93 [1.23, 2.83] | **0.20** [0.03, 0.48] | **0.88** | 26.37 | 44.37 | 73.34 |
+| v2.1 + PortGuard (step 4) | 1.73 | 35.71 | 23.66 | 50.22 | 3.03 | 75.48 |
+| **v2.1 + PortGuard (step 4b)** | **1.57** [1.22, 1.96] | **0.22** [0.07, 0.48] | **1.10** [0.75, 1.57] | 26.17 | 8.91 [6.76, 11.15] | 68.06 |
+
+Attacker-budget curve, dedicated ports (`table_budget_curve_harm.csv`):
+
+| Gap (s) | 0.25 | 0.5 | 0.8 | 1 | 2 | 5 | 9 |
+|---|---|---|---|---|---|---|---|
+| v2.1 | 81.3 | 76.8 | 66.9 | 65.2 | 52.1 | 30.0 | 15.8 |
+| v2.1 + PortGuard (step 4) | 58.9 | 47.1 | 20.0 | 16.8 | 10.6 | 7.4 | 4.8 |
+| **v2.1 + PortGuard (step 4b)** | **0.14** | **0.11** | **0.27** | **0.37** | **0.94** | **3.26** | **2.61** |
+| PortGuard alone, weighted | 0.14 | 0.09 | 0.23 | 0.33 | 0.74 | 2.72 | 1.89 |
+
+Benign-only episodes (no attack): 0.059 % harmed with step 4b, 0.037 % with v2.1.
+
+### 15.3 Pre-registered hypotheses (`hypothesis_tests.csv`, `outcomes.json`)
+
+| | Hypothesis | Outcome |
+|---|---|---|
+| H1 | Dedicated, fast: step 4b harms fewer than step 4's composition | **Supported** (−35.5 points, 30 / 30, Holm p = 10⁻⁸) |
+| H2 | Dedicated, A1–A7: non-inferior to v2.1 (≤ 0.5 points) | **Supported** (+0.03 points) |
+| H3 | Dedicated: ≤ 3 % at every gap | **Not supported, narrowly** (3.26 % at 5 s; all other gaps ≤ 2.61 %) |
+| H4 | Dedicated, A1–A7: fewer than PortGuard alone (same share, q) | **Not supported** (−0.37 points, 17 / 13, Holm p = 1.0) |
+| H5 | Shared, fast: fewer than v2.1 | **Supported** (−46.6 points, 15 / 0) |
+| H6 | Distributed, A1–A7: non-inferior to v2.1 | **Not supported** (+7.3 points, 0 / 15) |
+| H7 | Distributed, fast: no reduction vs v2.1 (expected negative) | **Not as expected**: a small significant reduction (−4.7 points, 13 / 2), still 68 % harmed |
+
+### 15.4 What this means
+
+1. **The adaptive fast-refresh attacker is defeated when attackers are port-isolated.**
+   In the DMS-BTT topology, step 4b harms 0.1–0.4 % of benign flows for refresh gaps up to
+   1 s and at most 3.3 % at any gap, against 15–81 % for every learned defense and the tuned
+   DMS-BTT. It does so while matching v2.1 on the standard and mimicry variants
+   (1.57 % vs 1.53 %). The step-4 composition failure is fixed (H1).
+2. **Weighted fair share does the work; the detector adds little in that topology.**
+   PortGuard alone with weighted shares is statistically indistinguishable on harm (H4).
+   DualGuard still lowers malicious occupancy (20.8 % vs 36.3 % on A1–A7), but that is a
+   secondary metric. The federated detector's demonstrated value is on the slow and mimicry
+   variants when ports cannot separate the attacker: the distributed scenario, where v2.1
+   alone is best (1.59 %).
+3. **PortGuard must not run blindly.** When attack flows enter on every port it raises harm
+   on A1–A7 from 1.6 % to 8.9 % (H6) and protects little against fast attackers (68 %).
+   When attackers share ports with users, it cuts fast-attack harm from 73 % to 26 % but
+   the users behind those ports bear it.
+4. **Deployment rule for the paper.** Enable the fair-share guard on access switches where
+   hosts have their own ports (the DMS-BTT and most campus/enterprise access topologies);
+   rely on the federated detector alone where attack traffic cannot be separated by port.
+   An automatic switch, for example enabling PortGuard only when the excess demand
+   concentrates on a few ports, is future work and would need its own pre-registered test.
+5. **Cost.** Refused attack installs become Packet-Ins: about 3,400/s under the fastest
+   attackers (v2.1 alone: about 980/s). A hardware deployment needs a per-port meter on
+   table misses; this belongs in the testbed measurements (E13).
+
+## 16. Emulation testbed (Mininet 2.3.0, Open vSwitch 3.3.9, Ryu 4.34)
+
+Topology as DMS-BTT: per domain a monitored switch (3,500-entry table, `overflow_policy=refuse`,
+idle timeout 10 s) behind an access switch with 4 benign hosts and 2 attackers; the same
+traffic generator as the simulator, sent with raw sockets. Run directories are in
+`~/loft-runs/` (not in git); `testbed/summarize_run.py` produces the figures below.
+
+**Two controller bugs found and fixed before any result** (`testbed/README.md`): layer-2 rules
+that swallowed IP traffic, and multipart flow-stats replies read as the whole table. Runs
+before the fixes (`tb_D1_benign`, `_v2`, `_v3`) are not used; `_v2` was also corrupted by a
+second concurrent run.
+
+### 16.1 Acceptance run 1: benign only (D1, seed 4000, no defense) — passed
+
+| Seconds | Simulator entries | Testbed entries |
+|---|---|---|
+| 0–50 | 1,008 | 998 |
+| 50–100 | 1,438 | 1,431 |
+| 100–150 | 1,537 | 1,530 |
+| 150–200 | 1,490 | 1,485 |
+| 200–250 | 1,526 | 1,521 |
+| 250–300 | 1,502 | 1,496 |
+
+From 60 s on: testbed mean 1,498 vs simulator 1,505 entries (ratio 0.996, RMSE 9 entries).
+No TABLE_FULL errors; ping 300/300 received, RTT 38.1 ms (the topology's 2 × 19 ms);
+all 25,354 benign flows sent and installed (25,366 distinct entries including pings);
+controller decision time mean 10 ms, max 48 ms. The simulator's table semantics (one entry
+per 5-tuple, 10 s idle timeout) reproduce on real OVS.
+
+### 16.2 Acceptance run 2: attack A2, no defense (D1, seed 4000)
+
+The first attempt (`tb_D1_A2_none`) exposed a third bug: each attacker host regenerated the
+attack as if it were alone, so both sent identical 5-tuples and only 1,700 distinct attack
+flows existed. The driver now generates the full two-attacker attack with the simulator's
+random stream and each host sends its own flows (88,400 attack packets, identical to the
+simulator). Rerun (`tb_D1_A2_none_v2`):
+
+| Seconds | Simulator entries | Testbed entries |
+|---|---|---|
+| 0–50 | 1,008 | 983 |
+| 50–100 | 2,131 | 2,097 |
+| 100–150 | 3,366 | 3,232 |
+| 150–300 | 3,499 | 3,491–3,496 |
+
+First overflow: 137 s on the testbed vs 123 s in the simulator; from 60 s, testbed occupancy
+is 98.9 % of the simulator's (RMSE 81 entries). TABLE_FULL errors: 36,082 vs 70,529 (the
+simulator assumes every packet of a refused flow is retried at once). 24.0 % of benign flows
+never received an entry (6,097 of 25,354); 3,394 of 3,400 attack flows did. The ping probe
+keeps its own refreshed entry, so its RTT does not change (38.1 ms); harm falls on new flows.
+The controller now logs which flow each TABLE_FULL refers to, so the simulator's harm metric
+(benign flows refused at least once; simulator 47.5 %) can be computed on the testbed.
+
+### 16.3 Run 2 repeated with refusal logging, and run 3: FL-DualGuard v2.1 (D1, A2, seed 4000)
+
+| | No defense (`tb_D1_A2_none_v3`) | FL-DualGuard v2.1 (`tb_D1_A2_dg`) | Simulator, v2.1 |
+|---|---|---|---|
+| Benign flows refused an entry at least once | 21.57 % | **0.41 %** | 0.26 % rejected (0.30 % harmed) |
+| TABLE_FULL errors | 31,572 | 419 | 1,661 |
+| Ping (300 probes) | 45 % loss, RTT up to 33.8 s | **0 % loss, 38.1 ms** | — |
+| Demotions | — | 8,959 (98.6 % attack flows) | 27,903 (29 benign) |
+| Benign flows whose request never reached the controller | 25.4 % | **15.3 %** | not modelled |
+| Peak / mean (100–250 s) Packet-In rate | 750 / 374 per s | 895 / 459 per s | — |
+| Controller decision time, mean / max | 21 / 71 ms | 27 / 618 ms | — |
+
+**Table protection reproduces.** With FL-DualGuard the real table stays below capacity, TABLE_FULL
+errors fall 75-fold, refusals fall from 21.6 % to 0.41 % of benign flows (simulator 0.26 %), the
+ping is unaffected, and demotions are 98.6 % attack flows.
+
+**The control plane is a second bottleneck the simulator does not model.** Under attack, many new
+benign flows produce neither an install nor a refusal: their Packet-In never reaches the
+controller. None are lost before the attack (0 % in the benign-only run and in the first 100 s of
+attacked runs). For flows starting after 150 s, 40–54 % are lost with no defense and 27–31 % with
+FL-DualGuard. The Ryu controller (Python, single-threaded) handles about 400–460 Packet-Ins per
+second while parsing a 3,000-entry flow-stats reply every second, and Open vSwitch drops Packet-Ins
+it cannot deliver. This is the Packet-In loss measured by rDefender (TIFS 2024), and it is also
+why the no-defense ping degraded in one run (its entries expired while its packets waited in the
+controller queue) but not in an identical earlier run.
+
+**Consequences.**
+
+1. The simulator's harm figures assume a controller that never loses Packet-Ins. The paper must
+   report Packet-In loss alongside table-level harm (experiment E13), and state the controller
+   capacity under which the simulator's numbers hold.
+2. FL-DualGuard lowers Packet-In loss (25.4 % → 15.3 % of benign flows) but adds Packet-In load
+   (demoted attack flows reinstall). PortGuard's refusals would add more (step 4b measured about
+   3,400 refused attack Packet-Ins per second in simulation); a per-port Packet-In meter is needed.
+3. Before scaling the testbed matrix: confirm where Packet-Ins are dropped (OVS coverage counters
+   `ofproto/…` before and after a run), and reduce controller cost (poll stats less often under
+   load or filter them by cookie; a compiled controller such as ONOS or ODL for comparison).
+
+### 16.4 Run 4: three domains at once, unseen variant A6, FL-DualGuard (`tb_all_A6_dg`) — not valid
+
+Three Ryu controllers, 21 hosts and 6 attackers on a 4-core laptop saturate the CPU. Benign
+flows were lost before the attack began (Packet-In never processed: 16.3 % in D1 and 22.4 % in
+D3 for flows starting in the first 50 s, 0 % in single-domain runs), rising to 31–51 % of all
+benign flows by the end. Because so few flows were installed, no table filled (maximum 62–81 %
+occupancy), there were no TABLE_FULL errors and almost no demotions (0, 205, 0), whereas the
+simulator overflows every domain under A6 without a defense (7.8–23.3 % harmed). The run measures
+the machine's capacity, not the attack or the defense, and is not used.
+
+**Plan.** Run domains one at a time: the federation is offline (training), and online each
+controller protects its own switch, so concurrent domains are not required by the design. Before
+the larger matrix, locate the Packet-In drops (Open vSwitch coverage counters) and reduce the Ryu
+controller's per-second cost.
+
+### 16.5 Where Packet-Ins are lost, and a leaner controller
+
+A diagnostic run (`tb_D1_A2_none_diag`, D1, A2, no defense) recorded Open vSwitch coverage counters,
+per-second CPU (pidstat) and the controller's event backlog (`testbed/diagnose_run.py`):
+
+- **Ryu is the bottleneck.** During the attack (120–300 s) `ryu-manager` used 97.5 % of one core
+  (≥ 95 % in 93 % of seconds) and its event queue stayed full (114 events on average, max 122).
+- **Open vSwitch drops what Ryu cannot read.** `rconn_overflow` counted 124,701 messages dropped
+  because the queue to the controller was full. `ovs-vswitchd` was busy (96 % of one core on
+  average, on four cores) but showed no upcall drops.
+- **Ryu was doing avoidable work:** about 96,000 Packet-Ins for about 29,000 flows, one flow-mod per
+  Packet-In, 39,461 TABLE_FULL errors to parse, and refused packets resubmitted to the table, where
+  they missed again.
+
+**Lean controller** (`LOFT_LEAN=1`, now the default; `--legacy-controller` reproduces runs 1–3): no
+repeat install of a flow within 0.5 s, a 1 s back-off after TABLE_FULL, slow-path packets output
+directly (the first packet of an install still goes through the table, as in the simulator), and
+the Open vSwitch queue to the controller raised from 100 to 512 messages. Same run (`tb_D1_A2_none_lean`):
+
+| D1, A2, no defense | Legacy controller | Lean controller | Simulator |
+|---|---|---|---|
+| `rconn_overflow` (messages dropped) | 124,701 | 23,812 | — |
+| Packet-Ins handled / install attempts | 95,847 / 95,741 | 166,309 / 49,863 | — |
+| Benign flows never installed | 24.1 % | 3.6 % (none before 200 s) | — |
+| Benign flows refused at least once | 21.6 % | **41.9 %** | **47.5 %** |
+| Ping | 0–45 % loss across runs | 0 % loss, 38.1 ms | — |
+
+Lost Packet-Ins had been hiding the attack's harm: a flow whose Packet-In is dropped is never
+refused. With the lean controller the testbed's benign harm (41.9 %) approaches the simulator's
+(47.5 %). Ryu still runs near saturation (94.8 % CPU) and loses 19 % of the flows that start after
+250 s, so Packet-In loss is reported as its own metric.
+
+### 16.6 FL-DualGuard with the lean controller (`tb_D1_A2_dg_lean`, D1, A2, seed 4000)
+
+| D1, A2 | No defense (lean) | FL-DualGuard v2.1 (lean) | Simulator: none / v2.1 |
+|---|---|---|---|
+| Benign flows refused at least once | 41.9 % | **0.02 %** | 47.5 % / 0.26 % |
+| Benign flows never installed (Packet-In lost) | 3.6 % | 5.9 % | not modelled |
+| TABLE_FULL errors | 28,046 | 165 | 70,529 / 1,661 |
+| Demotions (share on attack flows) | — | 18,706 (94.7 %) | — / 27,903 (99.9 %) |
+| Table entries 150–300 s, mean | ≈ 3,490 (full) | 2,070 | 3,499 / ≈ 2,000 |
+| `rconn_overflow` (messages dropped) | 23,812 | 46,935 | — |
+| Ryu CPU 120–300 s | 94.8 % | 101.4 % | — |
+| Ping | 0 % loss | 9 % loss, RTT up to 23.5 s | — |
+
+**Result.** On real Open vSwitch with a real controller, FL-DualGuard removes table-level harm almost
+entirely (41.9 % → 0.02 % of benign flows refused, simulator 47.5 % → 0.26 %), keeps the table
+around 2,070 entries (simulator about 2,000), and 94.7 % of its demotions hit attack flows.
+
+**Cost on the control plane.** Each demoted attack flow reinstalls through the controller, so
+DualGuard doubles the messages Open vSwitch drops (23,812 → 46,935) and raises Packet-In loss from
+3.6 % to 5.9 % of benign flows (all after 150 s). Total benign impact (refused or never installed)
+falls from about 45 % to about 6 %. The ping, never demoted, lost 9 % of probes to the saturated
+controller queue. On this hardware the controller, not the flow table, becomes the limiting resource
+once the table is defended; the paper must report Packet-In loss next to table harm and the
+controller capacity used.
+
+**Still to do on the testbed.** D2 and D3 one at a time; the unseen variant A6 and the fast-refresh
+attacker; and a Ryu implementation of PortGuard (only DualGuard is implemented in the controller app).
+
+### 16.7 All three domains, one at a time (A2, seed 4000, lean controller)
+
+Runs `tb_D2_A2_{none,dualguard}_lean`, `tb_D3_A2_{none,dualguard}_lean` and the D1 runs of §16.5–16.6.
+Simulator references use the same traffic and seed.
+
+| Domain | Defense | Refused at least once: testbed / simulator | Never installed (Packet-In lost) | TABLE_FULL | Demotions (attack share) | Ping loss |
+|---|---|---|---|---|---|---|
+| D1 enterprise | none | 41.9 % / 47.5 % | 3.6 % | 28,046 | — | 0 % |
+| D1 enterprise | FL-DualGuard | **0.02 %** / 0.26 % | 5.9 % | 165 | 18,706 (94.7 %) | 9 % |
+| D2 IoT | none | 48.3 % / 54.6 % | 4.3 % | 35,323 | — | 29 % |
+| D2 IoT | FL-DualGuard | **0.03 %** / 2.50 % | 4.1 % | 174 | 26,714 (89.1 %) | 27 % |
+| D3 cloud | none | 37.7 % / 52.7 % | 9.0 % | 20,635 | — | 0 % |
+| D3 cloud | FL-DualGuard | **0.00 %** / 1.16 % | 7.6 % | 0 | 14,019 (92.3 %) | 4 % |
+
+**Table-level result reproduces in every domain.** FL-DualGuard cuts benign flows refused an entry
+from 38–48 % to at most 0.03 %, and TABLE_FULL errors by two orders of magnitude. The testbed's
+no-defense harm is 6–15 points below the simulator's, because some flows that the simulator would
+refuse are lost before reaching the controller instead (never-installed column), and refusals are
+counted only once per flow back-off period.
+
+**Demotion precision is lower than in simulation** (89–95 % of demotions on attack flows against
+about 99 %), consistent with the controller's coarser view under load (stats replies arrive late
+and 1 s polls stretch).
+
+**The control plane remains the limit.** Ryu runs at 98–100 % of one core in every attacked run and
+Open vSwitch drops 23,000–72,000 controller messages per run. Packet-In loss is 3.6–9.0 % of benign
+flows without a defense and 4.1–7.6 % with FL-DualGuard: the defense neither causes nor cures it.
+The ping, which needs no new entry, still loses up to 29 % of probes in D2, where the IoT traffic's
+many periodic flows keep the controller busiest. Total benign impact (refused or never installed)
+falls from 42–53 % to 4–8 % with FL-DualGuard.
+
+### 16.8 Smoke tests of the ported defenses (D1, seed 4000, 150 s, passwordless runner)
+
+The controller now runs the simulator's own DMS-BTT (tuned + blocklist, CatBoost models
+evaluated from JSON with exact parity), PortGuard (step 4b setting) and DualGuard + PortGuard.
+Runs `~/loft-runs/smoke_*`; diagnosis with `testbed/diagnose_run.py --duration 150`.
+
+| Defense | Attack | Benign refused at least once | Never installed (Packet-In lost) | TABLE_FULL | OVS dropped controller messages | Ryu CPU (mean) | Defense actions |
+|---|---|---|---|---|---|---|---|
+| DMS-BTT tuned + blocklist | A2 | 0.0 % | 0.0 % | 0 | 0 | 18 % | 3,921 deletes, 13,613 blocked Packet-Ins |
+| PortGuard | A2 | 0.0 % | 0.0 % | 0 | 0 | 18 % | 1,033 deletes, 2,436 blocked |
+| DualGuard + PortGuard | A2 | 0.0 % | 0.0 % | 0 | 306 | 24 % | 4,067 demotes |
+| DualGuard + PortGuard | X1 (fast refresh) | 3.9 % | **24.3 %** | 1,542 | **114,220** | 30 % | 9,922 deletes, 26,241 blocked |
+
+All four runs completed without controller errors; all three defenses act in Ryu as in the simulator.
+Against A2 every defense keeps the table clear with no benign harm.
+
+**Fast refresh breaks the testbed's control channel, not the table.** In simulation this
+combination harms 0.0–0.4 % of benign flows against X1 (§15). On the testbed 24 % of benign flows
+are never installed, all after the attack starts (0 % in 0–50 s, 27 % in 50–100 s, 47 % in
+100–150 s), because Open vSwitch drops 114,000 messages on the controller connection. Ryu is not
+saturated (30 % of a core). The cause is the enforcement mechanism. A refused or blocked flow
+gets no rule, so every attacker packet keeps coming to the controller as a Packet-In, and the
+fast-refresh attacker sends many of them. The simulator charges nothing for refused packets.
+Enforcement in the data plane (a drop or rate-limit rule per over-quota port or blocked source,
+or an OpenFlow meter on Packet-Ins) is needed before the fast-refresh results can be claimed on
+the testbed. It is not done yet.
+
+## 17. Revision 5 — the main comparison on real traces (pre-registered)
+
+Pre-registration `results/revision5/preregistration.json` (sha256 committed in d5182f9 before any
+run); benign traffic replayed from real captures (`docs/traces.md`): T1 bigFlows at 1,200 pps,
+T2 IMC-10 univ2 at 1,000 pps (FTOP's rate), T3 the same univ2 window at its native 9,000 pps.
+Dedicated-port topology, as in DMS-BTT. DMS-BTT and the local MLP are trained on each trace (seeds
+1000–1004); FL-DualGuard v2.1 is transferred from the synthetic domains and only its threshold is
+recalibrated on trace validation runs (2000–2002). Ten test seeds (9000–9009) per trace, the seven
+library variants A1–A7 and the fast-refresh sweep X0.25–X9; 2,250 episodes.
+
+### 17.1 Main table (A1–A7, DMS-BTT Table-6 format; harm = benign flows refused at least once, 95 % cluster bootstrap)
+
+| Trace | No defense | DMS-BTT tuned + blocklist (trained on trace) | Local MLP + library (trained on trace) | FL-DualGuard v2.1 (transferred) | v2.1 + PortGuard |
+|---|---|---|---|---|---|
+| T1 bigFlows | 45.3 % | 3.4 % [3.0, 3.7] | 8.3 % [7.8, 8.8] | 5.6 % [5.2, 6.0] | **2.1 %** [1.9, 2.4] |
+| T2 univ2 1k pps | 27.1 % | 0.5 % [0.4, 0.7] | **0.4 %** [0.3, 0.6] | 0.6 % [0.5, 0.7] | 0.6 % [0.5, 0.6] |
+| T3 univ2 9k pps | 45.3 % | 4.1 % [3.7, 4.5] | 8.5 % [8.0, 9.2] | **3.3 %** [2.6, 4.1] | 4.3 % [3.2, 5.4] |
+| All traces | 39.2 % | 2.7 % [2.1, 3.2] | 5.7 % [4.3, 7.1] | 3.2 % [2.4, 3.9] | **2.3 %** [1.7, 3.0] |
+
+Overflow time per run (s), all traces: none 97.3, DMS-BTT 3.9, local 14.4, v2.1 6.7, v2.1 + PortGuard
+2.0. Benign-only false alarms are 0 % except v2.1 on T3 (0.41 %). Full table with Pa, table usage,
+earliest overflow, Packet-In and TABLE_FULL: `tables/table_main_dmsbtt_format.csv`.
+
+### 17.2 Hypotheses (as registered; cluster Wilcoxon over (trace, seed), Holm for H1/H4)
+
+| | Claim | Result | |
+|---|---|---|---|
+| H1 | v2.1 transferred harms fewer benign flows than DMS-BTT trained on the trace | +0.51 points (v2.1 worse), 10 wins / 20 losses, p = 0.088 | **not supported** |
+| H2 | v2.1 transferred non-inferior to local MLP trained on the trace (≤ 0.5 points) | −2.58 points (v2.1 better), 22 / 8 | **supported** |
+| H3 | v2.1 transferred harms ≤ 3 % on each trace | T1 5.6 %, T2 0.6 %, T3 3.3 % | **not supported** |
+| H4 | PortGuard reduces harm against fast refresh (gaps ≤ 1 s) | −57.8 points, 30 / 0, p_holm = 3.7e-9 | **supported** |
+| H5 | PortGuard non-inferior on A1–A7 (≤ 0.5 points) | −0.84 points (better), 16 / 10 | **supported** |
+
+### 17.3 Reading
+
+- **Transfer without retraining is close to, not better than, per-trace DMS-BTT.** The model
+  federated on synthetic domains, given only a new threshold, lands 0.5 points behind DMS-BTT
+  trained on each trace (not significant), and 2.6 points ahead of a local model trained on
+  the trace plus the public attack library. The paper must not claim that FL-DualGuard beats DMS-BTT
+  on real traffic. The supported claim is that it reaches comparable harm without trace-specific
+  training.
+- **A4 is where every learned detector loses.** On T1, A4 harms 19.6 % (DMS-BTT), 27.0 % (v2.1) and
+  48 % (local MLP); PortGuard brings it to 1.9 %. This drives H3's failure on T1.
+- **Fast refresh defeats every detector-only defense on real traffic** (X ≤ 2: 75–85 % harm on T1
+  and T3 for DMS-BTT, local MLP and v2.1), and PortGuard alone holds it to 0.0–0.1 % (T1), 1–3 % (T2)
+  and about 6 % (T3). The combination is the best defense overall. In simulation only, see §16.8
+  for the testbed caveat.
+- **The cost of PortGuard is on T3:** at 9,000 pps the per-port quotas cut into benign ports
+  (A1–A7 harm 4.3 % against 3.3 % for v2.1 alone).
+
+## 18. Minimal testbed confirmation matrix (Mininet/OVS/Ryu, 29 Oct 2026)
+
+48 runs of 300 s, one at a time, through the passwordless runner (`testbed/matrix_minimal.sh`;
+15:57–20:14, no failed runs). The 26 runs with DualGuard were repeated after a controller fix
+(18.2), 20:35–23:04. Every host replays its own access port's flows of the simulator episode
+(dedicated scenario), so each run is the simulator's episode for that seed. Trace T1 replays
+the bigFlows trace the same way. Defenses are the simulator's objects running in Ryu: DMS-BTT
+tuned + blocklist, FL-DualGuard v2.1, and v2.1 + PortGuard (step 4b). Simulator references are
+the dedicated-port test episodes: revision 4b for D1–D3 (seeds 8000–8009) and revision 5 for
+T1 (seeds 9000–9009). Table: `results/testbed_m1/table_m1.csv` and `table_m1.md`, built by
+`testbed/compare_matrix.py`. Run directories are in `~/loft-runs/m1_*`; the DualGuard runs from
+before the fix are in `~/loft-runs/m1_switchclock/` (not in git).
+
+Harm is the simulator's: benign flows refused (TABLE_FULL or the defense) or evicted while
+active, as a % of benign flows. Flows whose Packet-In never reached the controller are reported
+separately ("Packet-In lost") and are not counted as harm.
+
+### 18.1 Main cells (seed 4000, after the fix)
+
+Benign harmed %, testbed / simulator mean [min, max over 10 seeds]:
+
+| Cell | No defense | DMS-BTT | FL-DualGuard v2.1 | v2.1 + PortGuard |
+|---|---|---|---|---|
+| D1 A2 | 40.0 / 48.9 | 0.54 / 0.57 [0.49, 0.66] | 0.40 / 0.33 [0.11, 0.55] | 0.26 / 0.90 [0.17, 1.67] |
+| D2 A2 | 45.2 / 52.7 | 0.08 / 0.10 [0.07, 0.14] | 2.74 / 2.87 [2.29, 3.88] | 2.33 / 2.96 [2.57, 3.58] |
+| D3 A2 | 44.1 / 49.0 | 0.00 / 0.15 [0.00, 1.44] | 0.26 / 0.74 [0.12, 1.97] | 0.26 / 0.93 [0.14, 3.38] |
+| T1 A2 | 59.6 / 55.2 | 0.13 / 0.14 [0.10, 0.18] | 0.46 / 1.00 [0.42, 1.64] | 0.66 / 2.07 [0.78, 3.75] |
+| D1 A4 | 34.5 / 50.3 | 0.82 / 1.07 [0.98, 1.17] | 0.84 / 1.41 [0.43, 1.96] | 0.56 / 0.72 [0.14, 1.01] |
+| D2 A4 | 40.3 / 55.3 | 17.8 / 32.5 [31.7, 33.3] | 5.28 / 5.31 [3.00, 6.24] | 4.00 / 2.16 [1.68, 2.81] |
+| D3 A4 | 39.4 / 49.2 | 14.2 / 30.0 [26.8, 34.9] | 0.56 / 1.60 [0.35, 4.41] | 1.36 / 1.97 [0.26, 8.35] |
+| T1 A4 | 56.7 / 54.9 | 14.8 / 19.6 [13.6, 25.2] | **40.9** / 27.0 [23.8, 30.4] | 3.24 / 1.90 [0.69, 4.53] |
+
+Benign flows whose Packet-In was lost: mostly 4–12 % under attack for every defense including
+none, as low as 0.2 % (DMS-BTT on D1/D3 A2 and T1 A2) and up to 19.7 % (D2 A4, DMS-BTT).
+
+**Extra seeds (D1).** Seeds 4001 / 4002: DMS-BTT 0.58 / 0.68 % on A2 and 0.84 / 1.17 % on A4;
+v2.1 + PortGuard 0.15 / 0.49 % on A2 and 0.32 / 0.56 % on A4. All are within or next to the
+simulator's range, as is seed 4000.
+
+**False alarms (no attack, D1 and T1).** v2.1 and v2.1 + PortGuard: 0.0 % harmed, 0 TABLE_FULL,
+0.05–0.78 % Packet-In lost, in all four runs.
+
+### 18.2 A controller bug found by the matrix, and its fix
+
+In the first pass, v2.1 alone on A4 harmed 19.0 / 27.4 / 22.0 / 48.4 % (D1 / D2 / D3 / T1)
+against 1.4–27 % simulated, and the simulator on the same seed 4000 gave 1.46 % (D1) and
+4.09 % (D2). The controller dated each entry as poll time minus the entry's duration. The poll
+time is when Ryu *processes* the stats reply, which under attack waits behind a varying
+Packet-In backlog. The computed install time therefore moved from poll to poll, and the
+feature tracker (which restarts a flow's history when its install time changes) restarted the
+history of most entries every poll: on D1 A4, 2,132 of 2,993 entries per poll, against about
+180 real installs per second. Per-flow history (activity ratio, idle polls, gap statistics,
+packet deltas) was lost, which matters most for A4, the variant that copies benign sizes.
+DMS-BTT and PortGuard use no per-flow history, which is why only DualGuard was off. The
+controller now records each entry's install time when it sends the flow-mod
+(`LOFT_INSTALL_CLOCK=controller`, the default; `--install-clock switch` keeps the old
+behaviour). A/B on D1 A4, v2.1, seed 4000: 16.1 % harmed and 11,801 TABLE_FULL with the old
+clock, 0.9 % and 53 with the new one. The fix moved every DualGuard cell to the simulator,
+including D2 A2, which the first pass had *under*-estimated (0.70 → 2.74 %, simulated 2.87 %).
+
+### 18.3 What agrees and what does not
+
+1. **All defenses transfer on D1–D3 and on T1 A2.** Every no-defense cell overflows
+   (TABLE_FULL 22,000–32,000; 35–60 % harmed). Testbed harm on D1–D3 is 5–16 points below the
+   simulator because flows with lost Packet-Ins are left out and fill no entries. DMS-BTT
+   matches on every A2 cell and on D1 A4, and is *better* than simulated on D2/D3/T1 A4
+   (14–18 % against 20–33 %). v2.1 alone is within or below the simulator's range in all
+   seven cells (D2 A4: 5.28 against 5.31). v2.1 + PortGuard is within or below the range
+   except D2 A4 (4.0 % against at most 2.8 %; 2.39 % in the simulator on the same seed).
+2. **T1 A4 with v2.1 alone fails on both, worse on the testbed.** The simulator on seed 4000
+   gives 28.6 % (1,298 attacker and 367 benign demotes); the testbed gives 40.9 % (353 attacker
+   and 2,443 benign demotes, 107 fresh entries per poll, so not the clock bug). T1's threshold
+   is 0.9998, so small feature differences flip many decisions. This cell already fails in
+   the simulator (§17.3); v2.1 + PortGuard holds it to 3.2 % (3.9 % simulated, same seed).
+3. **The control plane is saturated under every attack.** Before the attack Ryu receives
+   100–200 Packet-Ins/s with an event backlog near 20. During it, it receives 470–650/s, the
+   backlog sits at 100–116 of 128, Ryu runs at 62–98 % of a core, and Open vSwitch drops
+   17,000–99,000 controller messages per run (`rconn_overflow`, first pass). Refused flows
+   install nothing, so each of their later packets is another Packet-In. This hits every
+   defense, including none, and explains the ping loss on D2 (19–35 % in all four). One laptop's
+   Ryu (about 500 Packet-Ins/s) is a limit of this testbed, not a property of a defense.
+4. **Fast refresh (X1, D1) is a control-plane limit here.** Testbed / simulator harm: none
+   59.4 / 78.5, DMS-BTT 9.7 / 25.5, v2.1 57.0 / 63.0, v2.1 + PortGuard 5.8 / 0.01 %, with 15–38 %
+   of benign Packet-Ins lost in every run. The order of the defenses holds (PortGuard best, v2.1
+   alone fails), but the 0.01 % of the simulator is not reproduced.
+
+**Correction to §16.8 and testbed README fix 3.** Drop rules refreshed at every poll did not
+fix X1. In check run `chk2_D1_X1_dualguard_portguard`, only 49 drop rules were needed, 26 % of
+benign flows were never installed, and Ryu ran at 110 % of a core in 120–300 s. The smoke test's
+"not saturated (30 %)" was a whole-run mean. Most of the Packet-In load comes from attacker
+flows that are admitted and then trimmed at the next poll, not from refused ones. Results of
+§16 with DualGuard predate the install-clock fix (18.2).
+
+### 18.4 What the paper can claim from the testbed
+
+- **The overflow and its cure are real.** On Open vSwitch with a 3,500-entry limit, the low-rate
+  attack fills the table and harms 35–60 % of benign flows. All three defenses bring A2 to
+  0–2.8 % with no false alarms. On the mimicry attack A4, v2.1 and v2.1 + PortGuard hold the
+  synthetic domains to 0.6–5.3 %, where DMS-BTT reaches 14–18 % on two of three. On real
+  trace T1, only v2.1 + PortGuard holds A4 (3.2 %). This is the simulator's ranking, cell by cell.
+- **Not claimable from the testbed:** any number for fast refresh (item 4).
+- **Report Packet-In loss as a testbed limit** with its own column: under 1 % without an attack
+  and up to 20 % under attack, for every defense including none.

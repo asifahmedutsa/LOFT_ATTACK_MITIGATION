@@ -1,0 +1,137 @@
+{
+ "test_off/C1": {
+  "rows": 555844,
+  "attack_frac": 0.4919,
+  "runs": 32
+ },
+ "test_off/C2": {
+  "rows": 591793,
+  "attack_frac": 0.4008,
+  "runs": 32
+ },
+ "test_off/C3": {
+  "rows": 526728,
+  "attack_frac": 0.523,
+  "runs": 32
+ },
+ "test_off/C4": {
+  "rows": 626128,
+  "attack_frac": 0.3834,
+  "runs": 32
+ },
+ "test_off/C5": {
+  "rows": 558349,
+  "attack_frac": 0.4466,
+  "runs": 32
+ },
+ "test_off/C6": {
+  "rows": 581527,
+  "attack_frac": 0.4467,
+  "runs": 32
+ },
+ "test_off/C7": {
+  "rows": 499458,
+  "attack_frac": 0.5739,
+  "runs": 32
+ },
+ "test_off/C8": {
+  "rows": 641682,
+  "attack_frac": 0.3166,
+  "runs": 32
+ },
+ "test_off/C9": {
+  "rows": 498550,
+  "attack_frac": 0.5794,
+  "runs": 32
+ },
+ "train/C1": {
+  "rows": 143309,
+  "attack_frac": 0.3445,
+  "runs": 10
+ },
+ "train/C2": {
+  "rows": 161086,
+  "attack_frac": 0.2933,
+  "runs": 10
+ },
+ "train/C3": {
+  "rows": 138695,
+  "attack_frac": 0.4166,
+  "runs": 10
+ },
+ "train/C4": {
+  "rows": 174068,
+  "attack_frac": 0.2876,
+  "runs": 10
+ },
+ "train/C5": {
+  "rows": 151112,
+  "attack_frac": 0.3267,
+  "runs": 10
+ },
+ "train/C6": {
+  "rows": 145406,
+  "attack_frac": 0.266,
+  "runs": 10
+ },
+ "train/C7": {
+  "rows": 122890,
+  "attack_frac": 0.431,
+  "runs": 10
+ },
+ "train/C8": {
+  "rows": 186282,
+  "attack_frac": 0.2092,
+  "runs": 10
+ },
+ "train/C9": {
+  "rows": 123218,
+  "attack_frac": 0.4922,
+  "runs": 10
+ },
+ "val/C1": {
+  "rows": 86983,
+  "attack_frac": 0.3442,
+  "runs": 6
+ },
+ "val/C2": {
+  "rows": 96574,
+  "attack_frac": 0.2904,
+  "runs": 6
+ },
+ "val/C3": {
+  "rows": 83339,
+  "attack_frac": 0.4185,
+  "runs": 6
+ },
+ "val/C4": {
+  "rows": 104071,
+  "attack_frac": 0.2779,
+  "runs": 6
+ },
+ "val/C5": {
+  "rows": 90340,
+  "attack_frac": 0.3302,
+  "runs": 6
+ },
+ "val/C6": {
+  "rows": 87788,
+  "attack_frac": 0.2735,
+  "runs": 6
+ },
+ "val/C7": {
+  "rows": 74540,
+  "attack_frac": 0.4282,
+  "runs": 6
+ },
+ "val/C8": {
+  "rows": 111618,
+  "attack_frac": 0.2201,
+  "runs": 6
+ },
+ "val/C9": {
+  "rows": 74009,
+  "attack_frac": 0.4893,
+  "runs": 6
+ }
+}

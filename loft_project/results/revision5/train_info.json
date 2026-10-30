@@ -1,0 +1,28 @@
+{
+  "T1": {
+    "train_rows": 362053,
+    "train_attack_rows": 168640,
+    "val_benign_rows": 32122,
+    "tau_fedavg": 0.9998195777402649,
+    "tau_local_lib": 0.10544662277562714
+  },
+  "T2": {
+    "train_rows": 221902,
+    "train_attack_rows": 191502,
+    "val_benign_rows": 3632,
+    "tau_fedavg": 5.26316518428539e-08,
+    "tau_local_lib": 0.0851186151371727
+  },
+  "T3": {
+    "train_rows": 317678,
+    "train_attack_rows": 181873,
+    "val_benign_rows": 24494,
+    "tau_fedavg": 0.9840206513868103,
+    "tau_local_lib": 0.0040657013410160545
+  },
+  "tau_fedavg_synthetic": {
+    "fedavg/D1": 0.006994208855314017,
+    "fedavg/D2": 0.003045911270884633,
+    "fedavg/D3": 0.0031114712578634023
+  }
+}

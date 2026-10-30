@@ -1,0 +1,10 @@
+{
+  "fedavg_noctx_comm": {
+    "rounds": 30,
+    "model_bytes": 2052,
+    "uplink_bytes": 184680,
+    "downlink_bytes": 184680,
+    "normalization_bytes": 696,
+    "total_bytes": 370056
+  }
+}
