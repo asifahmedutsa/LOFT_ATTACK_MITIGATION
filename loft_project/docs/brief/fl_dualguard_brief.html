@@ -78,7 +78,7 @@ code { font-family: var(--mono); font-size: 13px; }
   <ol>
     <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
     <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
-    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls is the best fix so far: FedAvg harm falls to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. IoT controllers remain the open part.</li>
+    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls cuts FedAvg harm to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. But on the main three-controller setup it leaves harm unchanged and lengthens overflow from 4.7 to 6.6 s (fresh seeds), so it is not the default. IoT controllers remain the open part.</li>
     <li><b>Model family matters less than federation.</b> Over 3 training seeds Random Forest leads offline (F1 96.5 against 94.7) and is more stable, but the MLP protects users best online on every seed (1.3 % harm against 4.9 %) and is 2.4 KB against 16 MB.</li>
   </ol>
 </section>
@@ -150,7 +150,19 @@ code { font-family: var(--mono); font-size: 13px; }
         <tr><td class="l">Pooled (upper bound)</td><td>2.8</td><td>2.1</td><td>2.8</td><td>2.1</td><td>3.6</td></tr>
       </tbody>
     </table></div>
-    <p>Flow-level calibration cuts federated harm by about a third (FedAvg 6.9 → 4.2 % at K = 9) and halves benign demotes, while F1 on attacks seen by another controller stays at about 97. The cost is offline F1 on the attack no one saw (FedAvg 49 → 35 at K = 9). It helps pooled training too, but makes local models worse because they lose recall. Weighting by benign rows does not help. The gap to pooled training shrinks from about 6 points to about 2–3, and the IoT controllers (9–11 % against 3.6 %) remain the open part. Flow-level calibration should become DualGuard's default; it needs no change to training or to the federation.</p>
+    <p>Flow-level calibration cuts federated harm by about a third (FedAvg 6.9 → 4.2 % at K = 9) and halves benign demotes, while F1 on attacks seen by another controller stays at about 97. The cost is offline F1 on the attack no one saw (FedAvg 49 → 35 at K = 9). It helps pooled training too, but makes local models worse because they lose recall. Weighting by benign rows does not help. The gap to pooled training shrinks from about 6 points to about 2–3, and the IoT controllers (9–11 % against 3.6 %) remain the open part. These runs did not record attack containment.</p>
+  </div>
+  <div class="callout">
+    <h3>Check on the main three-controller setup: not adopted as default <span class="chip done">done · 480 episodes, unused seeds 10000–10009</span></h3>
+    <p>v2.1 with its current threshold against the same model with the flow-level threshold (fixed earlier on validation seeds, not retuned). Attacked episodes, means with 95 % cluster-bootstrap intervals; the paired test is over 30 controller × seed clusters.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Threshold</th><th>Benign harmed %</th><th>Evicted while active %</th><th>Attack's table share %</th><th>Overflow after attack, s (mean / p90)</th><th>D2 overflow, s</th></tr></thead>
+      <tbody>
+        <tr class="fed"><td class="l">Current (per poll)</td><td>1.56 [1.15, 2.01]</td><td>0.61</td><td>14.5</td><td class="hi">4.7 / 8.8</td><td>8.2</td></tr>
+        <tr><td class="l">Flow-level 1 %</td><td>1.49 [1.13, 1.88]</td><td>0.15</td><td>16.2</td><td>6.6 / 11.3</td><td>12.8</td></tr>
+      </tbody>
+    </table></div>
+    <p>With three controllers, harm does not change (p = 0.34) but containment gets worse in all 30 clusters: the attack holds 1.7 points more of the table and overflow lasts 1.9 s longer, above the 5 s limit set when v2.1 was chosen. This matches the earlier validation check. So the current threshold stays the default at K = 3. Flow-level calibration helps harm at K = 6 / 9, but whether it costs containment there too is not yet measured.</p>
   </div>
 </section>
 

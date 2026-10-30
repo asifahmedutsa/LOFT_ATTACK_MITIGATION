@@ -1,0 +1,6 @@
+,avg_attack_occ_post,avg_attack_occ_post,benign_flows_harmed_frac,benign_flows_harmed_frac,overflow_seconds_post_attack,overflow_seconds_post_attack
+defense,v2.1,v2.1-flowcal,v2.1,v2.1-flowcal,v2.1,v2.1-flowcal
+domain,,,,,,
+D1,0.1528,0.166,0.0049,0.0049,2.5986,2.9243
+D2,0.1246,0.1469,0.0315,0.0285,8.1857,12.8014
+D3,0.1573,0.172,0.0105,0.0112,3.3314,3.9771
