@@ -15,10 +15,14 @@ from .trace import TRACE_DOMAIN_IDX, TRACE_DOMAINS
 from .traffic import build_traffic
 
 DOMAIN_IDX = {d: i for i, d in enumerate(DOMAINS)}
+EXTRA_DOMAINS = {}     # name -> (profile, domain index); filled by experiments such as scale.py
 
 
 def profile_of(domain):
-    """(profile, domain index) for a synthetic domain (D1-D3) or a trace domain (T1, T2)."""
+    """(profile, domain index) for a synthetic domain (D1-D3), a trace domain (T1, T2) or an
+    extra registered domain."""
+    if domain in EXTRA_DOMAINS:
+        return EXTRA_DOMAINS[domain]
     if domain in TRACE_DOMAINS:
         return TRACE_DOMAINS[domain], TRACE_DOMAIN_IDX[domain]
     return DOMAINS[domain], DOMAIN_IDX[domain]
