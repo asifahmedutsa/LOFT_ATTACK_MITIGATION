@@ -1,0 +1,5 @@
+model,accuracy_mean,accuracy_std,attack_detection_rate_mean,attack_detection_rate_std,false_alarm_rate_mean,false_alarm_rate_std
+catboost,94.12,0.05,94.97,0.05,3.34,0.03
+lightgbm,93.28,0.0,95.03,0.0,4.04,0.0
+rf,94.06,0.03,94.79,0.03,3.27,0.02
+xgboost,93.23,0.0,95.04,0.0,4.13,0.0

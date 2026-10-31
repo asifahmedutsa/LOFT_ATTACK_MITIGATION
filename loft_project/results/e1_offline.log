@@ -1,0 +1,15 @@
+[data] 0 s
+[seed 0] mlp 45 s
+[seed 0] rf 223 s
+[seed 0] xgboost 108 s
+[seed 0] lightgbm 137 s
+[seed 0] catboost 131 s
+[seed 0] knn 2187 s
+[seed 0] svm 46 s
+[seed 0] lr 60 s
+[seed 0] state task done, 2943 s
+[seed 1] mlp 114 s
+[seed 1] rf 221 s
+[seed 1] xgboost 108 s
+[seed 1] lightgbm 130 s
+[seed 1] catboost 126 s
