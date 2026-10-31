@@ -1,0 +1,20 @@
+{
+  "D1": {
+    "table_rows": 3600,
+    "table_attack_frac": 0.5213888883590698,
+    "rule_rows": 238144,
+    "seconds": 41.7
+  },
+  "D2": {
+    "table_rows": 3600,
+    "table_attack_frac": 0.5236111283302307,
+    "rule_rows": 261957,
+    "seconds": 28.5
+  },
+  "D3": {
+    "table_rows": 3600,
+    "table_attack_frac": 0.4605555534362793,
+    "rule_rows": 228317,
+    "seconds": 23.7
+  }
+}

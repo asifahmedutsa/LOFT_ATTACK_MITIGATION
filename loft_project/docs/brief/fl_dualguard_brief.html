@@ -79,6 +79,7 @@ code { font-family: var(--mono); font-size: 13px; }
     <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
     <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
     <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls cuts FedAvg harm to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. But on the main three-controller setup it leaves harm unchanged and lengthens overflow from 4.7 to 6.6 s (fresh seeds), so it is not the default. IoT controllers remain the open part.</li>
+    <li><b>FL-DualGuard beats four recent published defenses on the same simulator.</b> Against rDefender, FloRa, FTOP and FTMaster (and DMS-BTT), v2.1 harms <span class="num">1.6 %</span> of benign flows against 7.6–23.6 %, and leaves the attacker the smallest share of the table (14.5 % against 22.8–38.0 %), in all 30 controller × seed clusters.</li>
     <li><b>Offline F1 does not pick the best online detector.</b> In the papers' offline format (8 families, 3 seeds) federated Random Forest and CatBoost lead (F1 98.1 against 97.2 for our MLP). Inside DualGuard on fresh seeds, Random Forest harms 3.6× more benign flows (5.2 % against 1.45 %), though it shortens overflow (1.1 s against 4.3 s). The MLP is also 2.4 KB against 16 MB and 4–8× faster per poll.</li>
   </ol>
 </section>
@@ -216,7 +217,27 @@ code { font-family: var(--mono); font-size: 13px; }
 </section>
 
 <section>
-  <h2>4 · Already established (testbed matrix, 29 Oct)</h2>
+  <h2>4 · Against four recent published defenses <span class="chip done">done · 2,160 test episodes, unused seeds 11000–11009</span></h2>
+  <p>rDefender (TIFS 2024), FloRa (TNSM 2024), FTOP (TNSE 2024) and FTMaster (TNSM 2023) reimplemented in our simulator from their papers, with each paper's stated parameters; settings a paper leaves open were tuned on validation seeds by the same rule that chose v2.1. Their classifiers are trained per controller, as these systems are deployed (and as DMS-BTT was). All 3 controllers, attacks A1–A7, 300 s, dedicated ports. Columns follow DMS-BTT's comparison table, then ours.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Defense</th><th>Avg attack share %</th><th>Max attack share %</th><th>Table usage %</th><th>Overflow after attack, s</th><th>TABLE_FULL</th><th>Benign harmed %</th><th>Benign Packet-In lost %</th><th>Decision ms</th></tr></thead>
+    <tbody>
+      <tr><td class="l">No defense</td><td>53.2</td><td>78.2</td><td>78.1</td><td>147.8</td><td>59,150</td><td>42.43</td><td>15.10</td><td>0.05</td></tr>
+      <tr><td class="l">EVICT (OVS)</td><td>51.1</td><td>83.5</td><td>78.2</td><td>158.4</td><td>0</td><td>12.62</td><td>0.00</td><td>0.05</td></tr>
+      <tr><td class="l">DMS-BTT (2025)</td><td>24.8</td><td>59.3</td><td>61.8</td><td>12.8</td><td>11,271</td><td>7.60</td><td>0.93</td><td>4.1</td></tr>
+      <tr><td class="l">rDefender (2024)</td><td>35.1</td><td>59.8</td><td>71.4</td><td>23.2</td><td>19,651</td><td>8.05</td><td>1.21</td><td>0.16</td></tr>
+      <tr><td class="l">FloRa (2024)</td><td>38.0</td><td>64.3</td><td>70.6</td><td>88.5</td><td>32,262</td><td>23.59</td><td>6.45</td><td>5.1</td></tr>
+      <tr><td class="l">FTOP (2024)</td><td>22.8</td><td>60.6</td><td>58.5</td><td>7.6</td><td>9,005</td><td>7.89</td><td>0.40</td><td>19.4</td></tr>
+      <tr><td class="l">FTMaster (2023)</td><td>25.7</td><td>60.7</td><td>61.9</td><td>43.3</td><td>22,103</td><td>12.71</td><td>4.05</td><td>9.7</td></tr>
+      <tr class="fed"><td class="l">FL-DualGuard v2.1</td><td class="hi">14.5</td><td class="hi">53.8</td><td class="hi">54.6</td><td>4.8</td><td>5,004</td><td class="hi">1.64</td><td class="hi">0.16</td><td>2.4</td></tr>
+      <tr class="fed"><td class="l">v2.1 + PortGuard</td><td>21.2</td><td class="hi">53.8</td><td>60.3</td><td class="hi">4.4</td><td class="hi">4,855</td><td>1.77</td><td>0.18</td><td>2.6</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">FL-DualGuard v2.1 harms 4.6–14× fewer benign flows than every published defense and holds the attacker to the smallest share of the table; both differences hold in all 30 controller × seed clusters (Holm-corrected p &lt; 0.001). Overflow time is lower than every baseline (DMS-BTT's difference is not significant, p = 0.19). The per-attack view explains the baselines' failures: FTMaster's local detector misses attacks its controller never trained on (A2 harm 16 %, mimicry A4 41 %); FloRa's 100 s age rule and per-source blocking work only on single-source or spoofed attacks (A5 0.1 %, A2 8 %) and miss pooled sources (A1, A3: 30–37 %); DMS-BTT and FTOP fail on mimicry A4 (19–24 %); rDefender is attack-agnostic but its random in-port deletion costs a steady 8 %. Caveat for the paper: rDefender and FloRa did not halve the attacker's share on validation (our own sanity check), so a reviewer may call these reimplementations weak; rDefender was designed for idle timeout 30 s, a 2,000-entry table and high-rate attacks, and FloRa for idle timeout 20 s.</p>
+</section>
+
+<section>
+  <h2>5 · Already established (testbed matrix, 29 Oct)</h2>
   <p>48 Mininet/Ryu runs reproduce the simulator on D1–D3 for every defense, after we found and fixed a controller timing bug (entries dated by a lagging poll clock lost their per-flow history). DualGuard v2.1 alone: 0.26–5.3 % harm against 34–45 % with no defense. Open problem: on the bigFlows trace with the mimicry attack A4, DualGuard alone harms 40.9 % (27 % simulated); with PortGuard it is 3.2 %.</p>
 </section>
 
