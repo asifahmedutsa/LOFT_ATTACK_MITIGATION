@@ -81,6 +81,7 @@ class AttackVariant:
     pulse_on: float = 0.0                      # >0 enables on/off pulsing
     pulse_off: float = 0.0
     n_attackers: int = 2
+    refresh: bool = True                       # False: one-packet flows, never refreshed (flood)
 
 
 VARIANTS: Dict[str, AttackVariant] = {

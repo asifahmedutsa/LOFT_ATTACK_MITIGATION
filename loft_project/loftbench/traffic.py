@@ -194,9 +194,13 @@ def generate_attack(variant: AttackVariant, start: float, duration: float,
                 live.extend(new)
                 if owner_out is not None:
                     owner_out.extend([a] * n_new)
-            lo, hi = variant.pkts_per_refresh
-            reps = rng.integers(lo, hi + 1, len(live))
-            f = np.repeat(np.array(live), reps)
+            if not variant.refresh:
+                # Flood (rDefender's LA/HA): only this burst's new flows, one packet each.
+                f = np.array(live[len(live) - max(n_new, 0):], dtype=np.int64)
+            else:
+                lo, hi = variant.pkts_per_refresh
+                reps = rng.integers(lo, hi + 1, len(live))
+                f = np.repeat(np.array(live), reps)
             order = rng.permutation(len(f))
             f = f[order]
             tt = t + np.arange(len(f)) / variant.burst_pps

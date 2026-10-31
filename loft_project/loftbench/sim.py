@@ -159,7 +159,9 @@ def run_episode(traffic, cfg: SimConfig, defense: Defense = None, collect=None,
                 if len(u) > free and defense.evict_on_full is not None:
                     # Switch-side eviction (OVS overflow_policy=evict).
                     cand = np.flatnonzero(installed)
-                    ev = defense.evict_on_full(len(u) - free, cand, last_seen, idle_to, now)
+                    ev = (defense.evict_on_full(len(u) - free, cand, last_seen, idle_to, now, install_t)
+                          if getattr(defense, "evict_needs_install", False) else
+                          defense.evict_on_full(len(u) - free, cand, last_seen, idle_to, now))
                     if len(ev):
                         installed[ev] = False
                         count -= len(ev)

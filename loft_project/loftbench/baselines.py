@@ -267,16 +267,22 @@ class RDefender(Defense):
     Paper values kept: threshold_h 0.3, threshold_l 1.4, credit windows 8 (high) and 30 (low),
     deletion number Da = max(Nd, 2^credit) per attacked port and Nd spread evenly over all
     ports when no port is detected, EWMA weight 0.75 on the newest value.
-    Not stated: the credit scale gamma (tuned on validation seeds). Deviations: detection
-    runs at the 1 s poll when the table was full since the last poll (the paper reacts to
-    each Packet-In); Nd is the Packet-In arrivals expected in one poll interval (the defense
-    delay T_p of Eq. 3 is the poll interval here); w_h is the per-port count change since
-    the previous overflow divided by the Packet-Ins in between."""
+    Not stated: the credit scale gamma (tuned on validation seeds). Deviations: the paper
+    reacts to every overflow (each Packet-In refused by a full table); here the controller
+    sees the table once per 1 s poll, so attacked ports are detected once per poll and the
+    overflow events of the last interval are replayed: each refused Packet-In batch of size
+    Nd is one event that updates the credit windows and deletes Da rules (ceil(TABLE_FULL / Nd)
+    events per poll). Nd follows Eq. 3 with the paper's measured defense time T_p = 2.5 ms
+    (Nd = ceil(F_p T_p), at least 1). w_h is the per-port count change since the previous
+    overflow divided by the Packet-Ins in between. events="poll" keeps the first version
+    (one event per poll, Nd = one poll's arrivals)."""
     name = "rdefender"
 
-    def __init__(self, gamma=0.05, thr_h=0.3, thr_l=1.4, size_ch=8, size_cl=30, seed=0):
+    def __init__(self, gamma=0.05, thr_h=0.3, thr_l=1.4, size_ch=8, size_cl=30, seed=0,
+                 tp=0.0025, events="replay", max_events=5000):
         self.gamma, self.thr_h, self.thr_l = gamma, thr_h, thr_l
         self.size_ch, self.size_cl, self.seed = size_ch, size_cl, seed
+        self.tp, self.events, self.max_events = tp, events, max_events
 
     def reset(self, ctx):
         self.port = ctx["flow_port"]
@@ -305,7 +311,11 @@ class RDefender(Defense):
             self.base = counts.copy()
         if obs["count"] < cap - 1 and obs["table_full_last"] == 0:
             return None, None
-        nd = max(int(np.ceil(self.fp)), 1)
+        if self.events == "poll":
+            nd, n_ev = max(int(np.ceil(self.fp)), 1), 1
+        else:
+            nd = max(int(np.ceil(self.fp * self.tp)), 1)
+            n_ev = min(max(int(np.ceil(obs["table_full_last"] / nd)), 1), self.max_events)
         # Attacked-ports detection (Algorithm 1): high rate first, then low rate.
         flag, pa = None, []
         score_h = (counts - self.base) / max(self.pi_since, 1.0)
@@ -321,22 +331,22 @@ class RDefender(Defense):
                     pa.append(p)
                     flag = "L"
         self.base, self.pi_since = counts.copy(), 0.0
-        # Credit evaluation (Algorithm 2).
-        da = {}
-        if not pa:
-            per = int(np.ceil(nd / self.n_ports))
-            da = {p: per for p in range(self.n_ports)}
-        else:
-            hist = self.ch if flag == "H" else self.cl
-            for p in range(self.n_ports):
-                hist[p].append(1 if p in pa else 0)
-            for p in pa:
-                da[p] = max(nd, 2 ** min(sum(hist[p]), 20))
-        # Random deletion inside each port.
+        # Credit evaluation (Algorithm 2) and random deletion, once per overflow event.
+        da = {p: 0 for p in range(self.n_ports)}
+        for _ in range(n_ev):
+            if not pa:
+                for p in da:
+                    da[p] += int(np.ceil(nd / self.n_ports))
+            else:
+                hist = self.ch if flag == "H" else self.cl
+                for p in range(self.n_ports):
+                    hist[p].append(1 if p in pa else 0)
+                for p in pa:
+                    da[p] += max(nd, 2 ** min(sum(hist[p]), 20))
         ports = self.port[fids]
         dels = []
         for p, k in da.items():
             own = fids[ports == p]
-            if len(own):
+            if len(own) and k > 0:
                 dels.append(self.rng.choice(own, min(k, len(own)), replace=False))
         return (np.concatenate(dels) if dels else None), None
