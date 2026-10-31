@@ -1,0 +1,30 @@
+{
+  "selected": {
+    "mult": 10.0,
+    "purge": false,
+    "r_min": 50.0
+  },
+  "feasible_count": 9,
+  "v21_validation": {
+    "defense": "v2.1",
+    "knobs": "{}",
+    "benign_flows_harmed_frac": 0.08683067331575435,
+    "avg_attack_occ_post": 0.22135238095238097,
+    "overflow_seconds_post_attack": 26.767901234567905,
+    "benign_only_harmed": 0.00039119701359876174,
+    "harm_a1_a7": 0.014519363685807436,
+    "violation": 28.903139329806002,
+    "feasible": false
+  },
+  "validation_metrics": {
+    "defense": "v2.1+fg",
+    "knobs": "{\"mult\": 10.0, \"purge\": false, \"r_min\": 50.0}",
+    "benign_flows_harmed_frac": 0.023583600395541447,
+    "avg_attack_occ_post": 0.11795469488536156,
+    "overflow_seconds_post_attack": 0.9345679012345679,
+    "benign_only_harmed": 0.00039119701359876174,
+    "harm_a1_a7": 0.016779716445816856,
+    "violation": 0.0,
+    "feasible": true
+  }
+}

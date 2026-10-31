@@ -1,0 +1,119 @@
+== select
+  [select] 200/3420 episodes, 161 s
+  [select] 400/3420 episodes, 340 s
+  [select] 600/3420 episodes, 516 s
+  [select] 800/3420 episodes, 691 s
+  [select] 1000/3420 episodes, 867 s
+  [select] 1200/3420 episodes, 1041 s
+  [select] 1400/3420 episodes, 1217 s
+  [select] 1600/3420 episodes, 1392 s
+  [select] 1800/3420 episodes, 1571 s
+  [select] 2000/3420 episodes, 1747 s
+  [select] 2200/3420 episodes, 1924 s
+  [select] 2400/3420 episodes, 2101 s
+  [select] 2600/3420 episodes, 2280 s
+  [select] 2800/3420 episodes, 2456 s
+  [select] 3000/3420 episodes, 2633 s
+  [select] 3200/3420 episodes, 2813 s
+  [select] 3400/3420 episodes, 2991 s
+defense                                          knobs  benign_flows_harmed_frac  avg_attack_occ_post  overflow_seconds_post_attack  benign_only_harmed  harm_a1_a7  feasible
+   v2.1                                             {}                    0.0868               0.2214                       26.7679              0.0004      0.0145     False
+v2.1+fg {"mult": 10.0, "purge": false, "r_min": 100.0}                    0.0239               0.1189                        0.7574              0.0004      0.0172      True
+v2.1+fg  {"mult": 10.0, "purge": false, "r_min": 20.0}                    0.0233               0.1160                        0.9167              0.0004      0.0166      True
+v2.1+fg  {"mult": 10.0, "purge": false, "r_min": 50.0}                    0.0236               0.1180                        0.9346              0.0004      0.0168      True
+v2.1+fg  {"mult": 10.0, "purge": true, "r_min": 100.0}                    0.0338               0.1133                        1.4154              0.0004      0.0302     False
+v2.1+fg   {"mult": 10.0, "purge": true, "r_min": 20.0}                    0.0331               0.1086                        1.3037              0.0004      0.0298     False
+v2.1+fg   {"mult": 10.0, "purge": true, "r_min": 50.0}                    0.0333               0.1095                        1.3451              0.0004      0.0298     False
+v2.1+fg  {"mult": 3.0, "purge": false, "r_min": 100.0}                    0.0272               0.1151                        0.8315              0.0004      0.0181      True
+v2.1+fg   {"mult": 3.0, "purge": false, "r_min": 20.0}                    0.0265               0.1016                        0.8920              0.0004      0.0185      True
+v2.1+fg   {"mult": 3.0, "purge": false, "r_min": 50.0}                    0.0267               0.1070                        1.0593              0.0004      0.0179      True
+v2.1+fg   {"mult": 3.0, "purge": true, "r_min": 100.0}                    0.0350               0.0902                        0.6877              0.0004      0.0314     False
+v2.1+fg    {"mult": 3.0, "purge": true, "r_min": 20.0}                    0.0354               0.0775                        0.5204              0.0004      0.0324     False
+v2.1+fg    {"mult": 3.0, "purge": true, "r_min": 50.0}                    0.0351               0.0808                        0.6247              0.0004      0.0317     False
+v2.1+fg  {"mult": 5.0, "purge": false, "r_min": 100.0}                    0.0265               0.1141                        0.8179              0.0004      0.0179      True
+v2.1+fg   {"mult": 5.0, "purge": false, "r_min": 20.0}                    0.0256               0.1064                        1.0259              0.0004      0.0175      True
+v2.1+fg   {"mult": 5.0, "purge": false, "r_min": 50.0}                    0.0260               0.1094                        1.0414              0.0004      0.0176      True
+v2.1+fg   {"mult": 5.0, "purge": true, "r_min": 100.0}                    0.0346               0.0995                        0.9957              0.0004      0.0311     False
+v2.1+fg    {"mult": 5.0, "purge": true, "r_min": 20.0}                    0.0340               0.0913                        0.8414              0.0004      0.0309     False
+v2.1+fg    {"mult": 5.0, "purge": true, "r_min": 50.0}                    0.0342               0.0933                        0.9111              0.0004      0.0309     False
+SELECTED {'mult': 10.0, 'purge': False, 'r_min': 50.0}
+== select done, 3010 s
+== test
+  [test] 200/2025 episodes, 146 s
+  [test] 400/2025 episodes, 290 s
+  [test] 600/2025 episodes, 433 s
+  [test] 800/2025 episodes, 605 s
+  [test] 1000/2025 episodes, 780 s
+  [test] 1200/2025 episodes, 956 s
+  [test] 1400/2025 episodes, 1051 s
+  [test] 1600/2025 episodes, 1152 s
+  [test] 1800/2025 episodes, 1251 s
+  [test] 2000/2025 episodes, 1426 s
+== test done, 4449 s
+== report
+setting  scenario   defense attacks  episodes               harmed  attack_share  overflow_s  benign_blocked_pkts
+   main dedicated rdefender   A1-A7       210    8.38 [6.91, 9.99]         32.14       17.97                    0
+   main dedicated rdefender      LA        30    4.76 [4.38, 5.17]         32.58       18.10                    0
+   main dedicated rdefender      HA        30 28.96 [26.27, 31.42]         55.96       97.57                    0
+   main dedicated rdefender   A2/A4        60  10.17 [8.42, 12.10]         35.20       22.62                    0
+   main dedicated rdefender  benign        30    0.01 [0.00, 0.04]          0.00        0.01                    0
+   main dedicated      v2.1   A1-A7       210    1.48 [1.08, 1.91]         14.49        4.28                    0
+   main dedicated      v2.1      LA        30    3.88 [3.01, 4.76]         28.52        9.92                    0
+   main dedicated      v2.1      HA        30 65.74 [64.97, 66.50]         69.50      200.20                    0
+   main dedicated      v2.1   A2/A4        60    1.86 [1.35, 2.40]         17.72        6.50                    0
+   main dedicated      v2.1  benign        30    0.08 [0.01, 0.19]          0.00        0.06                    0
+   main dedicated   v2.1+fg   A1-A7       210    0.46 [0.31, 0.62]          8.82        0.23                    0
+   main dedicated   v2.1+fg      LA        30    1.48 [1.00, 1.99]         17.11        0.66                   12
+   main dedicated   v2.1+fg      HA        30    2.65 [2.23, 3.10]         17.34        7.00                    9
+   main dedicated   v2.1+fg   A2/A4        60    0.56 [0.38, 0.75]          9.41        0.27                    0
+   main dedicated   v2.1+fg  benign        30    0.08 [0.01, 0.19]          0.00        0.06                    0
+   main    shared rdefender   A1-A7       210  11.25 [9.01, 13.60]         32.28       17.01                    0
+   main    shared rdefender      LA        30   8.97 [7.47, 10.57]         33.45       20.76                    0
+   main    shared rdefender      HA        30 29.71 [27.49, 31.74]         58.94       89.24                    0
+   main    shared rdefender   A2/A4        60 12.86 [10.52, 15.36]         36.02       21.14                    0
+   main    shared rdefender  benign        30    0.03 [0.00, 0.09]          0.00        0.01                    0
+   main    shared      v2.1   A1-A7       210    1.48 [1.08, 1.91]         14.49        4.28                    0
+   main    shared      v2.1      LA        30    3.88 [3.01, 4.76]         28.52        9.92                    0
+   main    shared      v2.1      HA        30 65.74 [64.97, 66.50]         69.50      200.20                    0
+   main    shared      v2.1   A2/A4        60    1.86 [1.35, 2.40]         17.72        6.50                    0
+   main    shared      v2.1  benign        30    0.08 [0.01, 0.19]          0.00        0.06                    0
+   main    shared   v2.1+fg   A1-A7       210    2.97 [2.36, 3.64]          9.64        0.18                 1134
+   main    shared   v2.1+fg      LA        30    4.07 [3.39, 4.78]         24.45        3.43                  604
+   main    shared   v2.1+fg      HA        30 12.11 [11.03, 13.26]         22.37        5.99                11089
+   main    shared   v2.1+fg   A2/A4        60    4.01 [3.23, 4.86]         10.77        0.20                 1675
+   main    shared   v2.1+fg  benign        30    0.08 [0.01, 0.19]          0.00        0.06                    0
+   rdef dedicated rdefender   A1-A7        30 13.33 [10.93, 15.80]         33.43       19.52                    0
+   rdef dedicated rdefender      LA        15    6.06 [5.44, 6.76]         24.61       21.23                    0
+   rdef dedicated rdefender      HA        15 31.20 [29.22, 33.12]         44.14      100.71                    0
+   rdef dedicated rdefender   A2/A4        30 13.33 [10.93, 15.80]         33.43       19.52                    0
+   rdef dedicated rdefender  benign        15    0.09 [0.00, 0.27]          0.00        0.02                    0
+   rdef dedicated      v2.1   A1-A7        30    2.43 [1.72, 3.12]         13.17        4.98                    0
+   rdef dedicated      v2.1      LA        15    2.15 [1.19, 3.14]         10.83        0.51                    0
+   rdef dedicated      v2.1      HA        15 55.98 [55.02, 56.95]         57.37      170.29                    0
+   rdef dedicated      v2.1   A2/A4        30    2.43 [1.72, 3.12]         13.17        4.98                    0
+   rdef dedicated      v2.1  benign        15    0.12 [0.01, 0.28]          0.00        0.08                    0
+   rdef dedicated   v2.1+fg   A1-A7        30    1.10 [0.68, 1.53]          7.21        0.16                    0
+   rdef dedicated   v2.1+fg      LA        15    2.16 [1.23, 3.12]          8.95        0.38                    0
+   rdef dedicated   v2.1+fg      HA        15    1.75 [0.96, 2.67]          7.85        0.59                    0
+   rdef dedicated   v2.1+fg   A2/A4        30    1.10 [0.68, 1.53]          7.21        0.16                    0
+   rdef dedicated   v2.1+fg  benign        15    0.12 [0.01, 0.28]          0.00        0.08                    0
+setting  scenario attacks  baseline  mean_diff_fg_minus  fg_lower  fg_higher       p
+   main dedicated  floods      v2.1            -0.32746        30          0 0.00000
+   main dedicated  floods rdefender            -0.14798        30          0 0.00000
+   main dedicated   A1-A7      v2.1            -0.01022        30          0 0.00000
+   main dedicated   A1-A7 rdefender            -0.07927        30          0 0.00000
+   main dedicated      HA      v2.1            -0.63095        30          0 0.00000
+   main dedicated      HA rdefender            -0.26316        30          0 0.00000
+   main    shared  floods      v2.1            -0.26718        30          0 0.00000
+   main    shared  floods rdefender            -0.11248        30          0 0.00000
+   main    shared   A1-A7      v2.1             0.01495         0         30 0.00000
+   main    shared   A1-A7 rdefender            -0.08275        30          0 0.00000
+   main    shared      HA      v2.1            -0.53633        30          0 0.00000
+   main    shared      HA rdefender            -0.17597        30          0 0.00000
+   rdef dedicated  floods      v2.1            -0.27106        15          0 0.00006
+   rdef dedicated  floods rdefender            -0.16673        15          0 0.00006
+   rdef dedicated   A1-A7      v2.1            -0.01333        15          0 0.00006
+   rdef dedicated   A1-A7 rdefender            -0.12235        15          0 0.00006
+   rdef dedicated      HA      v2.1            -0.54221        15          0 0.00006
+   rdef dedicated      HA rdefender            -0.29449        15          0 0.00006
+== report done, 4449 s

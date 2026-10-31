@@ -372,3 +372,101 @@ class PortGuard(Defense):
         self.used[over] = lvl[over]
         dels = trim if dels is None else np.concatenate([np.asarray(dels), trim])
         return dels, dems
+
+
+class FloodGuard(Defense):
+    """Per-port new-flow rate cap against high-rate floods (wraps another defense).
+
+    Every ingress port's rate of new-flow requests (table misses that reach the controller)
+    is averaged over polls without table pressure (time constant tau_s). Once occupancy
+    reaches rho_f, enforcement stays on for hold_s seconds after the last such poll; while it
+    is on, each port may install at most cap = max(r_min, mult x its calm rate) new entries
+    per second (token bucket, burst of one second), and flows over the cap get no entry and
+    have their packets dropped at the controller (an OpenFlow meter on the port's table-miss
+    rule would do the same in the switch). With purge on, entries of ports that hit their cap
+    in the last interval are deleted if they matched at most one packet and are at least
+    purge_age seconds old: a flood's one-packet entries, which would otherwise hold the table
+    for a full idle timeout. Low-rate attacks stay within the cap and are left to the inner
+    defense.
+    """
+
+    def __init__(self, inner=None, mult=5.0, r_min=50.0, rho_f=0.7, hold_s=30.0, tau_s=60.0,
+                 purge=True, purge_age=1.0, warmup=10, name="floodguard"):
+        self.inner, self.mult, self.r_min, self.rho_f = inner, mult, r_min, rho_f
+        self.hold_s, self.tau_s, self.purge, self.purge_age = hold_s, tau_s, purge, purge_age
+        self.warmup, self.name = warmup, name
+        self.needs_features = bool(inner is not None and inner.needs_features)
+        self._inner_admit = getattr(inner, "admit_filter", None)
+        self.admit_filter = self._admit
+        self.evict_on_full = getattr(inner, "evict_on_full", None)
+
+    def reset(self, ctx):
+        if self.inner is not None:
+            self.inner.reset(ctx)
+        self.port = ctx["flow_port"]
+        if self.port is None:
+            raise ValueError("FloodGuard needs traffic.flow_port (see ports.assign_ports)")
+        n = int(self.port.max()) + 1
+        self.base = np.zeros(n)
+        self.base_n = 0
+        self.arrivals = np.zeros(n)          # new-flow requests since the last poll
+        self.tokens = np.full(n, np.inf)
+        self.cap = np.full(n, np.inf)
+        self.hit = np.zeros(n, bool)         # port exceeded its cap since the last poll
+        self.last = 0.0
+        self.active_until = -np.inf
+
+    def admit_timeouts(self, fids, now, default):
+        if self.inner is not None:
+            return self.inner.admit_timeouts(fids, now, default)
+        return np.full(len(fids), default)
+
+    def _admit(self, fids, now):
+        ok = np.ones(len(fids), bool)
+        if self._inner_admit is not None:
+            ok &= self._inner_admit(fids, now)
+        p = self.port[fids]
+        np.add.at(self.arrivals, p, 1)
+        if now > self.active_until:
+            self.last = now
+            return ok
+        self.tokens = np.minimum(self.tokens + self.cap * (now - self.last), self.cap)
+        self.last = now
+        order = np.argsort(p, kind="stable")
+        ps = p[order]
+        start = np.r_[0, np.flatnonzero(np.diff(ps)) + 1]
+        rank = np.arange(len(ps)) - np.repeat(start, np.diff(np.r_[start, len(ps)]))
+        okc = np.empty(len(fids), bool)
+        okc[order] = rank < np.floor(self.tokens[ps])
+        okc |= ~ok                           # refused by the inner defense: no token used
+        self.hit[np.unique(p[~okc])] = True
+        np.add.at(self.tokens, p[okc & ok], -1)
+        return ok & okc
+
+    def on_poll(self, t, obs):
+        cap = obs["capacity"]
+        pressure = obs["count"] / cap >= self.rho_f
+        rate = self.arrivals.copy()          # per poll interval (1 s)
+        self.arrivals[:] = 0
+        if not pressure and t > self.active_until:
+            self.base_n += 1
+            a = max(1.0 - np.exp(-1.0 / self.tau_s), 1.0 / self.base_n)
+            self.base += a * (rate - self.base)
+        if pressure and self.base_n >= self.warmup:
+            if t > self.active_until:
+                self.cap = np.maximum(self.r_min, self.mult * self.base)
+                self.tokens = self.cap.copy()
+            self.active_until = t + self.hold_s
+        hit, self.hit = self.hit, np.zeros_like(self.hit)
+        dels, dems = (self.inner.on_poll(t, obs) if self.inner is not None else (None, None))
+        if self.purge and t <= self.active_until and hit.any():
+            fids = obs["fids"]
+            m = (hit[self.port[fids]] & (obs["pkts"] <= 1)
+                 & (t - obs["install_t"] >= self.purge_age))
+            if m.any():
+                extra = fids[m]
+                dels = extra if dels is None else np.concatenate([np.asarray(dels), extra])
+        if t > self.active_until:
+            self.cap[:] = np.inf
+            self.tokens[:] = np.inf
+        return dels, dems
