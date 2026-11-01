@@ -126,12 +126,21 @@ class DualGuard(Defense):
         non-elephant entries until occupancy <= target (overflow guard).
     tau_soft is calibrated per controller on local benign validation scores so
     that the empirical benign flag rate is <= the declared budget.
+
+    hold_s > 0 adds a flow hold (follow-up to the testbed's E5): a flow demoted for the
+    strikes-th time is refused re-admission for hold_s seconds, its packets dropped at the
+    controller, as DMS-BTT's blocklist does. With sticky, every refused packet renews the hold,
+    so a held flow is released only after hold_s seconds of silence (DualGuard acts only under
+    table pressure, so a fixed hold lets a refreshing flow back in once the table has drained). Without it a refreshing attack flow costs the
+    controller a Packet-In and a flow-mod at every refresh, which on the Ryu testbed doubled
+    the flow-mods and delayed every new connection by seconds.
     """
     needs_features = True
 
     def __init__(self, model, tau_soft, name="dualguard", soft=True, hard=True,
                  rho=0.5, h_crit=0.90, target=0.80, t_short=1.0, feature_idx=None,
-                 inputs="X", numb_mode="bytes", state_model=None):
+                 inputs="X", numb_mode="bytes", state_model=None, hold_s=0.0, strikes=1,
+                 sticky=False):
         self.model, self.tau = model, tau_soft
         self.name = name
         self.soft, self.hard = soft, hard
@@ -140,9 +149,20 @@ class DualGuard(Defense):
         # inputs="dms" scores DMS-BTT's (Numb, PIT, Sizep) features instead of ours;
         # state_model (DMS-BTT state classifier) optionally gates all actions.
         self.inputs, self.numb_mode, self.state_model = inputs, numb_mode, state_model
+        self.hold_s, self.strikes, self.sticky = hold_s, strikes, sticky
+        if hold_s > 0:
+            self.admit_filter = self._admit_hold
 
     def reset(self, ctx):
         self.demoted = np.zeros(ctx["n_flows"], bool)
+        self.strike = np.zeros(ctx["n_flows"], np.int32)
+        self.held_until = np.full(ctx["n_flows"], -np.inf)
+
+    def _admit_hold(self, fids, now):
+        ok = self.held_until[fids] <= now
+        if self.sticky:
+            self.held_until[fids[~ok]] = now + self.hold_s
+        return ok
 
     def admit_timeouts(self, fids, now, default):
         return np.where(self.demoted[fids], self.t_short, default)
@@ -163,6 +183,9 @@ class DualGuard(Defense):
         dems = obs["fids"][flag]
         if self.soft:
             self.demoted[dems] = True
+        if self.hold_s > 0 and len(dems):
+            self.strike[dems] += 1
+            self.held_until[dems[self.strike[dems] >= self.strikes]] = t + self.hold_s
         dels = None
         n_after = n - int(flag.sum())
         if self.hard and n_after / cap >= self.h_crit:
