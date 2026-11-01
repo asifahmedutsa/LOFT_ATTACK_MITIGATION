@@ -39,12 +39,25 @@ for sp in "${specs[@]}"; do
         mkdir -p "$RUNS/_failed"
         mv "$RUNS/$name" "$RUNS/_failed/$name.$(date +%s)"
     fi
+    # A controller left over from an interrupted run keeps listening on 6653 (eventlet sets
+    # SO_REUSEPORT), and the kernel then hands some switches to it: runs look fine but are not.
+    if [ -n "$(ss -Hltn 'sport = :6653')" ]; then
+        echo "port 6653 already in use before $name; stop leftover ryu-manager and rerun"; exit 1
+    fi
     echo "=== [$n/${#specs[@]}] $name $(date +%T)"
+    t_start=$(date +%s)
     sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$3" --seed "$4" \
         --duration "$5" --probe newflow --out "$name" > "$RUNS/$name.log" 2>&1
     status=$?
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then
         echo "    FAILED (exit $status); see $RUNS/$name.log"; continue
+    fi
+    rows=$(($(wc -l < "$RUNS/$name/controller_$1.csv") - 1))
+    took=$(( $(date +%s) - t_start ))
+    if [ "$rows" -lt $(( $5 * 9 / 10 )) ] || [ "$took" -gt $(( $5 * 3 / 2 + 60 )) ]; then
+        echo "    INVALID ($rows controller rows, ${took} s wall); moved to _failed"
+        mv "$RUNS/$name.log" "$RUNS/$name/runner.log"
+        mkdir -p "$RUNS/_failed"; mv "$RUNS/$name" "$RUNS/_failed/$name.$(date +%s)"; continue
     fi
     mv "$RUNS/$name.log" "$RUNS/$name/runner.log"
     python3 testbed/summarize_run.py "$RUNS/$name" > "$RUNS/$name/summary.txt"
