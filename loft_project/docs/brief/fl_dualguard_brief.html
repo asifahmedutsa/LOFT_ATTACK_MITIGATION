@@ -68,9 +68,9 @@ code { font-family: var(--mono); font-size: 13px; }
 
 <main>
 <header>
-  <div class="eyebrow">FL-DualGuard · progress brief · 30 Oct 2026</div>
+  <div class="eyebrow">FL-DualGuard · progress brief · 1 Nov 2026</div>
   <h1>Federated defense against low-rate flow-table overflow: what the new experiments show</h1>
-  <p class="lede">Three new experiments today: local versus federated detectors on Mininet/Ryu, scaling the federation from 3 to 9 controllers in the simulator, and a model-family comparison (MLP, Random Forest, gradient boosting). Harm throughout means benign flows refused or evicted while active, as a % of benign flows.</p>
+  <p class="lede">New since 30 Oct: the published papers' own experiments on our setup, namely the comparison against four recent defenses, table-size, timeout and threshold sweeps, benign flash crowds and an adaptive attacker (sections 4–6), plus a flood rule and a switch-eviction fallback. Earlier: local versus federated detectors on Mininet/Ryu, scaling from 3 to 9 controllers and a model-family comparison. Harm throughout means benign flows refused or evicted while active, as a % of benign flows.</p>
 </header>
 
 <section class="takeaways" aria-label="Key results">
@@ -80,6 +80,8 @@ code { font-family: var(--mono); font-size: 13px; }
     <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
     <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls cuts FedAvg harm to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. But on the main three-controller setup it leaves harm unchanged and lengthens overflow from 4.7 to 6.6 s (fresh seeds), so it is not the default. IoT controllers remain the open part.</li>
     <li><b>FL-DualGuard beats four recent published defenses on the same simulator.</b> Against rDefender, FloRa, FTOP and FTMaster (and DMS-BTT), v2.1 harms <span class="num">1.6 %</span> of benign flows against 7.6–23.6 %, and leaves the attacker the smallest share of the table (14.5 % against 22.8–38.0 %), in all 30 controller × seed clusters.</li>
+    <li><b>An adaptive attacker breaks v2.1 alone; DualGuard + PortGuard holds.</b> Searching 72 attack settings against each defense, the best response (refresh every 2–3 s with benign-looking packets) harms 54 % of benign flows under v2.1, the worst of seven defenses, against 4.7 % under v2.1 + PortGuard, the best (all 30 clusters). Under a 4× benign flash crowd PortGuard itself harms 13.6 %, so no configuration wins everywhere.</li>
+    <li><b>The lead over published defenses holds from 2,000 to 4,000 entries and at idle 20 s.</b> It breaks where the benign traffic alone overflows the table (1,500 entries; OVS eviction is better) and ties at idle 30 s. Letting the switch evict on overflow underneath v2.1 cuts harm from 1.6 to 0.6 % and fixes benign flash crowds (11.3 → 1.7 %).</li>
     <li><b>A per-port flood rule closes the high-rate-flood gap.</b> Under a 2,000 flows/s flood v2.1 harmed 66 % of benign flows; with FloodGuard 2.7 % (rDefender 29 %), and 1.75 % in rDefender's own setting (rDefender 31 %). Caveat: when benign hosts share the attacker's port, A1–A7 harm rises from 1.5 % to 3.0 %.</li>
     <li><b>Offline F1 does not pick the best online detector.</b> In the papers' offline format (8 families, 3 seeds) federated Random Forest and CatBoost lead (F1 98.1 against 97.2 for our MLP). Inside DualGuard on fresh seeds, Random Forest harms 3.6× more benign flows (5.2 % against 1.45 %), though it shortens overflow (1.1 s against 4.3 s). The MLP is also 2.4 KB against 16 MB and 4–8× faster per poll.</li>
   </ol>
@@ -270,7 +272,60 @@ code { font-family: var(--mono); font-size: 13px; }
 </section>
 
 <section>
-  <h2>5 · Already established (testbed matrix, 29 Oct)</h2>
+  <h2>5 · Table size, thresholds and flash crowds <span class="chip done">done · preregistered · 4,416 episodes, unused seeds 15000–15009</span></h2>
+  <p>The sweeps the published papers run (FTMaster, FloRa, FTShield, rDefender, FTOP), on the same simulator and baselines as section 4. Every defense keeps its main-setting model and thresholds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Benign flows harmed %, A1–A3</th><th>No defense</th><th>EVICT</th><th>DMS-BTT</th><th>FTMaster</th><th>FTOP</th><th>rDefender</th><th>v2.1</th><th>v2.1 attack share %</th></tr></thead>
+    <tbody>
+      <tr><td class="l">1,500 entries (benign alone overflows)</td><td>71.9</td><td class="hi">22.5</td><td>47.5</td><td>46.0</td><td>28.6</td><td>36.8</td><td class="bad">32.1</td><td>5.1</td></tr>
+      <tr><td class="l">2,000 entries</td><td>67.1</td><td>20.7</td><td>21.4</td><td>23.5</td><td>20.2</td><td>29.0</td><td class="hi">15.8</td><td>9.2</td></tr>
+      <tr><td class="l">3,000 entries</td><td>56.3</td><td>15.8</td><td>6.4</td><td>10.2</td><td>10.0</td><td>15.2</td><td class="hi">4.1</td><td>13.4</td></tr>
+      <tr><td class="l">3,500 entries (main setting)</td><td>50.4</td><td>13.6</td><td>4.4</td><td>7.8</td><td>4.7</td><td>9.1</td><td class="hi">1.8</td><td>13.6</td></tr>
+      <tr><td class="l">4,000 entries</td><td>43.7</td><td>11.3</td><td>3.5</td><td>6.4</td><td>2.5</td><td>5.5</td><td class="hi">0.9</td><td>13.6</td></tr>
+      <tr><td class="l">Idle timeout 20 s</td><td>54.6</td><td>13.6</td><td>6.7</td><td>12.1</td><td>11.2</td><td>18.1</td><td class="hi">5.6</td><td>9.6</td></tr>
+      <tr><td class="l">Idle timeout 30 s</td><td>58.7</td><td>13.6</td><td>10.4</td><td>19.1</td><td>15.5</td><td>22.9</td><td>11.1</td><td>6.6</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>Table size and idle timeout (E6).</b> v2.1 has the lowest harm from 2,000 to 4,000 entries and at idle 20 s, and keeps the attacker below 15 % of the table in every setting (H6b holds). H6 (lowest harm everywhere) fails at the edges: at 1,500 entries the benign traffic alone overflows the table, and OVS eviction (22.5 %) beats v2.1 (32.1 %), which only removes suspected attack entries; at idle 30 s v2.1 ties DMS-BTT and EVICT (11.1 % against 10.4 and 13.6, not significant). With 5 seeds per cell, several pairwise wins in the middle of the range are not significant after Holm correction.</p>
+  <p class="note"><b>Threshold sensitivity (E7, validation seeds).</b> Across occupancy triggers 0.5–0.9 and flag budgets 0.5–5 %, attacked harm stays at 1.3–3.4 % and the attacker's share at 12–19 %. The trade-off is monotone: a lower trigger or larger budget cuts overflow but harms more benign flows, and a trigger of 0.5 breaks the 1 % benign-only limit. The preregistered claim (all of 0.6–0.8 and 0.5–2 % within the selection limits) fails narrowly: overflow reaches 5.1 s at trigger 0.8 and 5.3 s at budget 0.5 %, against the 5 s limit.</p>
+  <p class="note"><b>Benign flash crowds (E8, FTOP's test).</b> Three 12 s crowds adding 2× or 4× the normal new-flow rate, with no attack. H8 fails: v2.1 harms 1.2 % and 11.6 %, about as much as no defense (0.7 / 12.6 %), because the overflow is benign and v2.1 only removes suspected attack entries; OVS eviction is best (0.05 / 1.3 %). Under a flash crowd during attack A2, v2.1 + FloodGuard is the best defense (1.3 %, then v2.1 3.5 %, DMS-BTT 6.9 %). </p>
+  <div class="callout">
+    <h3>Follow-up: switch eviction as the overflow fallback <span class="chip done">done · preregistered · 2,100 episodes, unused seeds 17000–17009</span></h3>
+    <p>The switch evicts the entries closest to idle expiry when the table is full (OVS overflow_policy=evict), underneath the unchanged controller defense. Nothing tuned.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Benign flows harmed %</th><th>EVICT</th><th>v2.1</th><th>v2.1 + evict</th><th>v2.1 + PortGuard</th><th>v2.1 + PortGuard + evict</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Flash crowd 2×, no attack</td><td class="hi">0.13</td><td>1.30</td><td>0.73</td><td>1.92</td><td>1.92</td></tr>
+        <tr><td class="l">Flash crowd 4×, no attack</td><td class="hi">1.18</td><td>11.26</td><td>1.66</td><td class="bad">13.64</td><td class="bad">13.63</td></tr>
+        <tr><td class="l">Flash crowd 2× during A2</td><td>11.83</td><td>3.42</td><td class="hi">0.69</td><td>5.44</td><td>4.56</td></tr>
+        <tr><td class="l">A1–A7, normal load</td><td>12.5</td><td>1.59</td><td class="hi">0.60</td><td>1.67</td><td>0.79</td></tr>
+        <tr><td class="l">E9 worst case (fast refresh)</td><td>21.8</td><td class="bad">54.6</td><td>20.1</td><td class="hi">4.73</td><td class="hi">4.73</td></tr>
+      </tbody>
+    </table></div>
+    <p>Eviction underneath v2.1 is nearly free and helps everywhere: A1–A7 harm falls from 1.6 to 0.6 % (all 30 clusters), benign flash crowds from 1.3 / 11.3 % to 0.7 / 1.7 %, and the fast-refresh worst case from 55 to 20 %. HF2 (no worse on A1–A7) and HF3 (PortGuard's worst case unchanged) hold; HF1 fails narrowly: under flash crowds v2.1 + evict is 0.54 points above eviction alone (limit 0.5). <b>No configuration wins everywhere:</b> PortGuard is the only defense that holds against the adaptive attacker, but under a 4× benign flash crowd it refuses new benign flows (13.6 %, eviction does not help because the refusal is at admission). A PortGuard trigger that tells a benign surge from an attack (for example, many ports growing at once) is the next design question.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6 · Adaptive attacker: each defense against its own worst case <span class="chip done">done · preregistered · 3,654 episodes, unused seeds 16000–16009</span></h2>
+  <p>ALFO's attacker adapts to the switch's eviction policy; ours adapts to every defense. For each defense the attacker searched 72 LFTO settings (refresh every 2–3, 5–8.5 or 8–9.8 s; 1 or 1–3 packets per refresh; 64 B or benign-like sizes; pooled or spoofed sources; 600, 1,000 or 1,700 flows per attacker, the smaller ones staying under v2.1's 70 % trigger) on validation seeds, keeping the one that harmed most benign flows. Every defense then faced every selected attack on fresh seeds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Defense</th><th>Its best-response attack</th><th>Harmed %</th><th>Attack share %</th><th>Worst case over all selected attacks %</th></tr></thead>
+    <tbody>
+      <tr><td class="l">EVICT (OVS)</td><td class="l">refresh 2–3 s, benign sizes, pooled, 1,700</td><td>21.9</td><td>76.4</td><td>21.9</td></tr>
+      <tr><td class="l">DMS-BTT</td><td class="l">same</td><td>47.0</td><td>78.3</td><td>47.0</td></tr>
+      <tr><td class="l">FTOP</td><td class="l">same</td><td>29.2</td><td>73.5</td><td>29.2</td></tr>
+      <tr><td class="l">rDefender</td><td class="l">same</td><td>30.1</td><td>54.2</td><td>30.1</td></tr>
+      <tr class="fed"><td class="l">FL-DualGuard v2.1</td><td class="l">same</td><td class="bad">54.1</td><td>65.5</td><td class="bad">54.1</td></tr>
+      <tr class="fed"><td class="l">v2.1 + FloodGuard</td><td class="l">refresh 2–3 s, 1 packet, benign sizes, spoofed, 1,700</td><td>20.1</td><td>53.3</td><td>20.1</td></tr>
+      <tr class="fed"><td class="l">v2.1 + PortGuard</td><td class="l">refresh 2–3 s, benign sizes, pooled, 600</td><td class="hi">4.7</td><td>28.9</td><td class="hi">4.7</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>v2.1 alone is not robust to an adaptive attacker: its worst case is the worst of all seven defenses</b> (H9 and H9b fail). The same attack, fast refresh with benign-looking packets, is the best response to six of the seven defenses; its entries look like busy benign flows, so a detector cannot demote them (the revision 4 diagnosis). <b>v2.1 + PortGuard holds: 4.7 % worst case</b>, lower than every baseline's own worst case in all 30 controller × seed clusters (Holm p &lt; 0.001), because each port keeps its fair share whatever the attacker's timing, sizes or addresses (H9c). Its own best response is a smaller attack (600 flows per attacker) that stays under PortGuard's trigger. FloodGuard helps too (20.1 %) but does not stop fast refresh. <b>Paper consequence:</b> the claimed system against adaptive attackers must be DualGuard + PortGuard, with v2.1 alone reported as the non-adaptive result. PortGuard's caveats from revision 4 stay: it needs attackers on their own access ports, and on the testbed the refused attacker still floods Packet-Ins (24 % harm against fast refresh), so a switch-side meter is needed before claiming it on hardware.</p>
+</section>
+
+<section>
+  <h2>7 · Already established (testbed matrix, 29 Oct)</h2>
   <p>48 Mininet/Ryu runs reproduce the simulator on D1–D3 for every defense, after we found and fixed a controller timing bug (entries dated by a lagging poll clock lost their per-flow history). DualGuard v2.1 alone: 0.26–5.3 % harm against 34–45 % with no defense. Open problem: on the bigFlows trace with the mimicry attack A4, DualGuard alone harms 40.9 % (27 % simulated); with PortGuard it is 3.2 %.</p>
 </section>
 
@@ -278,12 +333,13 @@ code { font-family: var(--mono); font-size: 13px; }
   <h2>What I'd like to discuss</h2>
   <ul class="next">
     <li>Does the scaling result plus the FedAvg diagnosis make a stronger paper story than a fixed 3-controller setup? It lets us claim FL keeps paying off as controllers join, and to show the convergence fix.</li>
-    <li>Which baselines are a must for the target venue: rDefender, FTMaster-style trees, and SFTO-Guard (see the revision plan).</li>
+    <li>Which system do we claim? v2.1 + PortGuard is the only configuration robust to the adaptive attacker, but it needs per-host access ports and harms benign flash crowds; v2.1 + switch eviction is best on every non-adaptive test. A reasonable paper framing: DualGuard + eviction as the default, PortGuard as the adaptive-attacker module, with both limits stated.</li>
+    <li>E5 on the testbed is coded (rDefender, FTMaster, FTOP and FloRa in the Ryu controller, decisions identical to the simulator, and a new-connection probe) and waits for a reinstall and about 4 h of runs.</li>
     <li>Next: a concurrent multi-controller Mininet topology, the automatic PortGuard switch, and the fair-share guarantee with a weight-inflation attacker.</li>
   </ul>
 </section>
 
-<footer>Code and data: branch <code>loft-v2</code>. Scaling in <code>loftbench/scale.py</code>, <code>scale_fed.py</code>, results in <code>results/scale/</code>; Mininet runs in <code>results/testbed_fl/</code>; model comparison in <code>results/ml_compare/</code>; testbed matrix in <code>docs/results_v2.md</code> §18.</footer>
+<footer>Code and data: branch <code>loft-v2</code>. Scaling in <code>loftbench/scale.py</code>, <code>scale_fed.py</code>, results in <code>results/scale/</code>; Mininet runs in <code>results/testbed_fl/</code>; model comparison in <code>results/ml_compare/</code>; testbed matrix in <code>docs/results_v2.md</code> §18; sweeps in <code>loftbench/sweeps.py</code> (<code>results/sweeps/</code>), adaptive attacker in <code>loftbench/e9_adaptive.py</code> (<code>results/e9_adaptive/</code>), eviction fallback in <code>loftbench/evict_fallback.py</code> (<code>results/evict_fallback/</code>), testbed baselines in <code>loftbench/testbed_baselines.py</code> and <code>testbed/matrix_e5.sh</code>.</footer>
 </main>
 
 <script>
