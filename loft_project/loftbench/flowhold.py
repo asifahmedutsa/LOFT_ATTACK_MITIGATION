@@ -269,15 +269,36 @@ def stage_report():
         print(t.round(5).to_string(index=False))
 
 
+def stage_export():
+    """Selected holds into the testbed's defenses.json (dualguard+hold, dualguard+portguard+hold)."""
+    sel = json.load(open(os.path.join(OUT, "selected.json")))["selected"]
+    path = "results/v21/exported/defenses.json"
+    cfg = json.load(open(path))
+    hold = {}
+    for b, name in sel.items():
+        h = name.partition("|")[2]
+        if not h:
+            hold[b] = dict(hold_s=0.0, strikes=1, sticky=False)
+            continue
+        sticky = h.endswith("sticky")
+        hs, k = h[4:].removesuffix("sticky").split("s")
+        hold[b] = dict(hold_s=float(hs), strikes=int(k), sticky=sticky)
+    cfg["flowhold"] = hold
+    cfg["flowhold_source"] = os.path.join(OUT, "selected.json")
+    json.dump(cfg, open(path, "w"), indent=2)
+    print(json.dumps(hold, indent=1))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stages", default="prereg,select,test,report")
+    ap.add_argument("--stages", default="prereg,select,test,report,export")
     ap.add_argument("--workers", type=int, default=4)
     a = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     t0 = time.time()
     for name, fn in (("prereg", stage_prereg), ("select", lambda: stage_select(a.workers)),
-                     ("test", lambda: stage_test(a.workers)), ("report", stage_report)):
+                     ("test", lambda: stage_test(a.workers)), ("report", stage_report),
+                     ("export", stage_export)):
         if name in a.stages.split(","):
             print(f"== {name}", flush=True)
             fn()

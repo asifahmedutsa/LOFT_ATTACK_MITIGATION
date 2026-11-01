@@ -68,7 +68,8 @@ PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
 DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
-            "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender")
+            "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
+            "dualguard+portguard+hold")
 
 
 def ip2int(s):
@@ -129,6 +130,13 @@ def build_defense(name, model_dir, domain, model_path=None):
     h_crit = float(k.get("h_crit", 0.90))
     dg = DualGuard(m, m.tau, name="dualguard", rho=k.get("rho", 0.5), t_short=k.get("t_short", 1.0),
                    hard=h_crit <= 1.0, h_crit=h_crit, target=k.get("target", 0.80))
+    if name.endswith("+hold"):
+        # Flow hold selected in the simulator (loftbench.flowhold), set before PortGuard
+        # reads the admit filter.
+        h = cfg["flowhold"]["v2.1+pg" if "portguard" in name else "v2.1"]
+        dg.hold_s, dg.strikes, dg.sticky = h["hold_s"], h["strikes"], h["sticky"]
+        dg.admit_filter = dg._admit_hold
+        name = name[:-len("+hold")]
     if name == "dualguard":
         return dg
     if name == "dualguard+floodguard":

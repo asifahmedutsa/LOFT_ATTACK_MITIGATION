@@ -52,7 +52,8 @@ def main():
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
                     choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
-                             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender"])
+                             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
+                             "dualguard+hold", "dualguard+portguard+hold"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
