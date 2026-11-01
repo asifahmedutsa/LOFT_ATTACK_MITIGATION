@@ -1,0 +1,91 @@
+== search
+  [search] 200/3024 episodes, 129 s
+  [search] 400/3024 episodes, 237 s
+  [search] 600/3024 episodes, 429 s
+  [search] 800/3024 episodes, 613 s
+  [search] 1000/3024 episodes, 1181 s
+  [search] 1200/3024 episodes, 1670 s
+  [search] 1400/3024 episodes, 1965 s
+  [search] 1600/3024 episodes, 2070 s
+  [search] 1800/3024 episodes, 2198 s
+  [search] 2000/3024 episodes, 2363 s
+  [search] 2200/3024 episodes, 2518 s
+  [search] 2400/3024 episodes, 2733 s
+  [search] 2600/3024 episodes, 2913 s
+  [search] 2800/3024 episodes, 3124 s
+  [search] 3000/3024 episodes, 3290 s
+{
+ "ovs-evict": {
+  "attack": "t2-3_p1-3_benign_pool_M1700",
+  "harm": 0.21582023514504745,
+  "attack_share": 0.7641521904761911
+ },
+ "dms-btt": {
+  "attack": "t2-3_p1-3_benign_pool_M1700",
+  "harm": 0.4659895066789866,
+  "attack_share": 0.7834434285714288
+ },
+ "ftop": {
+  "attack": "t2-3_p1-3_benign_pool_M1700",
+  "harm": 0.29255249085384893,
+  "attack_share": 0.7357331428571435
+ },
+ "rdefender": {
+  "attack": "t2-3_p1-3_benign_pool_M1700",
+  "harm": 0.30813987582787344,
+  "attack_share": 0.5419780952380951
+ },
+ "v2.1": {
+  "attack": "t2-3_p1-3_benign_pool_M1700",
+  "harm": 0.5429168697168443,
+  "attack_share": 0.6538832380952375
+ },
+ "v2.1+fg": {
+  "attack": "t2-3_p1-1_benign_spoof_M1700",
+  "harm": 0.22609284761338086,
+  "attack_share": 0.5478194285714287
+ },
+ "v2.1+portguard": {
+  "attack": "t2-3_p1-3_benign_pool_M600",
+  "harm": 0.0496013352448757,
+  "attack_share": 0.29082495238095246
+ }
+}
+== search done, 3310 s
+== test
+  [test] 200/630 episodes, 309 s
+  [test] 400/630 episodes, 647 s
+  [test] 600/630 episodes, 909 s
+== test done, 4245 s
+== report
+       defense              own_best_attack        harm_own_best  attack_share_own_best  overflow_s_own_best                 worst_attack  harm_worst
+     ovs-evict  t2-3_p1-3_benign_pool_M1700 21.91 [17.99, 25.98]                   76.4               225.12  t2-3_p1-3_benign_pool_M1700       21.91
+       dms-btt  t2-3_p1-3_benign_pool_M1700 47.01 [39.94, 54.02]                   78.3               102.33  t2-3_p1-3_benign_pool_M1700       47.01
+          ftop  t2-3_p1-3_benign_pool_M1700 29.16 [26.29, 32.16]                   73.5                17.19  t2-3_p1-3_benign_pool_M1700       29.16
+     rdefender  t2-3_p1-3_benign_pool_M1700 30.05 [27.60, 32.70]                   54.2                92.63  t2-3_p1-3_benign_pool_M1700       30.05
+          v2.1  t2-3_p1-3_benign_pool_M1700 54.13 [52.10, 56.15]                   65.5               210.93  t2-3_p1-3_benign_pool_M1700       54.13
+       v2.1+fg t2-3_p1-1_benign_spoof_M1700 20.07 [15.60, 24.72]                   53.3                63.21 t2-3_p1-1_benign_spoof_M1700       20.07
+v2.1+portguard   t2-3_p1-3_benign_pool_M600    4.70 [3.34, 6.18]                   28.9                 0.04   t2-3_p1-3_benign_pool_M600        4.70
+attack          t2-3_p1-1_benign_spoof_M1700  t2-3_p1-3_benign_pool_M1700  t2-3_p1-3_benign_pool_M600
+defense                                                                                              
+dms-btt                                45.24                        47.01                        8.92
+ftop                                   25.14                        29.16                       13.10
+ovs-evict                              21.85                        21.91                        0.03
+rdefender                              23.40                        30.05                        0.72
+v2.1                                   39.67                        54.13                        4.29
+v2.1+fg                                20.07                        18.86                        4.22
+v2.1+portguard                          1.54                         1.23                        4.70
+          ours  baseline  mean_diff  ours_lower  ours_higher       p  p_holm
+          v2.1 ovs-evict    0.32223           0           30 0.00000 0.00000
+       v2.1+fg ovs-evict   -0.01837          18           12 0.15189 0.22835
+v2.1+portguard ovs-evict   -0.17211          30            0 0.00000 0.00000
+          v2.1   dms-btt    0.07121          10           20 0.11418 0.22835
+       v2.1+fg   dms-btt   -0.26939          30            0 0.00000 0.00000
+v2.1+portguard   dms-btt   -0.42313          30            0 0.00000 0.00000
+          v2.1      ftop    0.24972           0           30 0.00000 0.00000
+       v2.1+fg      ftop   -0.09088          28            2 0.00000 0.00000
+v2.1+portguard      ftop   -0.24461          30            0 0.00000 0.00000
+          v2.1 rdefender    0.24086           0           30 0.00000 0.00000
+       v2.1+fg rdefender   -0.09974          28            2 0.00000 0.00000
+v2.1+portguard rdefender   -0.25348          30            0 0.00000 0.00000
+== report done, 4245 s

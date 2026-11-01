@@ -1,0 +1,8 @@
+defense,own_best_attack,harm_own_best,attack_share_own_best,overflow_s_own_best,worst_attack,harm_worst
+ovs-evict,t2-3_p1-3_benign_pool_M1700,"21.91 [17.99, 25.98]",76.4,225.12,t2-3_p1-3_benign_pool_M1700,21.91
+dms-btt,t2-3_p1-3_benign_pool_M1700,"47.01 [39.94, 54.02]",78.3,102.33,t2-3_p1-3_benign_pool_M1700,47.01
+ftop,t2-3_p1-3_benign_pool_M1700,"29.16 [26.29, 32.16]",73.5,17.19,t2-3_p1-3_benign_pool_M1700,29.16
+rdefender,t2-3_p1-3_benign_pool_M1700,"30.05 [27.60, 32.70]",54.2,92.63,t2-3_p1-3_benign_pool_M1700,30.05
+v2.1,t2-3_p1-3_benign_pool_M1700,"54.13 [52.10, 56.15]",65.5,210.93,t2-3_p1-3_benign_pool_M1700,54.13
+v2.1+fg,t2-3_p1-1_benign_spoof_M1700,"20.07 [15.60, 24.72]",53.3,63.21,t2-3_p1-1_benign_spoof_M1700,20.07
+v2.1+portguard,t2-3_p1-3_benign_pool_M600,"4.70 [3.34, 6.18]",28.9,0.04,t2-3_p1-3_benign_pool_M600,4.7
