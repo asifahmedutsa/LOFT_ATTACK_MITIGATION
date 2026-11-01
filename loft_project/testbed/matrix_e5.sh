@@ -52,10 +52,12 @@ for sp in "${specs[@]}"; do
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then
         echo "    FAILED (exit $status); see $RUNS/$name.log"; continue
     fi
-    rows=$(($(wc -l < "$RUNS/$name/controller_$1.csv") - 1))
+    # Valid: the controller logged until near the end (an overloaded controller polls less often,
+    # so the row count alone is not a test) and the wall time was not stretched by a suspend.
+    last=$(tail -1 "$RUNS/$name/controller_$1.csv" | cut -d, -f1 | cut -d. -f1)
     took=$(( $(date +%s) - t_start ))
-    if [ "$rows" -lt $(( $5 * 9 / 10 )) ] || [ "$took" -gt $(( $5 * 3 / 2 + 60 )) ]; then
-        echo "    INVALID ($rows controller rows, ${took} s wall); moved to _failed"
+    if ! [ "${last:-0}" -ge $(( $5 * 9 / 10 )) ] 2>/dev/null || [ "$took" -gt $(( $5 * 3 / 2 + 60 )) ]; then
+        echo "    INVALID (controller log ends at ${last:-none} s, ${took} s wall); moved to _failed"
         mv "$RUNS/$name.log" "$RUNS/$name/runner.log"
         mkdir -p "$RUNS/_failed"; mv "$RUNS/$name" "$RUNS/_failed/$name.$(date +%s)"; continue
     fi
