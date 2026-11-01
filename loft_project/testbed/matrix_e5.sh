@@ -8,11 +8,15 @@
 #   bash testbed/matrix_e5.sh            # 6 defenses x A2, A4 x seeds 4100-4102 = 36 runs, ~4 h
 #
 # Needs the snapshot reinstalled after the E5 code (sudo bash testbed/root/install.sh).
-# Skips runs that already have summary.txt.
+# Skips runs that already have summary.txt. E5_TAG (default e5) prefixes run names. A lock stops
+# two matrices from running at once (each run starts with mn -c, which tears down any other run).
 set -u
 cd "$(dirname "$0")/.."
 RUNS="$HOME/loft-runs"
 mkdir -p "$RUNS"
+exec 9>"$RUNS/.matrix.lock"
+flock -n 9 || { echo "another testbed matrix is running"; exit 1; }
+TAG="${E5_TAG:-e5}"
 specs=()
 if [ "${1:-}" = "--smoke" ]; then
     for def in ftmaster ftop flora rdefender dualguard+floodguard dualguard none; do
@@ -21,7 +25,7 @@ if [ "${1:-}" = "--smoke" ]; then
 else
     for v in A2 A4; do
         for def in none dms-btt ftmaster ftop rdefender dualguard; do
-            for s in 4100 4101 4102; do specs+=("T1 $v $def $s 300 e5"); done
+            for s in 4100 4101 4102; do specs+=("T1 $v $def $s 300 $TAG"); done
         done
     done
 fi
