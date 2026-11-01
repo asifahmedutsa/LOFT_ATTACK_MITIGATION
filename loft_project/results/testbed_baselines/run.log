@@ -1,0 +1,19 @@
+== collect
+T1 table rows (4800, 13) attack fraction 0.585
+== train
+== export
+max parity error 1.022774627990053e-06 {"flora": {"block_after": 10, "trigger": 0.5}, "ftmaster": {}, "ftop": {}, "rdefender": {"events": "replay", "gamma": 0.02}, "floodguard": {"mult": 10.0, "purge": false, "r_min": 50.0}, "source": "results/e2_baselines/selected.json, rdefender_fix/selected.json, results/floodguard/selected.json; models: loftbench.testbed_baselines"}
+== parity
+ftmaster D1 A2 True 49.8 [0, 0]
+ftmaster D1 benign True 0.0 [0, 0]
+ftmaster T1 A2 True 0.0 [4217, 4217]
+ftmaster T1 benign True 0.0 [0, 0]
+ftop D1 A2 True 3.94 [75355, 75355]
+ftop D1 benign True 0.0 [0, 0]
+ftop T1 A2 True 4.55 [76952, 76952]
+ftop T1 benign True 0.0 [0, 0]
+flora D1 A2 True 5.8 [2290, 2290]
+flora D1 benign True 0.0 [0, 0]
+flora T1 A2 True 7.44 [2571, 2571]
+flora T1 benign True 0.0 [26, 26]
+ALL IDENTICAL

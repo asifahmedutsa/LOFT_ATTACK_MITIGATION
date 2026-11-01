@@ -11,9 +11,12 @@ Environment variables:
   LOFT_DPID         monitored switch datapath id (int, default 1)
   LOFT_ACCESS_DPID  access switch datapath id; its learned MAC-to-port table gives each
                     flow's ingress (access) port for PortGuard (default: none)
-  LOFT_DEFENSE      none | dualguard | dms-btt | portguard | dualguard+portguard
+  LOFT_DEFENSE      none | dualguard | dms-btt | portguard | dualguard+portguard |
+                    dualguard+floodguard | ftmaster | ftop | flora | rdefender
   LOFT_MODEL_DIR    directory with v21_<D>.json, dmsB_state_<D>.json, dmsB_flow_<D>.json
-                    and defenses.json (see loftbench.export_testbed)
+                    and defenses.json (see loftbench.export_testbed); for the published
+                    baselines also {ftmaster,ftop}_{state,rule}_<D>.json, flora_rule_<D>.json
+                    and baselines.json (see loftbench.testbed_baselines)
   LOFT_DOMAIN       domain name for the model files (D1, D2, D3)
   LOFT_MODEL        explicit path to the v2.1 model JSON (overrides LOFT_MODEL_DIR)
   LOFT_LOG          CSV path for the per-second controller log
@@ -51,10 +54,12 @@ from ryu.lib.packet import ethernet, ipv4, packet, tcp, udp
 from ryu.ofproto import ofproto_v1_3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
-from loftbench.defenses import DMSBTT, DualGuard, PortGuard  # noqa: E402
+from loftbench.defenses import DMSBTT, DualGuard, FloodGuard, PortGuard  # noqa: E402
 from loftbench.features import FeatureTracker  # noqa: E402
 from loftbench.sim import Defense  # noqa: E402
+from loftbench.treejson import TreeJSON  # noqa: E402
 
 MAX_FLOWS = 1 << 20
 N_PORTS = 64          # access-port ids learned at run time; OTHER_PORT for unknown sources
@@ -62,7 +67,8 @@ OTHER_PORT = N_PORTS - 1
 PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
-DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard")
+DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+            "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender")
 
 
 def ip2int(s):
@@ -102,6 +108,19 @@ def build_defense(name, model_dir, domain, model_path=None):
                       CatBoostJSON(os.path.join(model_dir, f"dmsB_flow_{domain}.json")),
                       h1=b["h1"], h2=b["h2"], p_thresh=b["p_thresh"], numb_mode=b["numb_mode"],
                       blocklist_s=b["blocklist_s"])
+    if name in ("ftmaster", "ftop", "flora", "rdefender"):
+        # Published baselines (E4/E5), with the knobs and models of the simulator's E2.
+        b = json.load(open(os.path.join(model_dir, "baselines.json")))
+
+        def tree(k):
+            return TreeJSON(os.path.join(model_dir, f"{k}_{domain}.json"))
+        if name == "ftmaster":
+            return FTMaster(tree("ftmaster_state"), tree("ftmaster_rule"), **b["ftmaster"])
+        if name == "ftop":
+            return FTOP(tree("ftop_state"), tree("ftop_rule"), **b["ftop"])
+        if name == "flora":
+            return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
+        return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
@@ -112,6 +131,9 @@ def build_defense(name, model_dir, domain, model_path=None):
                    hard=h_crit <= 1.0, h_crit=h_crit, target=k.get("target", 0.80))
     if name == "dualguard":
         return dg
+    if name == "dualguard+floodguard":
+        fg = json.load(open(os.path.join(model_dir, "baselines.json")))["floodguard"]
+        return FloodGuard(dg, name=name, **fg)
     return PortGuard(dg, name=name, **pg)
 
 

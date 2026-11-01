@@ -90,6 +90,27 @@ Each run writes the following files:
 Join the flow events with the truth files to compute benign rejection and eviction,
 and the same metrics as the simulator.
 
+## E5: published baselines and the new-connection probe
+
+The controller also runs the published baselines of the simulator's E2 (`--defense ftmaster |
+ftop | flora | rdefender`) and FL-DualGuard with the flood rule (`dualguard+floodguard`).
+Their models are exported by `python -m loftbench.testbed_baselines` to
+`results/v21/exported/` (TreeJSON for XGBoost and Random Forest, CatBoost JSON for FloRa;
+both evaluated with NumPy, because the Python 3.8 environment has neither library), with the
+knobs in `baselines.json`. `--probe newflow` adds a benign host that opens a new TCP
+connection to the server every 0.5 s (`probe_newflow.py`); the run summary reports the share
+that succeed and their setup time before and after the attack.
+
+```bash
+cd loft_project && sudo bash testbed/root/install.sh    # once, after this code changes
+bash testbed/matrix_e5.sh --smoke                      # 7 runs of 60 s, about 10 min
+bash testbed/matrix_e5.sh                              # 36 runs of 300 s, about 4 h
+```
+
+| File | Content |
+|---|---|
+| `probe_<D>.csv` | One row per new-connection attempt: start time, ok, connect ms, round trip ms |
+
 ## Known caveats to check during the first run
 
 - **Sender throughput.** Python raw-socket senders must sustain ~300 pps per benign

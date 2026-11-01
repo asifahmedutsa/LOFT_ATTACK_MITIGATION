@@ -1,0 +1,22 @@
+{
+  "ftmaster_state/D1": 3.374586839965943e-07,
+  "ftmaster_rule/D1": 4.4300598389668266e-07,
+  "ftop_state/D1": 0.0,
+  "ftop_rule/D1": 5.551115123125783e-16,
+  "flora_rule/D1": 0.0,
+  "ftmaster_state/D2": 2.8831702447718044e-07,
+  "ftmaster_rule/D2": 1.022774627990053e-06,
+  "ftop_state/D2": 0.0,
+  "ftop_rule/D2": 4.440892098500626e-16,
+  "flora_rule/D2": 0.0,
+  "ftmaster_state/D3": 1.3493134609632307e-07,
+  "ftmaster_rule/D3": 2.074376614924489e-07,
+  "ftop_state/D3": 0.0,
+  "ftop_rule/D3": 3.3306690738754696e-16,
+  "flora_rule/D3": 0.0,
+  "ftmaster_state/T1": 1.1127545862521515e-07,
+  "ftmaster_rule/T1": 2.246235023539711e-07,
+  "ftop_state/T1": 0.0,
+  "ftop_rule/T1": 5.551115123125783e-16,
+  "flora_rule/T1": 0.0
+}

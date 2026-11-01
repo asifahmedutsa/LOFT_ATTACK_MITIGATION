@@ -4,7 +4,8 @@
 
 Reports, per domain: monitored-table entries over time (before and after the attack
 start), TABLE_FULL errors, Packet-Ins, installs vs distinct flows, deletes and demotes,
-controller decision time, ping loss and RTT, the flows each host sent, and benign harm:
+controller decision time, ping loss and RTT, the E5 new-connection probe (success and
+setup time before and after the attack), the flows each host sent, and benign harm:
 refused an entry (TABLE_FULL, the defense, or its drop rule) or evicted while active, as
 in the simulator; and flows lost on the way to the controller (never installed).
 """
@@ -72,6 +73,21 @@ def summarize(d, attack_start):
                 info["ping"] = f"{m.group(2)}/{m.group(1)} received, {m.group(3)}% loss"
             if rtt:
                 info["rtt_ms"] = f"min {rtt.group(1)}, avg {rtt.group(2)}, max {rtt.group(3)}"
+        pr = os.path.join(d, f"probe_{dom}.csv")
+        t0p = log.replace(".csv", "_t0.txt")
+        if os.path.exists(pr) and os.path.exists(t0p):
+            # E5 new-connection probe: success and setup time before and after the attack.
+            t0c = float(open(t0p).read())
+            with open(pr) as f:
+                pp = list(csv.DictReader(f))
+            for tag, sel in (("pre", lambda t: t < attack_start), ("post", lambda t: t >= attack_start)):
+                q = [x for x in pp if sel(float(x["t_wall"]) - t0c)]
+                ok = [float(x["connect_ms"]) for x in q if x["ok"] == "1"]
+                ok.sort()
+                info[f"probe_{tag}_attempts"] = len(q)
+                info[f"probe_{tag}_success_pct"] = round(100 * len(ok) / max(len(q), 1), 2)
+                info[f"probe_{tag}_connect_ms_median"] = round(st.median(ok), 1) if ok else "n/a"
+                info[f"probe_{tag}_connect_ms_p95"] = round(ok[int(0.95 * (len(ok) - 1))], 1) if ok else "n/a"
         ff = os.path.join(d, f"final_flows_{dom}.txt")
         if os.path.exists(ff):
             info["final_dump_flows_lines"] = open(ff).read().strip()

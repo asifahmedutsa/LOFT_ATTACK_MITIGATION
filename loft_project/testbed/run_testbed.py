@@ -51,7 +51,8 @@ def main():
     ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, or benign (no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
-                    choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard"])
+                    choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+                             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
@@ -68,6 +69,9 @@ def main():
                     help="Packet-In handling of acceptance runs 1-3 (LOFT_LEAN=0)")
     ap.add_argument("--install-clock", default="controller", choices=["controller", "switch"],
                     help="entry install times for the features (LOFT_INSTALL_CLOCK)")
+    ap.add_argument("--probe", default="none", choices=["none", "newflow"],
+                    help="newflow: a benign host opens a new TCP connection to the server every "
+                         "0.5 s (E5 service-level harm; testbed/probe_newflow.py)")
     ap.add_argument("--controller-queue", type=int, default=512,
                     help="Open vSwitch queue to each controller, messages (OVS default 100; 0 = leave)")
     a = ap.parse_args()
@@ -127,6 +131,12 @@ def main():
                                     shell=True)
         procs = []
         drv = os.path.join(HERE, "traffic_driver.py")
+        probe = os.path.join(HERE, "probe_newflow.py")
+        servers = []
+        if a.probe == "newflow":
+            for dm in doms:
+                servers.append(dm["srv"].popen([a.python, probe, "--serve", "--port", "7777"]))
+            time.sleep(1)
         for dm in doms:
             dst = dm["srv"].IP()
             dmac = dm["srv"].MAC()
@@ -147,8 +157,15 @@ def main():
             # Legitimate service probe: RTT from a benign host every second.
             procs.append(dm["users"][0].popen(
                 f"ping -i 1 -c {int(a.duration)} {dst} > {a.out}/ping_{dm['name']}.txt", shell=True))
+            if a.probe == "newflow":
+                procs.append(dm["users"][1].popen(
+                    [a.python, probe, "--dst", dst, "--port", "7777", "--interval", "0.5",
+                     "--duration", str(a.duration),
+                     "--out", os.path.join(a.out, f"probe_{dm['name']}.csv")]))
         for p in procs:
             p.wait()
+        for p in servers:
+            p.terminate()
         if diag is not None:
             diag.terminate()
             subprocess.call("pkill -f '^pidstat -u -h -p'", shell=True)
