@@ -1,0 +1,171 @@
+== e6
+  [e6] 200/2940 episodes, 142 s
+  [e6] 400/2940 episodes, 480 s
+  [e6] 600/2940 episodes, 673 s
+  [e6] 800/2940 episodes, 932 s
+  [e6] 1000/2940 episodes, 1053 s
+  [e6] 1200/2940 episodes, 1302 s
+  [e6] 1400/2940 episodes, 1454 s
+  [e6] 1600/2940 episodes, 1662 s
+  [e6] 1800/2940 episodes, 1775 s
+  [e6] 2000/2940 episodes, 1983 s
+  [e6] 2200/2940 episodes, 2098 s
+  [e6] 2400/2940 episodes, 2425 s
+  [e6] 2600/2940 episodes, 2542 s
+  [e6] 2800/2940 episodes, 2924 s
+== e6 done, 3045 s
+== e7
+  [e7] 200/576 episodes, 149 s
+  [e7] 400/576 episodes, 293 s
+== e7 done, 3463 s
+== e8
+  [e8] 200/900 episodes, 104 s
+  [e8] 400/900 episodes, 286 s
+  [e8] 600/900 episodes, 476 s
+  [e8] 800/900 episodes, 617 s
+== e8 done, 4160 s
+== report
+E6 harm % (A1-A3)
+ defense   none  ovs-evict  dms-btt  ftmaster   ftop  rdefender   v2.1
+cfg                                                                  
+cap1500  71.91      22.51    47.45     46.00  28.63      36.82  32.10
+cap2000  67.09      20.69    21.37     23.54  20.18      28.96  15.77
+cap3000  56.26      15.81     6.36     10.18   9.99      15.24   4.10
+cap3500  50.40      13.60     4.40      7.80   4.69       9.07   1.81
+cap4000  43.69      11.31     3.53      6.43   2.51       5.48   0.88
+idle20   54.59      13.63     6.67     12.13  11.16      18.12   5.61
+idle30   58.73      13.63    10.35     19.08  15.51      22.86  11.10
+E6 attack share %
+ defense  none  ovs-evict  dms-btt  ftmaster  ftop  rdefender  v2.1
+cfg                                                               
+cap1500  48.0       47.6     16.1      12.9   8.8       21.6   5.1
+cap2000  55.1       52.4     12.7      15.4  12.2       24.2   9.2
+cap3000  58.9       54.7     18.0      18.1  16.7       29.6  13.4
+cap3500  58.5       55.1     19.7      19.1  18.1       32.4  13.6
+cap4000  57.1       54.9     21.6      20.3  18.9       34.7  13.6
+idle20   50.5       55.1     12.3      15.4  14.2       26.3   9.6
+idle30   41.5       55.1      7.1      12.3  11.2       24.3   6.6
+E6 benign-only overflow s
+ defense   none  ovs-evict  dms-btt  ftmaster  ftop  rdefender  v2.1
+cfg                                                                
+cap1500  113.0      153.6     89.9     112.9   0.3       20.6  88.1
+cap2000   31.4       68.1      2.3      30.8   0.1        6.3   2.8
+cap3000    0.4        0.8      0.4       0.4   0.0        0.1   0.3
+cap3500    0.3        0.7      0.3       0.3   0.0        0.1   0.3
+cap4000    0.2        0.4      0.2       0.2   0.0        0.0   0.2
+idle20     0.8        1.3      0.5       0.8   0.0        0.2   0.8
+idle30     5.7       12.0      0.6       5.7   0.0        0.7   2.9
+    cfg  baseline  mean_diff_v21_minus  v21_lower  v21_higher       p  p_holm
+cap1500      none             -0.39816         15           0 0.00006 0.00256
+cap1500 ovs-evict              0.09588          1          14 0.00012 0.00330
+cap1500   dms-btt             -0.15351         15           0 0.00006 0.00256
+cap1500  ftmaster             -0.13908         15           0 0.00006 0.00256
+cap1500      ftop              0.03464          6           9 0.06372 0.44604
+cap1500 rdefender             -0.04727         14           1 0.00043 0.00854
+cap2000      none             -0.51316         15           0 0.00006 0.00256
+cap2000 ovs-evict             -0.04915         12           3 0.04791 0.38330
+cap2000   dms-btt             -0.05602         13           2 0.00201 0.03827
+cap2000  ftmaster             -0.07769         10           5 0.00836 0.12543
+cap2000      ftop             -0.04409         11           4 0.01508 0.15076
+cap2000 rdefender             -0.13192         15           0 0.00006 0.00256
+cap3000      none             -0.52160         15           0 0.00006 0.00256
+cap3000 ovs-evict             -0.11711         14           1 0.00012 0.00330
+cap3000   dms-btt             -0.02267         10           5 0.27686 1.00000
+cap3000  ftmaster             -0.06086         10           5 0.27686 1.00000
+cap3000      ftop             -0.05891         14           1 0.00031 0.00641
+cap3000 rdefender             -0.11145         15           0 0.00006 0.00256
+cap3500      none             -0.48591         15           0 0.00006 0.00256
+cap3500 ovs-evict             -0.11790         14           1 0.00012 0.00330
+cap3500   dms-btt             -0.02587         10           5 0.00836 0.12543
+cap3500  ftmaster             -0.05987         10           5 0.10699 0.64197
+cap3500      ftop             -0.02878         14           1 0.00012 0.00330
+cap3500 rdefender             -0.07257         15           0 0.00006 0.00256
+cap4000      none             -0.42813         15           0 0.00006 0.00256
+cap4000 ovs-evict             -0.10433         15           0 0.00006 0.00256
+cap4000   dms-btt             -0.02644         10           5 0.00836 0.12543
+cap4000  ftmaster             -0.05545         12           3 0.00427 0.06836
+cap4000      ftop             -0.01631         15           0 0.00006 0.00256
+cap4000 rdefender             -0.04601         15           0 0.00006 0.00256
+ idle20      none             -0.48977         15           0 0.00006 0.00256
+ idle20 ovs-evict             -0.08022         14           1 0.00262 0.04724
+ idle20   dms-btt             -0.01061          9           6 0.42120 1.00000
+ idle20  ftmaster             -0.06512         10           5 0.00836 0.12543
+ idle20      ftop             -0.05549         14           1 0.00262 0.04724
+ idle20 rdefender             -0.12506         14           1 0.00012 0.00330
+ idle30      none             -0.47626         15           0 0.00006 0.00256
+ idle30 ovs-evict             -0.02535          6           9 0.59949 1.00000
+ idle30   dms-btt              0.00751          6           9 0.03534 0.31805
+ idle30  ftmaster             -0.07982         10           5 0.00836 0.12543
+ idle30      ftop             -0.04413          7           8 0.30280 1.00000
+ idle30 rdefender             -0.11761         14           1 0.00012 0.00330
+E7
+  budget  rho  harm_attacked  attack_share  overflow_s  harm_benign_only  a6_harm  a4_harm  within_constraints
+  0.010  0.5           2.16         12.07        3.98             1.079     1.85     2.83               False
+  0.010  0.6           1.66         13.06        4.24             0.266     1.28     2.60                True
+  0.010  0.7           1.45         14.47        4.55             0.039     0.79     2.52                True
+  0.010  0.8           1.37         16.54        5.06             0.000     0.52     2.79               False
+  0.010  0.9           1.35         18.94        5.52             0.000     0.32     2.95               False
+  0.005  0.7           1.29         14.93        5.31             0.031     0.50     2.61               False
+  0.020  0.7           2.05         14.13        3.71             0.082     1.51     3.04                True
+  0.050  0.7           3.42         13.93        2.63             0.203     2.85     4.37                True
+E8
+ traffic variant        defense  episodes               harmed  attack_share  overflow_s  overflow_s_all
+ flash2  benign           none        30    0.65 [0.10, 1.35]          0.00        0.88            0.88
+ flash4  benign           none        30  12.63 [9.79, 15.50]          0.00       12.89           13.55
+ flash2      A2           none        30 54.46 [52.38, 56.50]         59.06      175.85          175.85
+ flash2  benign      ovs-evict        30    0.05 [0.00, 0.13]          0.00        1.51            1.51
+ flash4  benign      ovs-evict        30    1.30 [0.78, 1.87]          0.00       22.71           23.84
+ flash2      A2      ovs-evict        30  11.95 [9.09, 15.06]         54.58      185.54          185.54
+ flash2  benign        dms-btt        30    1.33 [0.83, 1.88]          0.00        0.21            0.21
+ flash4  benign        dms-btt        30    6.63 [4.69, 8.78]          0.00        4.03            4.10
+ flash2      A2        dms-btt        30    6.86 [5.46, 8.40]         18.92       16.65           16.65
+ flash2  benign       ftmaster        30    0.84 [0.25, 1.58]          0.00        0.85            0.85
+ flash4  benign       ftmaster        30  12.65 [9.81, 15.52]          0.00       12.79           13.44
+ flash2      A2       ftmaster        30  16.65 [8.26, 25.70]         20.05       51.25           51.25
+ flash2  benign           ftop        30    3.20 [2.00, 4.47]          0.00        0.00            0.00
+ flash4  benign           ftop        30    5.60 [4.27, 6.92]          0.00        0.07            0.07
+ flash2      A2           ftop        30    7.38 [5.97, 8.93]         16.68       10.82           10.82
+ flash2  benign          flora        30    0.65 [0.11, 1.33]          0.00        0.87            0.87
+ flash4  benign          flora        30  12.57 [9.74, 15.44]          0.00       12.84           13.50
+ flash2      A2          flora        30 14.08 [11.51, 16.62]         26.02       39.66           39.66
+ flash2  benign      rdefender        30    0.34 [0.07, 0.67]          0.00        0.16            0.16
+ flash4  benign      rdefender        30    6.67 [5.14, 8.24]          0.00        3.22            3.38
+ flash2      A2      rdefender        30 12.73 [10.34, 15.22]         31.32       22.06           22.06
+ flash2  benign           v2.1        30    1.18 [0.64, 1.85]          0.00        0.72            0.72
+ flash4  benign           v2.1        30  11.64 [9.02, 14.35]          0.00       10.87           11.47
+ flash2      A2           v2.1        30    3.48 [2.53, 4.57]         12.22        7.16            7.16
+ flash2  benign v2.1+portguard        30    1.71 [0.94, 2.63]          0.00        0.00            0.00
+ flash4  benign v2.1+portguard        30 13.90 [10.87, 16.99]          0.00        0.01            0.01
+ flash2      A2 v2.1+portguard        30    5.29 [3.85, 6.84]         20.71        5.66            5.66
+ flash2  benign        v2.1+fg        30    1.18 [0.64, 1.85]          0.00        0.72            0.72
+ flash4  benign        v2.1+fg        30  11.65 [9.03, 14.36]          0.00       10.71           11.31
+ flash2      A2        v2.1+fg        30    1.30 [0.75, 1.98]          5.48        1.07            1.07
+traffic variant       baseline  mean_diff_v21_minus  v21_lower  v21_higher       p  p_holm
+ flash2  benign           none              0.00533          1          26 0.00002 0.00018
+ flash2  benign      ovs-evict              0.01132          0          27 0.00000 0.00005
+ flash2  benign        dms-btt             -0.00150         15          12 0.20584 0.82336
+ flash2  benign       ftmaster              0.00348         10          17 0.05191 0.25953
+ flash2  benign           ftop             -0.02011         18           9 0.00316 0.02211
+ flash2  benign          flora              0.00535          1          26 0.00002 0.00018
+ flash2  benign      rdefender              0.00848          0          27 0.00000 0.00005
+ flash2  benign v2.1+portguard             -0.00522         10           0 0.00653 0.03919
+ flash2  benign        v2.1+fg              0.00000          0           0 1.00000 1.00000
+ flash4  benign           none             -0.00989         27           0 0.00000 0.00005
+ flash4  benign      ovs-evict              0.10342          0          27 0.00000 0.00005
+ flash4  benign        dms-btt              0.05005          9          18 0.00138 0.01104
+ flash4  benign       ftmaster             -0.01014         27           0 0.00000 0.00005
+ flash4  benign           ftop              0.06044          0          27 0.00000 0.00005
+ flash4  benign          flora             -0.00931         27           0 0.00000 0.00005
+ flash4  benign      rdefender              0.04973          0          27 0.00000 0.00005
+ flash4  benign v2.1+portguard             -0.02263         27           0 0.00000 0.00005
+ flash4  benign        v2.1+fg             -0.00012          7           9 0.98339 1.00000
+ flash2      A2           none             -0.50972         30           0 0.00000 0.00000
+ flash2      A2      ovs-evict             -0.08465         28           2 0.00000 0.00006
+ flash2      A2        dms-btt             -0.03378         22           8 0.00095 0.00857
+ flash2      A2       ftmaster             -0.13167          9          21 0.98383 1.00000
+ flash2      A2           ftop             -0.03898         28           2 0.00001 0.00013
+ flash2      A2          flora             -0.10594         30           0 0.00000 0.00000
+ flash2      A2      rdefender             -0.09244         30           0 0.00000 0.00000
+ flash2      A2 v2.1+portguard             -0.01811         26           4 0.00000 0.00002
+ flash2      A2        v2.1+fg              0.02184          0          30 0.00000 0.00000
+== report done, 4162 s
