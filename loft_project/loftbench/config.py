@@ -118,9 +118,13 @@ def gap_variant(g):
 
 
 def attack_variant(key):
-    """A1-A7, or X<gap> for the fast-refresh sweep (for example X0.25, X1, X9)."""
+    """A1-A7, X<gap> for the fast-refresh sweep (for example X0.25, X1, X9), or E9P: E9's best
+    response to six of seven defenses (t2-3_p1-3_benign_pool_M1700 in loftbench.e9_adaptive)."""
     if key in VARIANTS:
         return VARIANTS[key]
+    if key == "E9P":
+        return AttackVariant("t2-3_p1-3_benign_pool_M1700", 100, (2.0, 3.0), max_flows=1700,
+                             pkts_per_refresh=(1, 3), size_mode="benign", src_mode="pool")
     if key.startswith("X"):
         return gap_variant(float(key[1:]))
     raise KeyError(key)

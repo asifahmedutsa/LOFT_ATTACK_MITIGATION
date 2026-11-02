@@ -70,7 +70,7 @@ DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and 
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
 DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
-            "dualguard+portguard+hold")
+            "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict")
 
 
 def ip2int(s):
@@ -138,7 +138,9 @@ def build_defense(name, model_dir, domain, model_path=None):
         dg.hold_s, dg.strikes, dg.sticky = h["hold_s"], h["strikes"], h["sticky"]
         dg.admit_filter = dg._admit_hold
         name = name[:-len("+hold")]
-    if name == "dualguard":
+    if name in ("dualguard", "dualguard+evict", "dualguard+fairevict"):
+        # The eviction variants differ only in the switch's overflow policy (run_testbed.py).
+        dg.name = name
         return dg
     if name == "dualguard+floodguard":
         fg = json.load(open(os.path.join(model_dir, "baselines.json")))["floodguard"]
@@ -161,6 +163,9 @@ class LoftController(app_manager.RyuApp):
                                      os.environ.get("LOFT_DOMAIN", "D1"),
                                      os.environ.get("LOFT_MODEL"))
         self.mac_to_port = {}
+        # Fair eviction groups the switch's entries by source MAC, so they must match on it.
+        self.match_mac = self.defense_name == "dualguard+fairevict"
+        self.mac_of, self.del_pending = {}, set()
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
@@ -225,6 +230,8 @@ class LoftController(app_manager.RyuApp):
     def _match(self, p, k):
         src, dst, proto, sp, dpt = k
         f = dict(eth_type=0x0800, ipv4_src=src, ipv4_dst=dst, ip_proto=proto)
+        if self.match_mac and k in self.mac_of:
+            f["eth_src"] = self.mac_of[k]
         if proto == 6:
             f.update(tcp_src=sp, tcp_dst=dpt)
         elif proto == 17:
@@ -257,6 +264,7 @@ class LoftController(app_manager.RyuApp):
         if ip is not None and dp.id == self.dpid and out != o.OFPP_FLOOD:
             k = self._key(ip, pkt.get_protocol(tcp.tcp) or pkt.get_protocol(udp.udp))
             fid = self.fid_of.get(k)
+            self.mac_of.setdefault(k, eth.src)
             if fid is None:
                 fid = len(self.key_of)
                 self.fid_of[k] = fid
@@ -326,6 +334,27 @@ class LoftController(app_manager.RyuApp):
         self.drop_xids.add(msg.xid)
         self.cnt["drop_rules"] += 1
         self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", ""])
+
+    @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
+    def flow_removed(self, ev):
+        """Log switch evictions: Open vSwitch reports an evicted entry as removed by delete
+        (OpenFlow 1.3 has no eviction reason), so a delete the controller did not send is one."""
+        msg = ev.msg
+        dp = msg.datapath
+        if dp.id != self.dpid or msg.reason != dp.ofproto.OFPRR_DELETE:
+            return
+        m = msg.match
+        if m.get("ipv4_src") is None:
+            return
+        proto = m.get("ip_proto", 0)
+        sp = m.get("tcp_src", m.get("udp_src", 0))
+        dpt = m.get("tcp_dst", m.get("udp_dst", 0))
+        k = (m["ipv4_src"], m["ipv4_dst"], proto, sp, dpt)
+        if k in self.del_pending:
+            self.del_pending.discard(k)
+            return
+        self.cnt["evictions"] = self.cnt.get("evictions", 0) + 1
+        self.fw.writerow([round(time.time() - self.t0, 3), "evict", *k])
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
@@ -425,6 +454,7 @@ class LoftController(app_manager.RyuApp):
         p, o = dp.ofproto_parser, dp.ofproto
         k = self.key_of[fid]
         self.last_install.pop(k, None)        # a demoted flow may reinstall at once
+        self.del_pending.add(k)
         dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE_STRICT, priority=PRIO,
                                  match=self._match(p, k), out_port=o.OFPP_ANY,
                                  out_group=o.OFPG_ANY))

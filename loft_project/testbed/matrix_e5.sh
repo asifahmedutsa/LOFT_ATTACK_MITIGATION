@@ -9,7 +9,8 @@
 #
 # Needs the snapshot reinstalled after the E5 code (sudo bash testbed/root/install.sh).
 # Skips runs that already have summary.txt. E5_TAG (default e5) prefixes run names; E5_DEFS
-# overrides the defense list of the full matrix. A lock stops
+# overrides the defense list of the full matrix, E5_VARS the attacks (default A2 A4) and E5_DOM the
+# domain (default T1). A lock stops
 # two matrices from running at once (each run starts with mn -c, which tears down any other run).
 set -u
 cd "$(dirname "$0")/.."
@@ -24,9 +25,9 @@ if [ "${1:-}" = "--smoke" ]; then
         specs+=("D1 A2 $def 4100 60 smoke")
     done
 else
-    for v in A2 A4; do
+    for v in ${E5_VARS:-A2 A4}; do
         for def in ${E5_DEFS:-none dms-btt ftmaster ftop rdefender dualguard}; do
-            for s in 4100 4101 4102; do specs+=("T1 $v $def $s 300 $TAG"); done
+            for s in 4100 4101 4102; do specs+=("${E5_DOM:-T1} $v $def $s 300 $TAG"); done
         done
     done
 fi

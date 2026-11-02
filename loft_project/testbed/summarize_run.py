@@ -52,7 +52,7 @@ def summarize(d, attack_start):
             if e["event"] in ("install", "refused", "blocked"):
                 last_seen[key(e)] = float(e["t"])
         for e in ev:
-            if e["event"] == "delete" and last_seen.get(key(e), -1.0) > float(e["t"]):
+            if e["event"] in ("delete", "evict") and last_seen.get(key(e), -1.0) > float(e["t"]):
                 back.add(key(e))
         drops = [(float(e["t"]), e["src"]) for e in ev if e["event"] == "drop_rule"]
         t0f = log.replace(".csv", "_t0.txt")
@@ -62,6 +62,7 @@ def summarize(d, attack_start):
                     packet_in=int(last.get("packet_in", 0)), installs=len(inst),
                     distinct_flows_installed=len(keys), distinct_flows_refused=len(refused),
                     deletes=int(last.get("deletes", 0)),
+                    evictions=sum(e["event"] == "evict" for e in ev),
                     demotes=int(last.get("demotes", 0)),
                     decision_ms=_stats([x["decision_ms"] for x in r]))
         ping = os.path.join(d, f"ping_{dom}.txt")

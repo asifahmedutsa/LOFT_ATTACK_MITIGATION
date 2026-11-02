@@ -15,6 +15,7 @@ Lab use only, inside an isolated emulated network.
 """
 import argparse
 import csv
+import dataclasses
 import os
 import socket
 import struct
@@ -73,6 +74,11 @@ def main():
     a = ap.parse_args()
 
     prof, didx = profile_of(a.domain)
+    if a.variant.startswith("F"):
+        # F2 / F4: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
+        # crowds per 300 s at 2x or 4x the domain's new-flow rate, from many external sources.
+        prof = dataclasses.replace(prof, flash_events=3, flash_rate=int(a.variant[1:]) * prof.new_flow_rate,
+                                   flash_len=12.0)
     if a.mode == "benign":
         # Benign flows do not depend on the attack, so any variant gives the same schedule.
         tr = build_traffic(prof, didx, None, a.seed, a.duration, a.start)

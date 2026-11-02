@@ -48,12 +48,14 @@ def build(net, k, dname, port):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--domains", default="D1")
-    ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, or benign (no attack)")
+    ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, E9P (adaptive), benign (no attack) or F2/F4 (flash "
+                         "crowd, no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
                     choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
-                             "dualguard+hold", "dualguard+portguard+hold"])
+                             "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
+                             "dualguard+fairevict"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
@@ -105,11 +107,19 @@ def main():
         for dm in doms:
             dm["s1"].start([dm["c"]])
             dm["s2"].start([dm["c"]])
-            # Hard limit + refuse: no silent eviction in the no-defense baseline.
+            # Hard limit + refuse: no silent eviction in the no-defense baseline. The eviction
+            # defenses let Open vSwitch evict instead: +evict the entry nearest expiry (OVS
+            # default), +fairevict the same within the source MAC (host) holding most entries,
+            # i.e. fair eviction with equal shares (loftbench.fairevict, fe-equal-expiry).
             br = dm["s1"].name
+            policy = ["overflow_policy=refuse"]
+            if a.defense in ("dualguard+evict", "dualguard+fairevict"):
+                policy = ["overflow_policy=evict"]
+            if a.defense == "dualguard+fairevict":
+                policy.append('groups=["NXM_OF_ETH_SRC[]"]')
             subprocess.check_call(
                 ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",
-                 f"flow_limit={a.capacity}", "overflow_policy=refuse", "--",
+                 f"flow_limit={a.capacity}", *policy, "--",
                  "set", "Bridge", br, "flow_tables:0=@t"])
             if a.controller_queue:
                 for sw in (dm["s1"].name, dm["s2"].name):
@@ -144,11 +154,12 @@ def main():
             for i, h in enumerate(dm["users"][:4]):
                 procs.append(h.popen(
                     [a.python, drv, "--mode", "benign", "--domain", dm["name"], "--seed", str(a.seed),
-                     "--share", f"{i}/4", "--iface", f"{h.name}-eth0", "--dst", dst,
+                     "--variant", a.variant, "--share", f"{i}/4", "--iface", f"{h.name}-eth0", "--dst", dst,
                      "--dst-mac", dmac, "--duration", str(a.duration),
                      "--truth", os.path.join(a.out, f"truth_{h.name}.csv")]))
-            # --variant benign: the attacker hosts stay silent (false-alarm runs).
-            for j, h in enumerate(dm["users"][4:] if a.variant != "benign" else []):
+            # --variant benign or F2/F4: the attacker hosts stay silent.
+            silent = a.variant == "benign" or a.variant.startswith("F")
+            for j, h in enumerate(dm["users"][4:] if not silent else []):
                 procs.append(h.popen(
                     [a.python, drv, "--mode", "attack", "--domain", dm["name"], "--variant", a.variant,
                      "--seed", str(a.seed), "--attacker", str(j), "--iface", f"{h.name}-eth0",

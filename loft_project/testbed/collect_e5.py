@@ -1,6 +1,6 @@
 """Collect the E5 testbed runs (testbed/matrix_e5.sh) into results/testbed_e5/.
 
-    python3 testbed/collect_e5.py [tag]        # default tag e5c
+    python3 testbed/collect_e5.py [tag [domain]]   # default e5c T1; other tags write results/testbed_<tag>/
 
 Reads ~/loft-runs/<tag>_T1_<variant>_<defense>_s<seed>/summary.txt and writes runs.csv (one row
 per run) and table_e5.csv / table_e5.md (mean and min-max over seeds per variant and defense).
@@ -13,13 +13,16 @@ import statistics
 import sys
 
 TAG = sys.argv[1] if len(sys.argv) > 1 else "e5c"
+DOM = sys.argv[2] if len(sys.argv) > 2 else "T1"
 RUNS = os.path.expanduser("~/loft-runs")
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results", "testbed_e5")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results",
+                   "testbed_e5" if TAG == "e5c" else f"testbed_{TAG}")
 DEFENSES = ["none", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard",
-            "dualguard+hold", "dualguard+portguard+hold"]
+            "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict"]
 KEYS = ["benign_harmed_pct", "probe_post_success_pct", "probe_post_connect_ms_median",
         "probe_post_connect_ms_p95", "probe_pre_success_pct", "entries_after_attack",
-        "table_full", "packet_in", "installs", "deletes", "demotes", "decision_ms", "seconds"]
+        "table_full", "packet_in", "installs", "deletes", "demotes", "evictions", "decision_ms",
+        "seconds"]
 SHOW = [("benign_harmed_pct", "benign harm %"), ("probe_post_success_pct", "probe success %"),
         ("probe_post_connect_ms_median", "probe connect ms (median)"),
         ("installs", "installs"), ("decision_ms", "decision ms (mean)")]
@@ -43,7 +46,7 @@ def parse(path):
 def main():
     os.makedirs(OUT, exist_ok=True)
     rows = []
-    for s in sorted(glob.glob(os.path.join(RUNS, f"{TAG}_T1_*_s*/summary.txt"))):
+    for s in sorted(glob.glob(os.path.join(RUNS, f"{TAG}_{DOM}_*_s*/summary.txt"))):
         name = os.path.basename(os.path.dirname(s))
         _, dom, variant, defense, seed = name.split("_")
         rows.append(dict(domain=dom, variant=variant, defense=defense.replace("-", "+")
@@ -55,7 +58,7 @@ def main():
         w.writerows(rows)
     table, md = [], []
     for v in sorted({r["variant"] for r in rows}):
-        md += [f"\n### T1, {v}\n", "| defense | n | " + " | ".join(h for _, h in SHOW) + " |",
+        md += [f"\n### {DOM}, {v}\n", "| defense | n | " + " | ".join(h for _, h in SHOW) + " |",
                "|---|---|" + "---|" * len(SHOW)]
         for d in DEFENSES:
             g = [r for r in rows if r["variant"] == v and r["defense"] == d]
