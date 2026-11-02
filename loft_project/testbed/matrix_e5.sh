@@ -9,6 +9,7 @@
 #
 # Needs the snapshot reinstalled after the E5 code (sudo bash testbed/root/install.sh).
 # Skips runs that already have summary.txt. E5_TAG (default e5) prefixes run names; E5_DEFS
+# E5_TOPO=tree3 runs the three-switch tree (run_testbed.py --topo). E5_DEFS
 # overrides the defense list of the full matrix, E5_VARS the attacks (default A2 A4) and E5_DOM the
 # domain (default T1). A lock stops
 # two matrices from running at once (each run starts with mn -c, which tears down any other run).
@@ -49,7 +50,7 @@ for sp in "${specs[@]}"; do
     echo "=== [$n/${#specs[@]}] $name $(date +%T)"
     t_start=$(date +%s)
     sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$3" --seed "$4" \
-        --duration "$5" --probe newflow --out "$name" > "$RUNS/$name.log" 2>&1
+        --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} --out "$name" > "$RUNS/$name.log" 2>&1
     status=$?
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then
         echo "    FAILED (exit $status); see $RUNS/$name.log"; continue

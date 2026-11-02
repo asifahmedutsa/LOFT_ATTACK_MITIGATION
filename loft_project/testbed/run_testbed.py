@@ -15,6 +15,7 @@ eviction).
 Requires Mininet, Open vSwitch and Ryu (default: ~/ryu-env/bin/ryu-manager).
 """
 import argparse
+import json
 import os
 import subprocess
 import time
@@ -42,17 +43,47 @@ def build(net, k, dname, port):
         net.addLink(h, s2, bw=1000, delay="2ms")
         users.append(h)
     return dict(name=dname, c=c, s1=s1, s2=s2, srv=srv, users=users, port=port,
-                dpid=int(f"{k:x}1", 16), access_dpid=int(f"{k:x}2", 16))
+                dpid=int(f"{k:x}1", 16), access_dpid=int(f"{k:x}2", 16), switches=[s1, s2],
+                limited=[s1], monitored=None, topo=None)
+
+
+def build_tree(net, k, dname, port):
+    """Three-switch tree (FloRa-style): core s{k}1 to the server, access switches s{k}2 (hosts
+    1, 2 and attacker 5) and s{k}3 (hosts 3, 4 and attacker 6). Every table is limited and
+    monitored; LOFT_TOPO tells the controller which port leads to which switch."""
+    c = net.addController(f"c{k}", controller=RemoteController, ip="127.0.0.1", port=port)
+    sw = [net.addSwitch(f"s{k}{j}", dpid=f"{k:x}{j}".zfill(16), protocols="OpenFlow13")
+          for j in (1, 2, 3)]
+    srv = net.addHost(f"srv{k}", ip=f"10.{k}.0.100/16", mac=f"00:00:00:00:{k:02x}:64")
+    net.addLink(srv, sw[0], bw=1000, delay="2ms")
+    topo = {}
+    for acc in sw[1:]:
+        ln = net.addLink(sw[0], acc, bw=250, delay="15ms")
+        p0, p1 = sw[0].ports[ln.intf1], acc.ports[ln.intf2]
+        topo.setdefault(int(sw[0].dpid, 16), {})[p0] = [int(acc.dpid, 16), p1]
+        topo.setdefault(int(acc.dpid, 16), {})[p1] = [int(sw[0].dpid, 16), p0]
+    users = []
+    for i in range(6):
+        h = net.addHost(f"d{k}h{i + 1}", ip=f"10.{k}.1.{i + 1}/16",
+                        mac=f"00:00:00:00:{k:02x}:{i + 1:02x}")
+        net.addLink(h, sw[1] if i in (0, 1, 4) else sw[2], bw=1000, delay="2ms")
+        users.append(h)
+    return dict(name=dname, c=c, s1=sw[0], s2=sw[1], srv=srv, users=users, port=port,
+                dpid=int(sw[0].dpid, 16), access_dpid=None, switches=sw, limited=sw,
+                monitored=[int(x.dpid, 16) for x in sw], topo=topo)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--domains", default="D1")
+    ap.add_argument("--topo", default="dumbbell", choices=["dumbbell", "tree3"],
+                    help="dumbbell: monitored switch + access switch (DMS-BTT); tree3: core and "
+                         "two access switches, all monitored (build_tree)")
     ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, E9P (adaptive), benign (no attack) or F2/F4 (flash "
                          "crowd, no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
-                    choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+                    choices=["none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
                              "dualguard+fairevict", "dualguard+fairevictq"])
@@ -61,6 +92,7 @@ def main():
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
                          "results/v21/exported; fedprox in results/v2/exported")
     ap.add_argument("--capacity", type=int, default=3500)
+    ap.add_argument("--idle", type=int, default=10, help="idle timeout of the per-flow entries, s")
     ap.add_argument("--duration", type=float, default=300)
     ap.add_argument("--attack-start", type=float, default=50)
     ap.add_argument("--ryu", default=os.path.expanduser("~utsa/ryu-env/bin/ryu-manager"))
@@ -82,19 +114,25 @@ def main():
 
     setLogLevel("info")
     net = Mininet(switch=OVSSwitch, link=TCLink, controller=None, autoSetMacs=False)
-    doms = [build(net, k + 1, d, 6653 + k) for k, d in enumerate(a.domains.split(","))]
+    mk = build_tree if a.topo == "tree3" else build
+    doms = [mk(net, k + 1, d, 6653 + k) for k, d in enumerate(a.domains.split(","))]
 
     ctrl = []
     for dm in doms:
         env = dict(os.environ, LOFT_DPID=str(dm["dpid"]), LOFT_DEFENSE=a.defense,
-                   LOFT_ACCESS_DPID=str(dm["access_dpid"]), LOFT_MODEL_DIR=a.model_dir,
+                   LOFT_MODEL_DIR=a.model_dir,
                    LOFT_DOMAIN=dm["name"],
-                   LOFT_CAPACITY=str(a.capacity),
+                   LOFT_CAPACITY=str(a.capacity), LOFT_IDLE=str(a.idle),
                    LOFT_MODEL=os.path.join(a.model_dir, f"{a.model_prefix}_{dm['name']}.json"),
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),
                    LOFT_LEAN="0" if a.legacy_controller else "1",
                    LOFT_INSTALL_CLOCK=a.install_clock,
                    PYTHONPATH=ROOT)
+        if dm["access_dpid"] is not None:
+            env["LOFT_ACCESS_DPID"] = str(dm["access_dpid"])
+        if dm["monitored"]:
+            env["LOFT_DPIDS"] = ",".join(str(x) for x in dm["monitored"])
+            env["LOFT_TOPO"] = json.dumps(dm["topo"])
         ctrl.append(subprocess.Popen(
             [a.ryu, "--ofp-tcp-listen-port", str(dm["port"]), os.path.join(HERE, "loft_ryu_app.py")],
             env=env, stdout=open(os.path.join(a.out, f"ryu_{dm['name']}.log"), "w"),
@@ -105,25 +143,25 @@ def main():
         for dm in doms:
             dm["c"].start()
         for dm in doms:
-            dm["s1"].start([dm["c"]])
-            dm["s2"].start([dm["c"]])
+            for sw in dm["switches"]:
+                sw.start([dm["c"]])
             # Hard limit + refuse: no silent eviction in the no-defense baseline. The eviction
             # defenses let Open vSwitch evict instead: +evict the entry nearest expiry (OVS
             # default), +fairevict the same within the source MAC (host) holding most entries,
             # i.e. fair eviction with equal shares (loftbench.fairevict, fe-equal-expiry);
             # +fairevictq adds the controller's churn quarantine (loftbench.fairevictq).
-            br = dm["s1"].name
             policy = ["overflow_policy=refuse"]
-            if a.defense in ("dualguard+evict", "dualguard+fairevict", "dualguard+fairevictq"):
+            if a.defense in ("evict", "dualguard+evict", "dualguard+fairevict", "dualguard+fairevictq"):
                 policy = ["overflow_policy=evict"]
             if a.defense in ("dualguard+fairevict", "dualguard+fairevictq"):
                 policy.append('groups=["NXM_OF_ETH_SRC[]"]')
-            subprocess.check_call(
-                ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",
-                 f"flow_limit={a.capacity}", *policy, "--",
-                 "set", "Bridge", br, "flow_tables:0=@t"])
+            for sw in dm["limited"]:
+                subprocess.check_call(
+                    ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",
+                     f"flow_limit={a.capacity}", *policy, "--",
+                     "set", "Bridge", sw.name, "flow_tables:0=@t"])
             if a.controller_queue:
-                for sw in (dm["s1"].name, dm["s2"].name):
+                for sw in (x.name for x in dm["switches"]):
                     for uuid in subprocess.check_output(
                             ["ovs-vsctl", "get", "Bridge", sw, "controller"]).decode().strip("[]\n ").split(","):
                         if uuid.strip():
@@ -187,8 +225,10 @@ def main():
                            ("ovs-vsctl list controller", "ovs_controllers.txt")):
                 subprocess.call(f"{cmd} > {a.out}/{f}", shell=True)
             for dm in doms:
-                subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-tables {dm['s1'].name} | head -8 "
-                                f"> {a.out}/ovs_tables_{dm['name']}.txt", shell=True)
+                for sw in dm["limited"]:
+                    sfx = "" if sw is dm["s1"] else f"_{sw.name}"
+                    subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-tables {sw.name} | head -8 "
+                                    f"> {a.out}/ovs_tables_{dm['name']}{sfx}.txt", shell=True)
         for dm in doms:
             subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-flows {dm['s1'].name} | wc -l "
                             f"> {a.out}/final_flows_{dm['name']}.txt", shell=True)

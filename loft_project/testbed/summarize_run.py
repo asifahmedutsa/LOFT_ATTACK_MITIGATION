@@ -28,10 +28,10 @@ def _stats(v):
     return f"mean {st.mean(v):.0f}, max {max(v):.0f}"
 
 
-def summarize(d, attack_start):
+def summarize(d, attack_start, capacity=3500):
     out = {}
     for log in sorted(glob.glob(os.path.join(d, "controller_*.csv"))):
-        if log.endswith("_flows.csv"):
+        if log.endswith("_flows.csv") or log.endswith("_macs.csv"):
             continue
         dom = os.path.basename(log)[len("controller_"):-4]
         r = _rows(log)
@@ -92,6 +92,35 @@ def summarize(d, attack_start):
         ff = os.path.join(d, f"final_flows_{dom}.txt")
         if os.path.exists(ff):
             info["final_dump_flows_lines"] = open(ff).read().strip()
+        # The papers' table columns, per monitored switch (one log in the dumbbell, one per
+        # switch in the tree): attack share Pa (entries of the attacker hosts 5 and 6 over the
+        # capacity), table usage, earliest overflow and seconds at the limit after the attack.
+        k_dom = len(out) + 1
+        att = {f"00:00:00:00:{k_dom:02x}:05", f"00:00:00:00:{k_dom:02x}:06"}
+        sw_logs = sorted(glob.glob(os.path.join(d, f"switch_{dom}_s*.csv")))
+        sw_logs = [x for x in sw_logs if not x.endswith("_macs.csv")] or [log]
+        for sl in sw_logs:
+            tag = "" if sl == log else "_" + os.path.basename(sl)[:-4].rsplit("_", 1)[1]
+            rr = _rows(sl)
+            mf = sl.replace(".csv", "_macs.csv")
+            pa = {}
+            if os.path.exists(mf):
+                with open(mf) as f:
+                    for x in csv.DictReader(f):
+                        if x["mac"] in att:
+                            pa[float(x["t"])] = pa.get(float(x["t"]), 0) + int(x["entries"])
+            post_r = [x for x in rr if x["t"] >= attack_start]
+            cap = capacity
+            pas = [pa.get(x["t"], 0) / cap for x in post_r] if os.path.exists(mf) else []
+            full = [x["t"] for x in rr if x["entries"] >= 0.99 * cap]
+            info[f"attack_share_avg_pct{tag}"] = round(100 * st.mean(pas), 2) if pas else "n/a"
+            info[f"attack_share_max_pct{tag}"] = round(100 * max(pas), 2) if pas else "n/a"
+            info[f"table_usage_avg_pct{tag}"] = (round(100 * st.mean(x["entries"] for x in post_r) / cap, 2)
+                                                 if post_r else "n/a")
+            info[f"first_overflow_s{tag}"] = round(min(full) - attack_start, 1) if full else "none"
+            info[f"overflow_s_post{tag}"] = sum(1 for x in post_r if x["entries"] >= 0.99 * cap)
+            if tag:
+                info[f"table_full{tag}"] = int(rr[-1]["table_full"]) if rr else 0
         info["_refused"], info["_installed"] = refused, keys
         info["_blocked"], info["_back"], info["_drops"], info["_t0"] = blocked, back, drops, t0
         info["drop_rules"] = len(drops)
@@ -150,8 +179,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run_dir")
     ap.add_argument("--attack-start", type=float, default=50.0)
+    ap.add_argument("--capacity", type=int, default=3500)
     a = ap.parse_args()
-    out, hosts = summarize(os.path.expanduser(a.run_dir), a.attack_start)
+    out, hosts = summarize(os.path.expanduser(a.run_dir), a.attack_start, a.capacity)
     for dom, info in out.items():
         print(f"== {dom}")
         for k, v in info.items():

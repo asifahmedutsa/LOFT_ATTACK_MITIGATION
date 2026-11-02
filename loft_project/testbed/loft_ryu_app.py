@@ -72,7 +72,7 @@ OTHER_PORT = N_PORTS - 1
 PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
-DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+DEFENSES = ("none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+fairevictq")
@@ -106,8 +106,11 @@ def build_defense(name, model_dir, domain, model_path=None):
     """The simulator's defense objects, configured from exported files."""
     if name not in DEFENSES:
         raise ValueError(f"LOFT_DEFENSE must be one of {DEFENSES}")
-    if name == "none":
-        return Defense()
+    if name in ("none", "evict"):
+        # evict: no defense, Open vSwitch evicts the entry nearest expiry (run_testbed.py).
+        d = Defense()
+        d.name = name
+        return d
     cfg = json.load(open(os.path.join(model_dir, "defenses.json"))) if model_dir else {}
     if name == "dms-btt":
         b = cfg["dms_blocklist"]
@@ -160,6 +163,46 @@ def build_defense(name, model_dir, domain, model_path=None):
     return PortGuard(dg, name=name, **pg)
 
 
+class Switch:
+    """Per-switch state: flows, features, the defense and its drop rules, counters, log."""
+
+    def __init__(self, ctl, dpid, log_path):
+        self.dpid, self.name, self.dp = dpid, f"s{dpid:x}", None
+        self.defense = build_defense(ctl.defense_name, os.environ.get("LOFT_MODEL_DIR"),
+                                     os.environ.get("LOFT_DOMAIN", "D1"), os.environ.get("LOFT_MODEL"))
+        self.del_pending, self.idle_of, self.prev, self.prev_t = set(), {}, {}, 0.0
+        self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
+        self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
+        self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, ctl.capacity, 1.0)
+        self.install_t = np.zeros(MAX_FLOWS)
+        self.defense.reset({"cfg": None, "n_flows": MAX_FLOWS, "flow_src": self.src_of,
+                            "flow_port": self.port_of, "n_ports": N_PORTS})
+        self.admit = getattr(self.defense, "admit_filter", None)
+        self.pg = self.defense if isinstance(self.defense, PortGuard) else None
+        # Churn quarantine: a quarantined host's entries go with one delete matching its MAC,
+        # and a drop rule keeps its new flows from the controller (as PortGuard's quota).
+        self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
+        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and (
+            self.pg is not None or self.feq is not None)
+        self.drop_until, self.drop_pk, self.ref_mac = {}, {}, {}
+        self.last_install, self.refused_until = {}, {}
+        self._installs_seen = self._tf_last = 0
+        self._parts = []
+        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0,
+                        drop_rules=0, drop_rule_full=0, port_deletes=0)
+        self.log = open(log_path, "w", newline="")
+        self.w = csv.writer(self.log)
+        self.w.writerow(LOG_COLS)
+        # Entries per source MAC at each poll, for the papers' attack share of the table.
+        self.maclog = open(log_path.replace(".csv", "_macs.csv"), "w", newline="")
+        self.mw = csv.writer(self.maclog)
+        self.mw.writerow(["t", "mac", "entries"])
+
+
+LOG_COLS = ["t", "entries", "packet_in", "table_full", "installs", "deletes", "demotes",
+            "decision_ms", "event_backlog", "blocked", "drop_rules", "fresh"]
+
+
 class LoftController(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
@@ -171,9 +214,6 @@ class LoftController(app_manager.RyuApp):
         self.capacity = int(os.environ.get("LOFT_CAPACITY", "3500"))
         self.idle = int(os.environ.get("LOFT_IDLE", "10"))
         self.defense_name = os.environ.get("LOFT_DEFENSE", "none")
-        self.defense = build_defense(self.defense_name, os.environ.get("LOFT_MODEL_DIR"),
-                                     os.environ.get("LOFT_DOMAIN", "D1"),
-                                     os.environ.get("LOFT_MODEL"))
         self.mac_to_port = {}
         # Fair eviction groups the switch's entries by source MAC, so they must match on it.
         self.match_mac = self.defense_name in ("dualguard+fairevict", "dualguard+fairevictq")
@@ -181,44 +221,34 @@ class LoftController(app_manager.RyuApp):
         # Switch eviction (overflow_policy=evict): Open vSwitch does not report evictions to an
         # OpenFlow 1.3 controller, so the 1 s polls infer them (_evictions).
         self.evict_mode = "evict" in self.defense_name
-        self.del_pending, self.idle_of, self.prev, self.prev_t = set(), {}, {}, 0.0
-        self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
-        self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
-        self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
         self.install_clock = os.environ.get("LOFT_INSTALL_CLOCK", "controller")
-        self.install_t = np.zeros(MAX_FLOWS)
-        self.defense.reset({"cfg": None, "n_flows": MAX_FLOWS, "flow_src": self.src_of,
-                            "flow_port": self.port_of, "n_ports": N_PORTS})
-        self.admit = getattr(self.defense, "admit_filter", None)
-        self._parts = []
-        self.xid_key = {}
+        self.xid_key, self.drop_xids = {}, set()
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
-        self.pg = self.defense if isinstance(self.defense, PortGuard) else None
-        # Churn quarantine: a quarantined host's entries go with one delete matching its MAC,
-        # and a drop rule keeps its new flows from the controller (as PortGuard's quota).
-        self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
-        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and (
-            self.pg is not None or self.feq is not None)
-        self.drop_until, self.drop_xids, self.drop_pk = {}, set(), {}
-        self.last_install, self.refused_until = {}, {}
-        self._installs_seen = 0
-        self._tf_last = 0
-        self.dp = None
         self.t0 = time.time()
-        self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0,
-                        drop_rules=0, drop_rule_full=0, port_deletes=0)
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
         # Wall-clock origin of the log's t column, to align it with the traffic drivers.
         with open(log.replace(".csv", "_t0.txt"), "w") as f:
             f.write(f"{self.t0:.6f}\n")
-        self.log = open(log, "w", newline="")
-        self.w = csv.writer(self.log)
-        self.w.writerow(["t", "entries", "packet_in", "table_full", "installs", "deletes",
-                         "demotes", "decision_ms", "event_backlog", "blocked", "drop_rules",
-                         "fresh"])
+        # Tree topology (run_testbed --topo tree3): several monitored switches, each with its
+        # own defense; LOFT_TOPO maps {dpid: {port: [neighbour dpid, its port]}}. The per-second
+        # domain log then sums the switches' counters at each poll of the core (LOFT_DPID), and
+        # each switch also logs on its own. A flow's port is the switch's own ingress port.
+        dpids = os.environ.get("LOFT_DPIDS")
+        self.tree = bool(dpids)
+        self.topo = {int(d): {int(q): v for q, v in m.items()}
+                     for d, m in json.loads(os.environ.get("LOFT_TOPO", "{}")).items()}
+        self.sw = {}
+        for d in ([int(x) for x in dpids.split(",")] if self.tree else [self.dpid]):
+            path = log if not self.tree else log.replace("controller_", "switch_").replace(
+                ".csv", f"_s{d:x}.csv")
+            self.sw[d] = Switch(self, d, path)
+        if self.tree:
+            self.log = open(log, "w", newline="")
+            self.w = csv.writer(self.log)
+            self.w.writerow(LOG_COLS)
         self.flowlog = open(log.replace(".csv", "_flows.csv"), "w", newline="")
         self.fw = csv.writer(self.flowlog)
-        self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport"])
+        self.fw.writerow(["t", "event", "src", "dst", "proto", "sport", "dport", "sw"])
         hub.spawn(self._monitor)
 
     # ------------------------------------------------------------------
@@ -238,8 +268,8 @@ class LoftController(app_manager.RyuApp):
         p, o = dp.ofproto_parser, dp.ofproto
         self._send_flow(dp, p.OFPMatch(), [p.OFPActionOutput(o.OFPP_CONTROLLER, o.OFPCML_NO_BUFFER)],
                         0, priority=0)
-        if dp.id == self.dpid:
-            self.dp = dp
+        if dp.id in self.sw:
+            self.sw[dp.id].dp = dp
 
     def _key(self, ip, l4):
         sp = dp_ = 0
@@ -265,6 +295,70 @@ class LoftController(app_manager.RyuApp):
         port = self.mac_to_port.get(self.access_dpid, {}).get(mac)
         return port if port is not None and 0 <= port < OTHER_PORT else OTHER_PORT
 
+    def _port(self, S, mac, in_port):
+        """A flow's port for the defense: the switch's ingress port in the tree, the host's
+        access port (learned on the access switch) otherwise."""
+        if self.tree:
+            return in_port if 0 <= in_port < OTHER_PORT else OTHER_PORT
+        return self._access_port(mac)
+
+    def _macs_on(self, S, port):
+        """Host MACs behind a port of switch S."""
+        if self.tree:
+            return [m for m, q in self.mac_to_port.get(S.dpid, {}).items() if q == port]
+        return [m for m, q in self.mac_to_port.get(self.access_dpid, {}).items() if q == port]
+
+    def _downstream(self, dpid, out, dst):
+        """The monitored switches after dpid on the way to dst: (switch, in_port, out_port)."""
+        hops = []
+        while out in self.topo.get(dpid, {}):
+            nd, np_ = self.topo[dpid][out]
+            nout = self.mac_to_port.get(nd, {}).get(dst)
+            if nd not in self.sw or nout is None:
+                break
+            hops.append((self.sw[nd], np_, nout))
+            dpid, out = nd, nout
+        return hops
+
+    def _decide(self, S, k, ip, mac, in_port, out, now, t):
+        """Admit and install flow k on switch S: installed, skip (in flight) or refused."""
+        fid = S.fid_of.get(k)
+        if fid is None:
+            fid = len(S.key_of)
+            S.fid_of[k] = fid
+            S.key_of.append(k)
+            S.src_of[fid] = ip2int(ip.src)
+            S.port_of[fid] = self._port(S, mac, in_port)
+        if self.lean and (now - S.last_install.get(k, -1e9) < 0.5
+                          or now < S.refused_until.get(k, 0.0)):
+            # Install already in flight, or refused moments ago: forward this packet
+            # on the slow path without another flow-mod.
+            return "skip"
+        dp = S.dp
+        p = dp.ofproto_parser
+        if S.admit is not None and not S.admit(np.array([fid]), t)[0]:
+            # Refused by the defense (DMS-BTT blocklist, PortGuard quota): drop, as in
+            # the simulator.
+            S.cnt["blocked"] += 1
+            self.fw.writerow([round(t, 3), "blocked", *k, S.name])
+            # Only a PortGuard quota refusal blocks the whole host; a per-flow refusal (the
+            # flow hold of a demoted flow) stays in the controller, like DMS-BTT's blocklist.
+            held = getattr(S.pg.inner, "held_until", None) if S.pg is not None else None
+            if (S.drop_rules and S.port_of[fid] != OTHER_PORT
+                    and (held is None or held[fid] <= t)):
+                S.ref_mac.setdefault(int(S.port_of[fid]), {})[mac] = now
+                self._drop_rule(S, mac, now)
+            return "refused"
+        idle = int(round(float(S.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
+        fm = self._send_flow(dp, self._match(p, k), [p.OFPActionOutput(out)], max(idle, 1))
+        self.xid_key[(S.dpid, fm.xid)] = k        # attribute a TABLE_FULL error to its flow
+        S.last_install[k] = now
+        S.install_t[fid] = round(t, 3)
+        S.idle_of[fid] = max(idle, 1)
+        S.cnt["installs"] += 1
+        self.fw.writerow([round(t, 3), "install", *k, S.name])
+        return "installed"
+
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def packet_in(self, ev):
         msg = ev.msg
@@ -279,49 +373,28 @@ class LoftController(app_manager.RyuApp):
         out = self.mac_to_port[dp.id].get(eth.dst, o.OFPP_FLOOD)
         actions = [p.OFPActionOutput(out)]
         ip = pkt.get_protocol(ipv4.ipv4)
-        if dp.id == self.dpid:
-            self.cnt["packet_in"] += 1
-        if ip is not None and dp.id == self.dpid and out != o.OFPP_FLOOD:
+        S = self.sw.get(dp.id)
+        if S is not None:
+            S.cnt["packet_in"] += 1
+        if ip is not None and S is not None and S.dp is not None and out != o.OFPP_FLOOD:
             k = self._key(ip, pkt.get_protocol(tcp.tcp) or pkt.get_protocol(udp.udp))
-            fid = self.fid_of.get(k)
             self.mac_of.setdefault(k, eth.src)
-            if fid is None:
-                fid = len(self.key_of)
-                self.fid_of[k] = fid
-                self.key_of.append(k)
-                self.src_of[fid] = ip2int(ip.src)
-                self.port_of[fid] = self._access_port(eth.src)
             now = time.time()
             t = now - self.t0
-            if self.lean and (now - self.last_install.get(k, -1e9) < 0.5
-                              or now < self.refused_until.get(k, 0.0)):
-                # Install already in flight, or refused moments ago: forward this packet
-                # on the slow path without another flow-mod.
-                pass
-            elif self.admit is not None and not self.admit(np.array([fid]), t)[0]:
-                # Refused by the defense (DMS-BTT blocklist, PortGuard quota): drop, as in
-                # the simulator.
-                self.cnt["blocked"] += 1
-                self.fw.writerow([round(t, 3), "blocked", *k])
-                # Only a PortGuard quota refusal blocks the whole host; a per-flow refusal (the
-                # flow hold of a demoted flow) stays in the controller, like DMS-BTT's blocklist.
-                held = getattr(self.pg.inner, "held_until", None) if self.pg is not None else None
-                if (self.drop_rules and self.port_of[fid] != OTHER_PORT
-                        and (held is None or held[fid] <= t)):
-                    self._drop_rule(dp, eth.src, now)
-                return
-            else:
-                idle = int(round(float(self.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
-                fm = self._send_flow(dp, self._match(p, k), actions, max(idle, 1))
-                self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
-                self.last_install[k] = now
-                self.install_t[fid] = round(t, 3)
-                self.idle_of[fid] = max(idle, 1)
-                self.cnt["installs"] += 1
-                self.fw.writerow([round(t, 3), "install", *k])
-                # Packet-Out through the table so the triggering packet is counted.
-                actions = [p.OFPActionOutput(o.OFPP_TABLE)]
-        elif out != o.OFPP_FLOOD and dp.id != self.dpid:
+            # In the tree the flow is also installed on the monitored switches further along
+            # its path, each asking its own defense, so it costs one Packet-In. A switch that
+            # refuses stops the walk; the packet is then dropped there.
+            hops = [(S, in_port, out)] + self._downstream(dp.id, out, eth.dst)
+            for i, (H, hin, hout) in enumerate(hops):
+                r = self._decide(H, k, ip, eth.src, hin, hout, now, t)
+                if i == 0 and r == "refused":
+                    return
+                if i == 0 and r == "installed":
+                    # Packet-Out through the table so the triggering packet is counted.
+                    actions = [p.OFPActionOutput(o.OFPP_TABLE)]
+                if r == "refused":
+                    break
+        elif out != o.OFPP_FLOOD and S is None:
             # Access switches: plain L2 forwarding for everything.
             self._send_flow(dp, p.OFPMatch(in_port=in_port, eth_dst=eth.dst), actions, 30,
                             priority=1)
@@ -334,17 +407,18 @@ class LoftController(app_manager.RyuApp):
         dp.send_msg(p.OFPPacketOut(datapath=dp, buffer_id=msg.buffer_id, in_port=in_port,
                                    actions=actions, data=data))
 
-    def _drop_rule(self, dp, mac, now, refresh=False):
-        """Drop the host's new IPv4 flows in the switch for DROP_S seconds.
+    def _drop_rule(self, S, mac, now, refresh=False):
+        """Drop the host's new IPv4 flows in switch S for DROP_S seconds.
 
         A refused flow gets no rule, so without this every later packet of the refused host
         is another Packet-In: against the fast-refresh attacker Open vSwitch then drops
         controller messages and benign flows go uninstalled (results_v2.md 16.8). Installing
         only on a refused Packet-In is not enough, because Packet-Ins wait in the controller's
         queue for about a second under attack; hence the refresh at every poll."""
-        if not refresh and now < self.drop_until.get(mac, 0.0):
+        if not refresh and now < S.drop_until.get(mac, 0.0):
             return
-        self.drop_until[mac] = now + DROP_S
+        S.drop_until[mac] = now + DROP_S
+        dp = S.dp
         p, o = dp.ofproto_parser, dp.ofproto
         # OFPFC_ADD of an identical match and priority replaces the rule and resets its timeout.
         msg = p.OFPFlowMod(datapath=dp, priority=DROP_PRIO, match=p.OFPMatch(eth_type=0x0800, eth_src=mac),
@@ -352,89 +426,99 @@ class LoftController(app_manager.RyuApp):
         dp.send_msg(msg)
         if len(self.drop_xids) > 4096:       # errors arrive within milliseconds; keep it small
             self.drop_xids.clear()
-        self.drop_xids.add(msg.xid)
-        self.cnt["drop_rules"] += 1
-        self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", ""])
+        self.drop_xids.add((S.dpid, msg.xid))
+        S.cnt["drop_rules"] += 1
+        self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", "", S.name])
 
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
         o = ev.msg.datapath.ofproto
+        S = self.sw.get(ev.msg.datapath.id)
+        if S is None:
+            return
         if ev.msg.type == o.OFPET_FLOW_MOD_FAILED and ev.msg.code == o.OFPFMFC_TABLE_FULL:
-            if ev.msg.xid in self.drop_xids:
+            x = (S.dpid, ev.msg.xid)
+            if x in self.drop_xids:
                 # A drop rule did not fit: the refusal stays controller-only this second.
-                self.drop_xids.discard(ev.msg.xid)
-                self.cnt["drop_rule_full"] += 1
+                self.drop_xids.discard(x)
+                S.cnt["drop_rule_full"] += 1
                 return
-            self.cnt["table_full"] += 1
-            k = self.xid_key.pop(ev.msg.xid, None)
+            S.cnt["table_full"] += 1
+            k = self.xid_key.pop(x, None)
             if k is not None:
                 now = time.time()
-                self.fw.writerow([round(now - self.t0, 3), "refused", *k])
+                self.fw.writerow([round(now - self.t0, 3), "refused", *k, S.name])
                 if self.lean:
-                    self.refused_until[k] = now + 1.0
-                    self.last_install.pop(k, None)
+                    S.refused_until[k] = now + 1.0
+                    S.last_install.pop(k, None)
 
-    def _evictions(self, t, fids, pk):
+    def _evictions(self, S, t, fids, pk):
         """Log entries the switch evicted since the last poll: gone (or reinstalled) without a
         controller delete while their idle timeout could not yet have expired, counted from
         the last poll at which their packet count grew. Entries idle for most of their timeout
         are not counted, so this undercounts evictions slightly."""
         cur, ev = {}, []
         for f, c in zip(fids.tolist(), pk.tolist()):
-            old = self.prev.get(f)
-            same = old is not None and old[3] == self.install_t[f]
-            cur[f] = (c, t if not same or c > old[0] else old[1], self.idle_of.get(f, self.idle),
-                      self.install_t[f])
-        for f, (c, last, idle, inst) in self.prev.items():
+            old = S.prev.get(f)
+            same = old is not None and old[3] == S.install_t[f]
+            cur[f] = (c, t if not same or c > old[0] else old[1], S.idle_of.get(f, self.idle),
+                      S.install_t[f])
+        for f, (c, last, idle, inst) in S.prev.items():
             if f in cur and cur[f][3] == inst:
                 continue
-            if f in self.del_pending:
-                self.del_pending.discard(f)
+            if f in S.del_pending:
+                S.del_pending.discard(f)
                 continue
             if t - last < idle - 1.0:
-                self.cnt["evictions"] = self.cnt.get("evictions", 0) + 1
+                S.cnt["evictions"] = S.cnt.get("evictions", 0) + 1
                 ev.append(f)
                 # Logged at the previous poll: the eviction happened after it, so a return of
                 # the flow at any time after that is harm.
-                self.fw.writerow([round(self.prev_t, 3), "evict", *self.key_of[f]])
-        if self.feq is not None and ev:
-            self.feq.note_evicted(np.array(ev, np.int64), self.prev_t)
-        self.prev, self.prev_t = cur, t
+                self.fw.writerow([round(S.prev_t, 3), "evict", *S.key_of[f], S.name])
+        if S.feq is not None and ev:
+            S.feq.note_evicted(np.array(ev, np.int64), S.prev_t)
+        S.prev, S.prev_t = cur, t
 
     # ------------------------------------------------------------------
     def _monitor(self):
         while True:
             hub.sleep(1.0)
-            if self.dp is not None:
-                p = self.dp.ofproto_parser
-                self.dp.send_msg(p.OFPFlowStatsRequest(self.dp, match=p.OFPMatch(eth_type=0x0800)))
+            for S in self.sw.values():
+                if S.dp is not None:
+                    p = S.dp.ofproto_parser
+                    S.dp.send_msg(p.OFPFlowStatsRequest(S.dp, match=p.OFPMatch(eth_type=0x0800)))
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def stats(self, ev):
+        S = self.sw.get(ev.msg.datapath.id)
+        if S is None:
+            return
         # OVS splits a large flow-stats reply into several parts (about 550 entries
         # each); act only once the last part has arrived.
-        self._parts.extend(ev.msg.body)
+        S._parts.extend(ev.msg.body)
         if ev.msg.flags & ev.msg.datapath.ofproto.OFPMPF_REPLY_MORE:
             return
-        body, self._parts = self._parts, []
+        body, S._parts = S._parts, []
         t = time.time() - self.t0
         t_start = time.perf_counter()
         fids, pk, by, inst = [], [], [], []
         for s in body:
             m = s.match
-            if self.feq is not None and s.priority == DROP_PRIO and "eth_src" in m:
+            if S.feq is not None and s.priority == DROP_PRIO and "eth_src" in m:
                 # Packets the quarantined host's drop rule matched: its refused requests. The
                 # rule is re-added each poll, which may reset its counter.
-                c, old = s.packet_count, self.drop_pk.get(m["eth_src"], 0)
-                self.drop_pk[m["eth_src"]] = c
-                self.feq.note_refused(self._access_port(m["eth_src"]), c - old if c >= old else c, t)
+                c, old = s.packet_count, S.drop_pk.get(m["eth_src"], 0)
+                S.drop_pk[m["eth_src"]] = c
+                port = (self.mac_to_port.get(S.dpid, {}).get(m["eth_src"], OTHER_PORT) if self.tree
+                        else self._access_port(m["eth_src"]))
+                S.feq.note_refused(port, c - old if c >= old else c, t)
                 continue
             if s.priority != PRIO or "ipv4_src" not in m:
                 continue
             proto = m["ip_proto"]
             sp = m.get("tcp_src", m.get("udp_src", 0))
             dpt = m.get("tcp_dst", m.get("udp_dst", 0))
-            fid = self.fid_of.get((m["ipv4_src"], m["ipv4_dst"], proto, sp, dpt))
+            fid = S.fid_of.get((m["ipv4_src"], m["ipv4_dst"], proto, sp, dpt))
             if fid is None:
                 continue
             fids.append(fid)
@@ -444,86 +528,105 @@ class LoftController(app_manager.RyuApp):
         fids = np.array(fids, np.int64)
         pk, by = np.array(pk, np.int64), np.array(by, np.int64)
         if self.evict_mode:
-            self._evictions(t, fids, pk)
+            self._evictions(S, t, fids, pk)
         if self.install_clock == "switch":
             inst = np.round(np.array(inst, float), 1)
         else:
-            inst = self.install_t[fids]
+            inst = S.install_t[fids]
         # Entries the tracker treats as new this poll (history restarted).
-        fresh = int((self.tracker.seen_install[fids] != inst).sum())
-        X, dms, state = self.tracker.observe(t, fids, pk, by, inst,
-                                             self.cnt["installs"] - self._installs_seen)
-        self._installs_seen = self.cnt["installs"]
+        fresh = int((S.tracker.seen_install[fids] != inst).sum())
+        X, dms, state = S.tracker.observe(t, fids, pk, by, inst,
+                                          S.cnt["installs"] - S._installs_seen)
+        S._installs_seen = S.cnt["installs"]
         n = len(fids)
         obs = dict(t=t, fids=fids, count=n, capacity=self.capacity,
-                   table_full_last=self.cnt["table_full"] - self._tf_last,
+                   table_full_last=S.cnt["table_full"] - S._tf_last,
                    pkts=pk, bytes=by, install_t=inst, X=X, dms=dms, state=state)
-        self._tf_last = self.cnt["table_full"]
-        dels, dems = self.defense.on_poll(t, obs) if n else (None, None)
+        S._tf_last = S.cnt["table_full"]
+        dels, dems = S.defense.on_poll(t, obs) if n else (None, None)
         qmacs = []
-        if self.feq is not None:
-            qp = self.feq.q_until > t
+        if S.feq is not None:
+            qp = S.feq.q_until > t
             qp[OTHER_PORT] = False
             if qp.any():
-                macs = {port: mac for mac, port in self.mac_to_port.get(self.access_dpid, {}).items()}
-                qmacs = [macs[q] for q in np.flatnonzero(qp) if q in macs]
+                qmacs = [m for q in np.flatnonzero(qp) for m in self._macs_on(S, q)]
                 if dels is not None and len(dels):
                     dels = np.asarray(dels, np.int64)
-                    gone = qp[self.port_of[dels]]
+                    gone = qp[S.port_of[dels]]
                     for f in dels[gone]:
                         if self.evict_mode:
-                            self.del_pending.add(int(f))
-                        self.last_install.pop(self.key_of[f], None)
-                        self.fw.writerow([round(t, 3), "delete", *self.key_of[f]])
-                        self.cnt["deletes"] += 1
+                            S.del_pending.add(int(f))
+                        S.last_install.pop(S.key_of[f], None)
+                        self.fw.writerow([round(t, 3), "delete", *S.key_of[f], S.name])
+                        S.cnt["deletes"] += 1
                     dels = dels[~gone]
                 for mac in qmacs:
-                    self._delete_host(mac)
+                    self._delete_host(S, mac)
         for arr, kind in ((dems, "demotes"), (dels, "deletes")):
             if arr is not None and len(arr):
                 for f in np.unique(np.asarray(arr, np.int64)):
-                    self._delete(int(f))
-                    self.cnt[kind] += 1
+                    self._delete(S, int(f))
+                    S.cnt[kind] += 1
         if qmacs:
             now = time.time()
             for mac in qmacs:
-                self._drop_rule(self.dp, mac, now, refresh=True)
-        if self.drop_rules and self.pg is not None:
-            # Ports whose quota is full refuse every new flow until the next poll.
-            full = np.flatnonzero(np.isfinite(self.pg.quota) & (self.pg.used >= self.pg.quota))
+                self._drop_rule(S, mac, now, refresh=True)
+        if S.drop_rules and S.pg is not None:
+            # Ports whose quota is full refuse every new flow until the next poll. In the tree
+            # a port may carry several hosts (the core's ports); only hosts refused there in
+            # the last few seconds get the drop rule.
+            full = np.flatnonzero(np.isfinite(S.pg.quota) & (S.pg.used >= S.pg.quota))
             if len(full):
-                macs = {port: mac for mac, port in self.mac_to_port.get(self.access_dpid, {}).items()}
                 now = time.time()
                 for port in full:
-                    if port != OTHER_PORT and port in macs:
-                        self._drop_rule(self.dp, macs[port], now, refresh=True)
+                    if port == OTHER_PORT:
+                        continue
+                    if self.tree:
+                        macs = [m for m, tr in S.ref_mac.get(int(port), {}).items()
+                                if now - tr < DROP_S + 1]
+                    else:
+                        macs = self._macs_on(S, port)[:1]
+                    for mac in macs:
+                        self._drop_rule(S, mac, now, refresh=True)
         ms = 1000 * (time.perf_counter() - t_start)
-        c = self.cnt
+        c = S.cnt
         # Events waiting in this app's queue: a growing backlog means the controller is
         # the bottleneck (Packet-Ins wait here before Open vSwitch starts dropping them).
         backlog = self.events.qsize() if hasattr(self, "events") else -1
-        self.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
-                         c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"],
-                         c["drop_rules"], fresh])
-        self.log.flush()
+        if n:
+            macs, cnt = np.unique([self.mac_of.get(S.key_of[f], "") for f in fids.tolist()],
+                                  return_counts=True)
+            for m_, c_ in zip(macs.tolist(), cnt.tolist()):
+                S.mw.writerow([round(t, 2), m_, c_])
+            S.maclog.flush()
+        S.w.writerow([round(t, 2), n, c["packet_in"], c["table_full"], c["installs"],
+                      c["deletes"], c["demotes"], round(ms, 2), backlog, c["blocked"],
+                      c["drop_rules"], fresh])
+        S.log.flush()
+        if self.tree and S.dpid == self.dpid:
+            tot = {k: sum(x.cnt[k] for x in self.sw.values()) for k in c}
+            self.w.writerow([round(t, 2), n, tot["packet_in"], tot["table_full"], tot["installs"],
+                             tot["deletes"], tot["demotes"], round(ms, 2), backlog, tot["blocked"],
+                             tot["drop_rules"], fresh])
+            self.log.flush()
         self.flowlog.flush()
 
-    def _delete_host(self, mac):
+    def _delete_host(self, S, mac):
         """One delete for all of a host's per-flow entries (and its drop rule, re-added next)."""
-        dp = self.dp
+        dp = S.dp
         p, o = dp.ofproto_parser, dp.ofproto
         dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE, match=p.OFPMatch(
             eth_type=0x0800, eth_src=mac), out_port=o.OFPP_ANY, out_group=o.OFPG_ANY))
-        self.cnt["port_deletes"] += 1
+        S.cnt["port_deletes"] += 1
 
-    def _delete(self, fid):
-        dp = self.dp
+    def _delete(self, S, fid):
+        dp = S.dp
         p, o = dp.ofproto_parser, dp.ofproto
-        k = self.key_of[fid]
-        self.last_install.pop(k, None)        # a demoted flow may reinstall at once
+        k = S.key_of[fid]
+        S.last_install.pop(k, None)           # a demoted flow may reinstall at once
         if self.evict_mode:
-            self.del_pending.add(fid)
+            S.del_pending.add(fid)
         dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE_STRICT, priority=PRIO,
                                  match=self._match(p, k), out_port=o.OFPP_ANY,
                                  out_group=o.OFPG_ANY))
-        self.fw.writerow([round(time.time() - self.t0, 3), "delete", *k])
+        self.fw.writerow([round(time.time() - self.t0, 3), "delete", *k, S.name])
