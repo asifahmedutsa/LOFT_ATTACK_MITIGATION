@@ -1,0 +1,55 @@
+{
+  "created_utc": "2026-11-02T07:40:17.741223+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3",
+    "T1"
+  ],
+  "seeds": [
+    20000,
+    20001,
+    20002,
+    20003,
+    20004,
+    20005,
+    20006,
+    20007,
+    20008,
+    20009
+  ],
+  "duration_s": 600.0,
+  "attack_start_s": 50.0,
+  "defenses": [
+    "none",
+    "ovs-evict",
+    "dms-btt",
+    "ftmaster",
+    "ftop",
+    "flora",
+    "rdefender",
+    "v2.1",
+    "v2.1+evict",
+    "v2.1+hold",
+    "v2.1+portguard"
+  ],
+  "attacks": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "t2-3_p1-3_benign_pool_M1700",
+    "benign"
+  ],
+  "x1": "t2-3_p1-3_benign_pool_M1700",
+  "knobs": "E2 selected.json (FloRa, FTMaster, FTOP), rdefender_fix selected.json, DMS-BTT paper defaults, revision 5 T1 models, flowhold selected.json (v2.1), revision 4b PortGuard; nothing retuned",
+  "hypotheses": {
+    "E3H1": "harm: v2.1 harms fewer benign flows than each published defense over A1-A7 on D1-D3 and T1 at 600 s (paired cluster Wilcoxon over domain x seed, Holm over the five, p < 0.05 and lower mean)",
+    "E3H2": "containment: v2.1 leaves the attacker a smaller average table share than each published defense over A1-A7 (same test)",
+    "E3H3": "adaptive: under X1, v2.1 + PortGuard harms fewer benign flows than every other defense in the table (same test, Holm over the ten)",
+    "E3H4": "T1: v2.1's A1-A7 harm on T1 is lower than each published defense's (descriptive, means only: 10 clusters)"
+  }
+}
