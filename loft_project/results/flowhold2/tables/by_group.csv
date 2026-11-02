@@ -1,0 +1,4 @@
+group,defense,benign_flows_harmed_frac,benign_flows_blocked_frac,benign_demotes,flow_mods,packet_in
+A1-A7,v2.1+pg,1.69,0.21,112.3,80239.6,90401.21
+E9,v2.1+pg,1.94,0.44,795.73,45335.6,202210.92
+benign,v2.1+pg,0.02,0.0,38.08,25554.92,25516.85
