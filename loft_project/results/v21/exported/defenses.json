@@ -15,5 +15,18 @@
     "hold_s": 30.0,
     "tau_s": 60.0
   },
-  "portguard_source": "results/revision4b/selected.json"
+  "portguard_source": "results/revision4b/selected.json",
+  "flowhold": {
+    "v2.1": {
+      "hold_s": 60.0,
+      "strikes": 1,
+      "sticky": true
+    },
+    "v2.1+pg": {
+      "hold_s": 30.0,
+      "strikes": 1,
+      "sticky": true
+    }
+  },
+  "flowhold_source": "results/flowhold/selected.json"
 }
