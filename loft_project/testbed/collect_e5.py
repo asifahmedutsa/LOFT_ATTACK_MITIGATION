@@ -18,7 +18,8 @@ RUNS = os.path.expanduser("~/loft-runs")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results",
                    "testbed_e5" if TAG == "e5c" else f"testbed_{TAG}")
 DEFENSES = ["none", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard",
-            "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict"]
+            "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
+            "dualguard+fairevictq"]
 KEYS = ["benign_harmed_pct", "probe_post_success_pct", "probe_post_connect_ms_median",
         "probe_post_connect_ms_p95", "probe_pre_success_pct", "entries_after_attack",
         "table_full", "packet_in", "installs", "deletes", "demotes", "evictions", "decision_ms",

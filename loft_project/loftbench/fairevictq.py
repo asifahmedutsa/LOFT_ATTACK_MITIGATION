@@ -109,6 +109,10 @@ class QuarantineFairEvict(F.FairEvict):
         self.ev_t[fids] = now
         self.log.extend((now, int(p), 0) for p in self.port[fids])
 
+    def note_refused(self, port, n, now):
+        """The testbed's refused requests: packets its drop rule for the port's host matched."""
+        self.log.extend((now, int(port), 2) for _ in range(int(n)))
+
     def _evict(self, n_needed, cand, last_seen, idle_to, now, install_t):
         v = cand[:0]
         qc = cand[self.q_until[self.port[cand]] > now]

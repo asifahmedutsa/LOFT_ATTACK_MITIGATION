@@ -55,7 +55,7 @@ def main():
                     choices=["none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
-                             "dualguard+fairevict"])
+                             "dualguard+fairevict", "dualguard+fairevictq"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
@@ -110,12 +110,13 @@ def main():
             # Hard limit + refuse: no silent eviction in the no-defense baseline. The eviction
             # defenses let Open vSwitch evict instead: +evict the entry nearest expiry (OVS
             # default), +fairevict the same within the source MAC (host) holding most entries,
-            # i.e. fair eviction with equal shares (loftbench.fairevict, fe-equal-expiry).
+            # i.e. fair eviction with equal shares (loftbench.fairevict, fe-equal-expiry);
+            # +fairevictq adds the controller's churn quarantine (loftbench.fairevictq).
             br = dm["s1"].name
             policy = ["overflow_policy=refuse"]
-            if a.defense in ("dualguard+evict", "dualguard+fairevict"):
+            if a.defense in ("dualguard+evict", "dualguard+fairevict", "dualguard+fairevictq"):
                 policy = ["overflow_policy=evict"]
-            if a.defense == "dualguard+fairevict":
+            if a.defense in ("dualguard+fairevict", "dualguard+fairevictq"):
                 policy.append('groups=["NXM_OF_ETH_SRC[]"]')
             subprocess.check_call(
                 ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",

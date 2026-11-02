@@ -1,0 +1,29 @@
+{
+  "selected": "feq0.8r300h10",
+  "verdict": {
+    "FQ1": true,
+    "FQ2": true,
+    "FQ3": true,
+    "FQ4": true
+  },
+  "e9_ctl_msgs": {
+    "fe-weighted-expiry": 435798,
+    "feq0.8r300h10": 89294,
+    "v2.1+pg": 253157
+  },
+  "fq1": {
+    "mean_diff": -346504.8,
+    "sel_lower": 30,
+    "sel_higher": 0,
+    "p": 1.862645149230957e-09
+  },
+  "e9_worst": {
+    "v2.1+pg": 5.28,
+    "fe-weighted-expiry": 3.98,
+    "feq0.8r300h10": 3.98
+  },
+  "flash_diff": 0.023,
+  "flash_upper95": 0.055,
+  "a1_a7_diff": -0.092,
+  "a1_a7_upper95": -0.04
+}

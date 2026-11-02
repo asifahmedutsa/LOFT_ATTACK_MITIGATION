@@ -12,7 +12,10 @@ Environment variables:
   LOFT_ACCESS_DPID  access switch datapath id; its learned MAC-to-port table gives each
                     flow's ingress (access) port for PortGuard (default: none)
   LOFT_DEFENSE      none | dualguard | dms-btt | portguard | dualguard+portguard |
-                    dualguard+floodguard | ftmaster | ftop | flora | rdefender
+                    dualguard+floodguard | ftmaster | ftop | flora | rdefender | dualguard+hold |
+                    dualguard+portguard+hold | dualguard+evict | dualguard+fairevict |
+                    dualguard+fairevictq (fair eviction with churn quarantine, knobs from
+                    results/fairevictq/selected.json)
   LOFT_MODEL_DIR    directory with v21_<D>.json, dmsB_state_<D>.json, dmsB_flow_<D>.json
                     and defenses.json (see loftbench.export_testbed); for the published
                     baselines also {ftmaster,ftop}_{state,rule}_<D>.json, flora_rule_<D>.json
@@ -58,6 +61,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
 from loftbench.defenses import DMSBTT, DualGuard, FloodGuard, PortGuard  # noqa: E402
+from loftbench.fairevictq import QuarantineFairEvict, _parse as feq_parse  # noqa: E402
 from loftbench.features import FeatureTracker  # noqa: E402
 from loftbench.sim import Defense  # noqa: E402
 from loftbench.treejson import TreeJSON  # noqa: E402
@@ -70,7 +74,8 @@ DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and 
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
 DEFENSES = ("none", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
-            "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict")
+            "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
+            "dualguard+fairevictq")
 
 
 def ip2int(s):
@@ -142,6 +147,12 @@ def build_defense(name, model_dir, domain, model_path=None):
         # The eviction variants differ only in the switch's overflow policy (run_testbed.py).
         dg.name = name
         return dg
+    if name == "dualguard+fairevictq":
+        # Switch eviction as +fairevict, plus the quarantine selected in the simulator.
+        sel = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
+                                          "results", "fairevictq", "selected.json")))["selected"]
+        theta, r_min, hold = feq_parse(sel)
+        return QuarantineFairEvict(dg, theta=theta, r_min=r_min, hold_s=hold, name=name)
     if name == "dualguard+floodguard":
         fg = json.load(open(os.path.join(model_dir, "baselines.json")))["floodguard"]
         return FloodGuard(dg, name=name, **fg)
@@ -164,11 +175,11 @@ class LoftController(app_manager.RyuApp):
                                      os.environ.get("LOFT_MODEL"))
         self.mac_to_port = {}
         # Fair eviction groups the switch's entries by source MAC, so they must match on it.
-        self.match_mac = self.defense_name == "dualguard+fairevict"
+        self.match_mac = self.defense_name in ("dualguard+fairevict", "dualguard+fairevictq")
         self.mac_of = {}
         # Switch eviction (overflow_policy=evict): Open vSwitch does not report evictions to an
         # OpenFlow 1.3 controller, so the 1 s polls infer them (_evictions).
-        self.evict_mode = self.defense_name.endswith("evict")
+        self.evict_mode = "evict" in self.defense_name
         self.del_pending, self.idle_of, self.prev, self.prev_t = set(), {}, {}, 0.0
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
@@ -182,15 +193,19 @@ class LoftController(app_manager.RyuApp):
         self.xid_key = {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
         self.pg = self.defense if isinstance(self.defense, PortGuard) else None
-        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and self.pg is not None
-        self.drop_until, self.drop_xids = {}, set()
+        # Churn quarantine: a quarantined host's entries go with one delete matching its MAC,
+        # and a drop rule keeps its new flows from the controller (as PortGuard's quota).
+        self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
+        self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and (
+            self.pg is not None or self.feq is not None)
+        self.drop_until, self.drop_xids, self.drop_pk = {}, set(), {}
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = 0
         self._tf_last = 0
         self.dp = None
         self.t0 = time.time()
         self.cnt = dict(packet_in=0, table_full=0, installs=0, deletes=0, demotes=0, blocked=0,
-                        drop_rules=0, drop_rule_full=0)
+                        drop_rules=0, drop_rule_full=0, port_deletes=0)
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
         # Wall-clock origin of the log's t column, to align it with the traffic drivers.
         with open(log.replace(".csv", "_t0.txt"), "w") as f:
@@ -363,7 +378,7 @@ class LoftController(app_manager.RyuApp):
         controller delete while their idle timeout could not yet have expired, counted from
         the last poll at which their packet count grew. Entries idle for most of their timeout
         are not counted, so this undercounts evictions slightly."""
-        cur = {}
+        cur, ev = {}, []
         for f, c in zip(fids.tolist(), pk.tolist()):
             old = self.prev.get(f)
             same = old is not None and old[3] == self.install_t[f]
@@ -377,9 +392,12 @@ class LoftController(app_manager.RyuApp):
                 continue
             if t - last < idle - 1.0:
                 self.cnt["evictions"] = self.cnt.get("evictions", 0) + 1
+                ev.append(f)
                 # Logged at the previous poll: the eviction happened after it, so a return of
                 # the flow at any time after that is harm.
                 self.fw.writerow([round(self.prev_t, 3), "evict", *self.key_of[f]])
+        if self.feq is not None and ev:
+            self.feq.note_evicted(np.array(ev, np.int64), self.prev_t)
         self.prev, self.prev_t = cur, t
 
     # ------------------------------------------------------------------
@@ -403,6 +421,13 @@ class LoftController(app_manager.RyuApp):
         fids, pk, by, inst = [], [], [], []
         for s in body:
             m = s.match
+            if self.feq is not None and s.priority == DROP_PRIO and "eth_src" in m:
+                # Packets the quarantined host's drop rule matched: its refused requests. The
+                # rule is re-added each poll, which may reset its counter.
+                c, old = s.packet_count, self.drop_pk.get(m["eth_src"], 0)
+                self.drop_pk[m["eth_src"]] = c
+                self.feq.note_refused(self._access_port(m["eth_src"]), c - old if c >= old else c, t)
+                continue
             if s.priority != PRIO or "ipv4_src" not in m:
                 continue
             proto = m["ip_proto"]
@@ -434,12 +459,35 @@ class LoftController(app_manager.RyuApp):
                    pkts=pk, bytes=by, install_t=inst, X=X, dms=dms, state=state)
         self._tf_last = self.cnt["table_full"]
         dels, dems = self.defense.on_poll(t, obs) if n else (None, None)
+        qmacs = []
+        if self.feq is not None:
+            qp = self.feq.q_until > t
+            qp[OTHER_PORT] = False
+            if qp.any():
+                macs = {port: mac for mac, port in self.mac_to_port.get(self.access_dpid, {}).items()}
+                qmacs = [macs[q] for q in np.flatnonzero(qp) if q in macs]
+                if dels is not None and len(dels):
+                    dels = np.asarray(dels, np.int64)
+                    gone = qp[self.port_of[dels]]
+                    for f in dels[gone]:
+                        if self.evict_mode:
+                            self.del_pending.add(int(f))
+                        self.last_install.pop(self.key_of[f], None)
+                        self.fw.writerow([round(t, 3), "delete", *self.key_of[f]])
+                        self.cnt["deletes"] += 1
+                    dels = dels[~gone]
+                for mac in qmacs:
+                    self._delete_host(mac)
         for arr, kind in ((dems, "demotes"), (dels, "deletes")):
             if arr is not None and len(arr):
                 for f in np.unique(np.asarray(arr, np.int64)):
                     self._delete(int(f))
                     self.cnt[kind] += 1
-        if self.drop_rules:
+        if qmacs:
+            now = time.time()
+            for mac in qmacs:
+                self._drop_rule(self.dp, mac, now, refresh=True)
+        if self.drop_rules and self.pg is not None:
             # Ports whose quota is full refuse every new flow until the next poll.
             full = np.flatnonzero(np.isfinite(self.pg.quota) & (self.pg.used >= self.pg.quota))
             if len(full):
@@ -458,6 +506,14 @@ class LoftController(app_manager.RyuApp):
                          c["drop_rules"], fresh])
         self.log.flush()
         self.flowlog.flush()
+
+    def _delete_host(self, mac):
+        """One delete for all of a host's per-flow entries (and its drop rule, re-added next)."""
+        dp = self.dp
+        p, o = dp.ofproto_parser, dp.ofproto
+        dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE, match=p.OFPMatch(
+            eth_type=0x0800, eth_src=mac), out_port=o.OFPP_ANY, out_group=o.OFPG_ANY))
+        self.cnt["port_deletes"] += 1
 
     def _delete(self, fid):
         dp = self.dp
