@@ -1,0 +1,23 @@
+=== [1/9] fe_D1_E9P_dualguard-fairevictq_s4100 00:01:46
+ decision_ms mean 132, max 1195  probe_post_success_pct 10.92  probe_post_connect_ms_median 114.4  benign_harmed_pct 1.98
+mv: cannot move '/home/utsa/loft-runs/fe_D1_E9P_dualguard-fairevictq_s4101' to '/home/utsa/loft-runs/_failed/fe_D1_E9P_dualguard-fairevictq_s4101.1793642861': Permission denied
+=== [2/9] fe_D1_E9P_dualguard-fairevictq_s4101 00:07:41
+    FAILED (exit 2); see /home/utsa/loft-runs/fe_D1_E9P_dualguard-fairevictq_s4101.log
+=== [3/9] fe_D1_E9P_dualguard-fairevictq_s4102 00:07:41
+ decision_ms mean 132, max 907  probe_post_success_pct 10.87  probe_post_connect_ms_median 226.2  benign_harmed_pct 2.78
+=== [4/9] fe_D1_A2_dualguard-fairevictq_s4100 00:13:26
+ decision_ms mean 44, max 892  probe_post_success_pct 35.08  probe_post_connect_ms_median 50.5  benign_harmed_pct 0.39
+=== [5/9] fe_D1_A2_dualguard-fairevictq_s4101 00:18:43
+ decision_ms mean 64, max 1292  probe_post_success_pct 18.25  probe_post_connect_ms_median 126.7  benign_harmed_pct 0.64
+=== [6/9] fe_D1_A2_dualguard-fairevictq_s4102 00:24:27
+ decision_ms mean 59, max 1330  probe_post_success_pct 30.29  probe_post_connect_ms_median 82.5  benign_harmed_pct 0.59
+=== [7/9] fe_D1_F4_dualguard-fairevictq_s4100 00:30:28
+ decision_ms mean 68, max 971  probe_post_success_pct 59.22  probe_post_connect_ms_median 47.1  benign_harmed_pct 0.32
+=== [8/9] fe_D1_F4_dualguard-fairevictq_s4101 00:36:06
+ decision_ms mean 38, max 492  probe_post_success_pct 60.97  probe_post_connect_ms_median 52.5  benign_harmed_pct 0.55
+=== [9/9] fe_D1_F4_dualguard-fairevictq_s4102 00:41:50
+ decision_ms mean 24, max 392  probe_post_success_pct 89.32  probe_post_connect_ms_median 44.6  benign_harmed_pct 0.06
+matrix done 00:47:03
+=== [2/9] fe_D1_E9P_dualguard-fairevictq_s4101 00:47:09
+ decision_ms mean 142, max 1108  probe_post_success_pct 13.2  probe_post_connect_ms_median 48.5  benign_harmed_pct 2.76
+matrix done 00:52:56
