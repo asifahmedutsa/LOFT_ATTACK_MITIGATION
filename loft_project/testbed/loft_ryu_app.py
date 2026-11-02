@@ -29,8 +29,9 @@ Environment variables:
                     port's quota is full, a drop rule for that port's host (by source MAC,
                     priority DROP_PRIO, hard timeout DROP_S) keeps its new flows from reaching
                     the controller; refreshed at every poll and on every refused Packet-In.
-                    0 = refuse in the controller only. The DMS-BTT blocklist is per flow (a
-                    drop rule would take the entry it frees), so it always refuses in the
+                    0 = refuse in the controller only. The DMS-BTT blocklist and the flow hold
+                    are per flow (a drop rule would take the entry it frees, and a per-host
+                    rule would block the host's other flows), so they always refuse in the
                     controller.
   LOFT_INSTALL_CLOCK controller (default) = each entry's install time is when the controller
                     sent its flow-mod; switch = poll time minus the entry's duration (the
@@ -274,7 +275,11 @@ class LoftController(app_manager.RyuApp):
                 # the simulator.
                 self.cnt["blocked"] += 1
                 self.fw.writerow([round(t, 3), "blocked", *k])
-                if self.drop_rules and self.port_of[fid] != OTHER_PORT:
+                # Only a PortGuard quota refusal blocks the whole host; a per-flow refusal (the
+                # flow hold of a demoted flow) stays in the controller, like DMS-BTT's blocklist.
+                held = getattr(self.pg.inner, "held_until", None) if self.pg is not None else None
+                if (self.drop_rules and self.port_of[fid] != OTHER_PORT
+                        and (held is None or held[fid] <= t)):
                     self._drop_rule(dp, eth.src, now)
                 return
             else:
