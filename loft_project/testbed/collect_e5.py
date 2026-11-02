@@ -15,7 +15,8 @@ import sys
 TAG = sys.argv[1] if len(sys.argv) > 1 else "e5c"
 RUNS = os.path.expanduser("~/loft-runs")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results", "testbed_e5")
-DEFENSES = ["none", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard"]
+DEFENSES = ["none", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard",
+            "dualguard+hold", "dualguard+portguard+hold"]
 KEYS = ["benign_harmed_pct", "probe_post_success_pct", "probe_post_connect_ms_median",
         "probe_post_connect_ms_p95", "probe_pre_success_pct", "entries_after_attack",
         "table_full", "packet_in", "installs", "deletes", "demotes", "decision_ms", "seconds"]
