@@ -1,0 +1,5 @@
+defense,flash2/A2,flash2/benign,flash4/benign,normal/A1,normal/A2,normal/A3,normal/A4,normal/A5,normal/A6,normal/A7,normal/benign,normal/t2-3_p1-1_benign_spoof_M1700,normal/t2-3_p1-3_benign_pool_M1700,normal/t2-3_p1-3_benign_pool_M600
+fe-weighted-expiry,0.61,0.53,1.23,0.47,0.5,0.53,0.81,0.52,0.76,0.5,0.04,0.33,0.59,4.02
+v2.1,4.0,1.77,11.65,1.48,1.33,1.58,2.8,1.45,0.92,1.19,0.04,40.26,54.28,4.26
+v2.1+evict,0.66,0.55,1.39,0.49,0.51,0.55,0.87,0.53,0.76,0.52,0.04,19.87,20.25,4.01
+v2.1+pg,6.13,2.49,13.34,1.81,1.74,1.96,1.89,1.83,0.92,1.42,0.07,1.87,1.53,4.82

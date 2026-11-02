@@ -1,0 +1,9 @@
+defense,flash_pct,a1_a7_pct,e9_worst_pct,benign_pct,flow_mods,eligible
+v2.1+pg,7.611,1.368,4.57,0.039,61553,False
+v2.1+evict,0.991,0.642,20.48,0.039,103609,False
+fe-equal-expiry,1.545,0.838,3.77,0.039,118131,True
+fe-equal-rate2,2.716,1.144,3.86,0.039,117500,True
+fe-equal-rate5,2.901,1.147,3.86,0.039,117054,True
+fe-weighted-expiry,0.913,0.621,3.77,0.039,118203,True
+fe-weighted-rate2,1.426,0.626,3.83,0.039,117528,True
+fe-weighted-rate5,1.45,0.625,3.83,0.039,117046,True
