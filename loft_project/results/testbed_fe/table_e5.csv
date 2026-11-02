@@ -1,0 +1,10 @@
+defense,n,variant,benign_harmed_pct_max,benign_harmed_pct_mean,benign_harmed_pct_min,decision_ms_max,decision_ms_mean,decision_ms_min,installs_max,installs_mean,installs_min,probe_post_connect_ms_median_max,probe_post_connect_ms_median_mean,probe_post_connect_ms_median_min,probe_post_success_pct_max,probe_post_success_pct_mean,probe_post_success_pct_min
+dualguard+portguard,3,A2,0.46,0.27,0.11,41.0,33.0,29.0,99931.0,97728.33,95330.0,246.7,205.87,170.7,44.19,38.91,35.66
+dualguard+evict,3,A2,0.11,0.07,0.04,38.0,37.0,36.0,103784.0,102413.0,101010.0,220.9,195.33,166.5,44.77,43.6,42.05
+dualguard+fairevict,3,A2,0.39,0.35,0.31,47.0,42.33,38.0,98963.0,96608.33,94353.0,325.6,296.67,260.5,36.24,34.69,32.95
+dualguard+portguard,3,E9P,5.41,5.22,4.92,77.0,73.33,68.0,70638.0,66867.67,64104.0,246.0,191.87,139.2,22.67,20.15,17.05
+dualguard+evict,3,E9P,6.34,6.14,5.86,56.0,53.0,51.0,89646.0,87878.0,84439.0,249.6,217.87,181.5,18.41,17.31,16.28
+dualguard+fairevict,3,E9P,2.03,1.66,1.42,84.0,81.33,76.0,75408.0,69831.0,63030.0,252.5,248.87,246.5,14.53,13.89,13.57
+dualguard+portguard,3,F4,6.51,5.1,2.6,30.0,23.0,14.0,47228.0,41255.0,30984.0,162.3,109.67,44.8,94.77,75.52,59.88
+dualguard+evict,3,F4,0.28,0.19,0.08,50.0,38.33,23.0,50674.0,42136.67,32132.0,51.1,45.83,42.7,91.28,75.19,64.34
+dualguard+fairevict,3,F4,0.31,0.25,0.15,58.0,46.33,28.0,52728.0,43412.33,33256.0,61.8,53.4,44.5,87.21,71.25,60.85
