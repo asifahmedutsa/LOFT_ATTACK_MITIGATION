@@ -15,7 +15,7 @@ Environment variables:
                     dualguard+floodguard | ftmaster | ftop | flora | rdefender | dualguard+hold |
                     dualguard+portguard+hold | dualguard+evict | dualguard+fairevict |
                     dualguard+fairevictq (fair eviction with churn quarantine, knobs from
-                    results/fairevictq/selected.json)
+                    LOFT_MODEL_DIR/fairevictq_selected.json)
   LOFT_MODEL_DIR    directory with v21_<D>.json, dmsB_state_<D>.json, dmsB_flow_<D>.json
                     and defenses.json (see loftbench.export_testbed); for the published
                     baselines also {ftmaster,ftop}_{state,rule}_<D>.json, flora_rule_<D>.json
@@ -149,8 +149,9 @@ def build_defense(name, model_dir, domain, model_path=None):
         return dg
     if name == "dualguard+fairevictq":
         # Switch eviction as +fairevict, plus the quarantine selected in the simulator.
-        sel = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..",
-                                          "results", "fairevictq", "selected.json")))["selected"]
+        # results/fairevictq/selected.json, copied next to the exported models (the installed
+        # testbed snapshot carries only those).
+        sel = json.load(open(os.path.join(model_dir, "fairevictq_selected.json")))["selected"]
         theta, r_min, hold = feq_parse(sel)
         return QuarantineFairEvict(dg, theta=theta, r_min=r_min, hold_s=hold, name=name)
     if name == "dualguard+floodguard":
