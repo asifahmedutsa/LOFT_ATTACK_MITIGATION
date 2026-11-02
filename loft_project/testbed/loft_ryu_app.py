@@ -165,7 +165,11 @@ class LoftController(app_manager.RyuApp):
         self.mac_to_port = {}
         # Fair eviction groups the switch's entries by source MAC, so they must match on it.
         self.match_mac = self.defense_name == "dualguard+fairevict"
-        self.mac_of, self.del_pending = {}, set()
+        self.mac_of = {}
+        # Switch eviction (overflow_policy=evict): Open vSwitch does not report evictions to an
+        # OpenFlow 1.3 controller, so the 1 s polls infer them (_evictions).
+        self.evict_mode = self.defense_name.endswith("evict")
+        self.del_pending, self.idle_of, self.prev, self.prev_t = set(), {}, {}, 0.0
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
         self.tracker = FeatureTracker(MAX_FLOWS, self.src_of, self.capacity, 1.0)
@@ -296,6 +300,7 @@ class LoftController(app_manager.RyuApp):
                 self.xid_key[fm.xid] = k          # attribute a TABLE_FULL error to its flow
                 self.last_install[k] = now
                 self.install_t[fid] = round(t, 3)
+                self.idle_of[fid] = max(idle, 1)
                 self.cnt["installs"] += 1
                 self.fw.writerow([round(t, 3), "install", *k])
                 # Packet-Out through the table so the triggering packet is counted.
@@ -335,27 +340,6 @@ class LoftController(app_manager.RyuApp):
         self.cnt["drop_rules"] += 1
         self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", ""])
 
-    @set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
-    def flow_removed(self, ev):
-        """Log switch evictions: Open vSwitch reports an evicted entry as removed by delete
-        (OpenFlow 1.3 has no eviction reason), so a delete the controller did not send is one."""
-        msg = ev.msg
-        dp = msg.datapath
-        if dp.id != self.dpid or msg.reason != dp.ofproto.OFPRR_DELETE:
-            return
-        m = msg.match
-        if m.get("ipv4_src") is None:
-            return
-        proto = m.get("ip_proto", 0)
-        sp = m.get("tcp_src", m.get("udp_src", 0))
-        dpt = m.get("tcp_dst", m.get("udp_dst", 0))
-        k = (m["ipv4_src"], m["ipv4_dst"], proto, sp, dpt)
-        if k in self.del_pending:
-            self.del_pending.discard(k)
-            return
-        self.cnt["evictions"] = self.cnt.get("evictions", 0) + 1
-        self.fw.writerow([round(time.time() - self.t0, 3), "evict", *k])
-
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
         o = ev.msg.datapath.ofproto
@@ -373,6 +357,30 @@ class LoftController(app_manager.RyuApp):
                 if self.lean:
                     self.refused_until[k] = now + 1.0
                     self.last_install.pop(k, None)
+
+    def _evictions(self, t, fids, pk):
+        """Log entries the switch evicted since the last poll: gone (or reinstalled) without a
+        controller delete while their idle timeout could not yet have expired, counted from
+        the last poll at which their packet count grew. Entries idle for most of their timeout
+        are not counted, so this undercounts evictions slightly."""
+        cur = {}
+        for f, c in zip(fids.tolist(), pk.tolist()):
+            old = self.prev.get(f)
+            same = old is not None and old[3] == self.install_t[f]
+            cur[f] = (c, t if not same or c > old[0] else old[1], self.idle_of.get(f, self.idle),
+                      self.install_t[f])
+        for f, (c, last, idle, inst) in self.prev.items():
+            if f in cur and cur[f][3] == inst:
+                continue
+            if f in self.del_pending:
+                self.del_pending.discard(f)
+                continue
+            if t - last < idle - 1.0:
+                self.cnt["evictions"] = self.cnt.get("evictions", 0) + 1
+                # Logged at the previous poll: the eviction happened after it, so a return of
+                # the flow at any time after that is harm.
+                self.fw.writerow([round(self.prev_t, 3), "evict", *self.key_of[f]])
+        self.prev, self.prev_t = cur, t
 
     # ------------------------------------------------------------------
     def _monitor(self):
@@ -409,6 +417,8 @@ class LoftController(app_manager.RyuApp):
             inst.append(t - s.duration_sec - s.duration_nsec * 1e-9)
         fids = np.array(fids, np.int64)
         pk, by = np.array(pk, np.int64), np.array(by, np.int64)
+        if self.evict_mode:
+            self._evictions(t, fids, pk)
         if self.install_clock == "switch":
             inst = np.round(np.array(inst, float), 1)
         else:
@@ -454,7 +464,8 @@ class LoftController(app_manager.RyuApp):
         p, o = dp.ofproto_parser, dp.ofproto
         k = self.key_of[fid]
         self.last_install.pop(k, None)        # a demoted flow may reinstall at once
-        self.del_pending.add(k)
+        if self.evict_mode:
+            self.del_pending.add(fid)
         dp.send_msg(p.OFPFlowMod(datapath=dp, command=o.OFPFC_DELETE_STRICT, priority=PRIO,
                                  match=self._match(p, k), out_port=o.OFPP_ANY,
                                  out_group=o.OFPG_ANY))
