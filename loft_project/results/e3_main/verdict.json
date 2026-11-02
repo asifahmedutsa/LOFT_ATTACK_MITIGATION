@@ -1,0 +1,21 @@
+{
+  "verdict": {
+    "E3H1": true,
+    "E3H2": true,
+    "E3H3": true,
+    "E3H4": false
+  },
+  "e3h4_t1_harm": {
+    "none": 65.86,
+    "ovs-evict": 5.44,
+    "dms-btt": 11.53,
+    "ftmaster": 20.55,
+    "ftop": 8.2,
+    "flora": 34.12,
+    "rdefender": 10.35,
+    "v2.1": 12.54,
+    "v2.1+evict": 1.44,
+    "v2.1+hold": 6.27,
+    "v2.1+portguard": 4.27
+  }
+}
