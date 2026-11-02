@@ -33,6 +33,17 @@ test    v2.1 + PortGuard, fair eviction and the selection on fresh seeds 24000-2
     PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.fairevictq --stages prereg,select,test,report
 
 Writes results/fairevictq/.
+
+Round 2 (--round 2, results/fairevictq2/): round 1's selection (r_min 300, theta 0.8) never fired
+on the testbed. The Ryu controller installs only about 150-200 flows/s in all, so an attacker's
+evicted entries came back 50-120 times per 10 s, not the simulator's thousands, and only about
+half of them within 10 s (median 4.9 s; the rest lost or delayed in the controller queue). The
+thresholds are recalibrated to what both see, checked before this round on round 1's validation
+data and on the earlier testbed runs (results/testbed_fe, seeds 4100-4102: plain fair eviction
+and round 1): r_min {30, 60} x theta {0.3, 0.5}, hold 10 s. Every candidate catches all 30
+attacker episodes on validation seeds and 76-81 % of attacker 10 s windows on the testbed,
+against at most 1 of 2,092 benign simulator windows and 1 benign testbed window. Same cells,
+eligibility, selection and hypotheses as round 1, fresh seeds 25000-25009.
 """
 import os
 
@@ -236,7 +247,7 @@ def stage_prereg():
                   f"{FE} + {E9_MARGIN}, A1-A7 mean harm <= {FE} + {HARM_MARGIN}; among eligible, "
                   "fewest mean controller messages over E9's attacks; ties within 2 %: higher "
                   "r_min, then higher theta, then shorter hold; none eligible: report, no test",
-        test_defenses=[PG, FE, "<selected>"], hypotheses=HYPOTHESES,
+        test_defenses=[PG, FE, "<selected>"], hypotheses=HYPOTHESES, grid=GRID,
         testbed="then D1, A2 / E9P / F4, seeds 4100-4102 against results/testbed_fe; primary "
                 "testbed measure: benign impact (harm + unanswered first packets) under E9P"))
     h = hashlib.sha256(open(path, "rb").read()).hexdigest()
@@ -347,7 +358,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stages", default="prereg,select,test,report")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--round", type=int, default=1)
     a = ap.parse_args()
+    if a.round == 2:
+        global OUT, GRID, TEST_SEEDS
+        OUT, TEST_SEEDS = "results/fairevictq2", list(range(25000, 25010))
+        GRID = list(itertools.product((0.3, 0.5), (30, 60), (10.0,)))
     os.makedirs(OUT, exist_ok=True)
     t0 = time.time()
     for name, fn in (("prereg", stage_prereg), ("select", lambda: stage_select(a.workers)),
