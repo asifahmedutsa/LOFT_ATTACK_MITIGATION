@@ -21,6 +21,15 @@ runs only where a testbed run needs a selection step, plus quarantine round 2 (k
 | R11 | "Day 1 does five things; the schedule has no slack." | minor | 10-day schedule, 20 % rerun slack; priority tiers so cuts are predetermined |
 | R12 | "Running each switch's own defense instance is your adaptation of single-switch baselines." | minor | Stated as a deviation for every baseline; FTMaster's Napnet also runs per-switch instances |
 
+## 0a. Gate outcomes (2026-11-03)
+
+- G1 passed (results/gate_g1): SIFT 16.3 %, TableGuard 16.8 % benign harm, between none 50.7 %
+  and DMS-BTT 4.4 %; attack shares 45 % vs DMS-BTT's paper 38 % / 36 %.
+- G2 failed in the simulator (results/fairevictq2): no round-2 setting kept flash-crowd harm within
+  fair eviction's + 0.25 points (1.27-3.60 % vs 0.91 %), so no test; the Q2 testbed block is
+  dropped and fair eviction is not in the final system.
+- G3: final system frozen in results/final_system.json: dualguard+portguard+hostid.
+
 ## 0b. Adopted schedule: the 3-day core (2026-11-03)
 
 The user chose the 3-day core. It keeps every critical fix (R1-R4) and cuts the rest:

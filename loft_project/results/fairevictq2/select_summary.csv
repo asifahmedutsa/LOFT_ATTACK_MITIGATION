@@ -1,0 +1,6 @@
+defense,flash_pct,a1_a7_pct,e9_worst_pct,benign_pct,e9_ctl_msgs,q_events_flash,eligible,theta,r_min,hold
+fe-weighted-expiry,0.913,0.621,3.77,0.039,432609,0.0,False,0.0,0,0.0
+feq0.3r30h10,3.601,0.402,3.77,0.039,96757,0.93,False,0.3,30,10.0
+feq0.3r60h10,2.742,0.432,3.77,0.039,96304,0.89,False,0.3,60,10.0
+feq0.5r30h10,2.587,0.404,3.77,0.039,93274,0.85,False,0.5,30,10.0
+feq0.5r60h10,1.265,0.437,3.77,0.039,93274,0.74,False,0.5,60,10.0
