@@ -397,6 +397,70 @@ class PortGuard(Defense):
         return dels, dems
 
 
+class EvictBlock(Defense):
+    """Detect, evict, block (loftbench.evictblock, where the rule and its selection are
+    documented). Every poll while the table is >= rho full, or a released host is on probation:
+    evict every entry scoring >= tau; block a host whose evictions in the last window_s are
+    >= n_min and >= f_min x the median host's (an outlier among the hosts on the switch) for
+    block_s x 2^(k-1) at its k-th block (at most MAX_BLOCK_S), deleting its entries; after
+    release, probation for 2 window_s. Run inside PortGuard (mode "full") as in the paper."""
+    needs_features = True
+    MAX_BLOCK_S = 240.0
+
+    def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
+                 target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0):
+        self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
+        self.rho, self.h_crit, self.target = rho, h_crit, target
+        self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
+        self.admit_filter = self._admit
+
+    def reset(self, ctx):
+        self.port = ctx["flow_port"]
+        n_ports = int(self.port.max()) + 1
+        self.blocked_until = np.full(n_ports, -np.inf)
+        self.probation_until = np.full(n_ports, -np.inf)
+        self.hist = []                       # (t, evicted per port, flagged fraction per port)
+        self.blocks = []                     # (t, port)
+        self.n_blocks = np.zeros(n_ports, int)
+        self.share_max = np.zeros(n_ports)   # diagnostics: highest windowed share per host
+        self.ev_max = np.zeros(n_ports)      # diagnostics: most evictions in a window per host
+        self.seen = np.zeros(n_ports, bool)  # hosts that have held an entry
+
+    def _admit(self, fids, now):
+        return self.blocked_until[self.port[fids]] <= now
+
+    def on_poll(self, t, obs):
+        cap, n, fids = obs["capacity"], obs["count"], obs["fids"]
+        n_ports = len(self.blocked_until)
+        released = (self.blocked_until <= t) & (self.blocked_until > t - obs.get("dt", 1.0) - 1e-9)
+        self.probation_until[released] = t + 2 * self.window_s
+        if n == 0 or (n / cap < self.rho and not (self.probation_until > t).any()):
+            self.hist.append((t, np.zeros(n_ports)))
+            return None, None
+        X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
+        s = self.model.predict_proba(X)
+        flag = s >= self.tau
+        if n / cap < self.rho:               # below pressure: act on probation hosts only
+            flag &= self.probation_until[self.port[fids]] > t
+        p = self.port[fids]
+        ev = np.bincount(p[flag], minlength=n_ports).astype(float)
+        self.seen |= np.bincount(p, minlength=n_ports) > 0
+        self.hist.append((t, ev))
+        self.hist = [h for h in self.hist if h[0] > t - self.window_s]
+        ev_w = np.sum([h[1] for h in self.hist], axis=0)
+        med = float(np.median(ev_w[self.seen])) if self.seen.any() else 0.0
+        share = ev_w / max(med, 1.0)         # evictions relative to the median host
+        self.share_max = np.maximum(self.share_max, np.where(ev_w >= self.n_min, share, 0.0))
+        self.ev_max = np.maximum(self.ev_max, ev_w)
+        new_block = (ev_w >= self.n_min) & (share >= self.f_min) & (self.blocked_until <= t)
+        for q in np.flatnonzero(new_block):
+            self.n_blocks[q] += 1
+            self.blocked_until[q] = t + min(self.block_s * 2 ** (self.n_blocks[q] - 1), self.MAX_BLOCK_S)
+            self.blocks.append((t, int(q)))
+        gone = flag | (self.blocked_until[p] > t)
+        return fids[gone], None
+
+
 class FloodGuard(Defense):
     """Per-port new-flow rate cap against high-rate floods (wraps another defense).
 
