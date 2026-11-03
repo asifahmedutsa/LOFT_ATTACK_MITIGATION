@@ -350,3 +350,51 @@ class RDefender(Defense):
             if len(own) and k > 0:
                 dels.append(self.rng.choice(own, min(k, len(own)), replace=False))
         return (np.concatenate(dels) if dels else None), None
+
+
+class SIFT(Defense):
+    """SIFT, as the comparison papers use it (FTMaster, FTODefender, FTOP, FloRa, rDefender,
+    DMS-BTT): sampling-based eviction of low-rate entries. No paper we compare against states
+    its parameters, so these follow the one-line description: once the table is at least
+    `trigger` full, each poll samples a fraction `q` of the entries at random and deletes the
+    sampled entries older than `min_age` s whose mean rate (packets / age) is below `r_low`
+    packets/s. q and r_low are tuned on validation seeds (gate G1, docs/testbed_plan.md)."""
+    name = "sift"
+
+    def __init__(self, q=0.1, r_low=0.5, trigger=0.8, min_age=2.0, seed=0):
+        self.q, self.r_low, self.trigger, self.min_age, self.seed = q, r_low, trigger, min_age, seed
+
+    def reset(self, ctx):
+        self.rng = np.random.default_rng(self.seed)
+
+    def on_poll(self, t, obs):
+        fids = obs["fids"]
+        if obs["count"] < self.trigger * obs["capacity"] or not len(fids):
+            return None, None
+        pick = self.rng.random(len(fids)) < self.q
+        age = np.maximum(t - obs["install_t"], 1e-3)
+        low = pick & (age >= self.min_age) & (obs["pkts"] / age < self.r_low)
+        return fids[low], None
+
+
+class TableGuard(Defense):
+    """TableGuard, as the comparison papers use it (FTODefender, FTOP, rDefender, FTShield,
+    DMS-BTT): table-usage-triggered eviction of small, long-lived rules. Parameters are not
+    stated in the papers we compare against: above `high` usage, entries older than `min_age`
+    s with mean rate below `r_small` packets/s are deleted, oldest first, until usage is back
+    to `low`. min_age and r_small are tuned on validation seeds (gate G1)."""
+    name = "tableguard"
+
+    def __init__(self, min_age=20.0, r_small=0.5, high=0.8, low=0.7):
+        self.min_age, self.r_small, self.high, self.low = min_age, r_small, high, low
+
+    def on_poll(self, t, obs):
+        fids, cap = obs["fids"], obs["capacity"]
+        if obs["count"] < self.high * cap or not len(fids):
+            return None, None
+        age = np.maximum(t - obs["install_t"], 1e-3)
+        cand = np.flatnonzero((age >= self.min_age) & (obs["pkts"] / age < self.r_small))
+        n = int(obs["count"] - self.low * cap)
+        if n <= 0 or not len(cand):
+            return None, None
+        return fids[cand[np.argsort(-age[cand], kind="stable")[:n]]], None

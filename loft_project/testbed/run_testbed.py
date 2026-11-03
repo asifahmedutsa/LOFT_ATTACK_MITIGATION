@@ -86,6 +86,7 @@ def main():
                     choices=["none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
+                             "dualguard+portguard+hostid", "portguard+hostid",
                              "dualguard+fairevict", "dualguard+fairevictq"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
@@ -179,6 +180,15 @@ def main():
                 ["pidof", "ovs-vswitchd"]).decode().split()
             diag = subprocess.Popen(f"pidstat -u -h -p {','.join(pids)} 1 > {a.out}/cpu_pidstat.txt",
                                     shell=True)
+            # Memory (RSS) of the same processes, every 5 s.
+            subprocess.Popen(f"pidstat -r -h -p {','.join(pids)} 5 > {a.out}/mem_pidstat.txt", shell=True)
+        if "evict" in a.defense:
+            # Exact evictions: an OpenFlow 1.4 monitor connection receives Flow-Removed with
+            # reason eviction, which Open vSwitch does not send to the OpenFlow 1.3 controller.
+            for dm in doms:
+                for sw in dm["limited"]:
+                    subprocess.Popen(f"ovs-ofctl -O OpenFlow14 monitor {sw.name} 2>&1 | grep --line-buffered "
+                                     f"-i evict > {a.out}/ofmon_evict_{sw.name}.txt", shell=True)
         procs = []
         drv = os.path.join(HERE, "traffic_driver.py")
         probe = os.path.join(HERE, "probe_newflow.py")
@@ -220,6 +230,7 @@ def main():
         if diag is not None:
             diag.terminate()
             subprocess.call("pkill -f '^pidstat -u -h -p'", shell=True)
+            subprocess.call("pkill -f '^pidstat -r -h -p'", shell=True)
             for cmd, f in (("ovs-appctl coverage/show", "ovs_coverage_after.txt"),
                            ("ovs-appctl upcall/show", "ovs_upcall.txt"),
                            ("ovs-vsctl list controller", "ovs_controllers.txt")):
@@ -233,6 +244,7 @@ def main():
             subprocess.call(f"ovs-ofctl -O OpenFlow13 dump-flows {dm['s1'].name} | wc -l "
                             f"> {a.out}/final_flows_{dm['name']}.txt", shell=True)
     finally:
+        subprocess.call("pkill -f 'ovs-ofctl -O OpenFlow14 monitor'", shell=True)
         net.stop()
         for c in ctrl:
             c.terminate()

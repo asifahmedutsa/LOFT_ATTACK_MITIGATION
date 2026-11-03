@@ -21,6 +21,25 @@ runs only where a testbed run needs a selection step, plus quarantine round 2 (k
 | R11 | "Day 1 does five things; the schedule has no slack." | minor | 10-day schedule, 20 % rerun slack; priority tiers so cuts are predetermined |
 | R12 | "Running each switch's own defense instance is your adaptation of single-switch baselines." | minor | Stated as a deviation for every baseline; FTMaster's Napnet also runs per-switch instances |
 
+## 0b. Adopted schedule: the 3-day core (2026-11-03)
+
+The user chose the 3-day core. It keeps every critical fix (R1-R4) and cuts the rest:
+
+| Block | Runs |
+|---|---|
+| T0 + G0: bigFlows; none and DualGuard x A2 and benign; OVS eviction x A2 (checks the exact eviction monitor) | 5 |
+| Q2: D1 dumbbell; PortGuard, fair eviction, + quarantine x A2, adaptive, 4x crowd; seeds 4110-4112 | 27 |
+| T1: bigFlows; A2, A4, adaptive, benign; seeds 4110-4114; 9 main configs (none, OVS eviction, SIFT, TableGuard, DMS-BTT, FTMaster, FTOP, rDefender, final) | 180 |
+| T1 ablations: PortGuard alone (host identity), v2.1 + PortGuard (port identity); same cells | 40 |
+| T1-fed (H5): D1 (where local models exist); A2 (seen only by another controller) and A6 (seen by none); final with federated vs local models; 5 seeds | 20 |
+| T4: LA, HA, ALA, MAC-rotating; none, OVS eviction, rDefender, DMS-BTT, final; 3 seeds | 60 |
+| T2: table 2K / 4K; A2; none, DMS-BTT, FTMaster, final; 3 seeds | 24 |
+| T5: univ2; A2, A4; none, DMS-BTT, FTMaster, rDefender, final; 3 seeds | 30 |
+
+386 runs, about 42 h. Dropped for later: A1, A3, T3, idle timeouts, univ1, ALFO, AHA, the
+threshold-aware attacker (only needed if fair eviction joins the final system), G4 and P1 unless
+time remains on day 3. H5 is tested on T1-fed instead of on bigFlows.
+
 ## 1. Weaknesses and how each is closed
 
 | # | Weakness | Closed by | Done when |

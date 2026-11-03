@@ -109,7 +109,8 @@ def _exposure(d, v):
 
 
 def offline(data, models, taus):
-    from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+    from sklearn.metrics import (f1_score, matthews_corrcoef, precision_score, recall_score,
+                                 roc_auc_score)
     rows = []
     for d in DOMAINS:
         D = data[("test_off", d)]
@@ -130,7 +131,9 @@ def offline(data, models, taus):
                                  precision=precision_score(yt, yp, zero_division=0),
                                  recall=recall_score(yt, yp, zero_division=0),
                                  f1=f1_score(yt, yp, zero_division=0),
-                                 fpr=float(((yp == 1) & (yt == 0)).sum() / max((yt == 0).sum(), 1))))
+                                 fpr=float(((yp == 1) & (yt == 0)).sum() / max((yt == 0).sum(), 1)),
+                                 fnr=float(((yp == 0) & (yt == 1)).sum() / max((yt == 1).sum(), 1)),
+                                 mcc=float(matthews_corrcoef(yt, yp))))
         print(f"  offline {d} done", flush=True)
     return rows
 

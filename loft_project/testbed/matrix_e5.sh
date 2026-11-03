@@ -28,7 +28,7 @@ if [ "${1:-}" = "--smoke" ]; then
 else
     for v in ${E5_VARS:-A2 A4}; do
         for def in ${E5_DEFS:-none dms-btt ftmaster ftop rdefender dualguard}; do
-            for s in 4100 4101 4102; do specs+=("${E5_DOM:-T1} $v $def $s 300 $TAG"); done
+            for s in ${E5_SEEDS:-4100 4101 4102}; do specs+=("${E5_DOM:-T1} $v $def $s 300 $TAG"); done
         done
     done
 fi
@@ -36,7 +36,10 @@ n=0
 for sp in "${specs[@]}"; do
     set -- $sp
     n=$((n + 1))
-    name="$6_$1_$2_${3//+/-}_s$4"
+    # A defense written def@local runs with the local (non-federated) models.
+    def="${3%@*}"; prefix=""
+    [ "$def" != "$3" ] && prefix="--model-prefix ${3#*@}"
+    name="$6_$1_$2_${3//[+@]/-}_s$4"
     if [ -f "$RUNS/$name/summary.txt" ]; then continue; fi
     if [ -e "$RUNS/$name" ]; then
         mkdir -p "$RUNS/_failed"
@@ -49,7 +52,7 @@ for sp in "${specs[@]}"; do
     fi
     echo "=== [$n/${#specs[@]}] $name $(date +%T)"
     t_start=$(date +%s)
-    sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$3" --seed "$4" \
+    sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$def" $prefix --seed "$4" \
         --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} --out "$name" > "$RUNS/$name.log" 2>&1
     status=$?
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then

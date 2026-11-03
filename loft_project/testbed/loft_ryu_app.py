@@ -75,6 +75,7 @@ DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll whil
 DEFENSES = ("none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
+            "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq")
 
 
@@ -106,6 +107,9 @@ def build_defense(name, model_dir, domain, model_path=None):
     """The simulator's defense objects, configured from exported files."""
     if name not in DEFENSES:
         raise ValueError(f"LOFT_DEFENSE must be one of {DEFENSES}")
+    # +hostid: PortGuard's quota per host (source MAC) instead of per ingress port; the
+    # controller handles the identity and port security (LoftController._port).
+    name = name[:-len("+hostid")] if name.endswith("+hostid") else name
     if name in ("none", "evict"):
         # evict: no defense, Open vSwitch evicts the entry nearest expiry (run_testbed.py).
         d = Defense()
@@ -224,6 +228,11 @@ class LoftController(app_manager.RyuApp):
         self.install_clock = os.environ.get("LOFT_INSTALL_CLOCK", "controller")
         self.xid_key, self.drop_xids = {}, set()
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
+        # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
+        # and access switches pin each host port to the first MAC seen on it (port security),
+        # so a host cannot rotate MACs to get more quotas.
+        self.hostid = self.defense_name.endswith("+hostid")
+        self.host_of, self.port_mac = {}, {}
         self.t0 = time.time()
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
         # Wall-clock origin of the log's t column, to align it with the traffic drivers.
@@ -298,12 +307,16 @@ class LoftController(app_manager.RyuApp):
     def _port(self, S, mac, in_port):
         """A flow's port for the defense: the switch's ingress port in the tree, the host's
         access port (learned on the access switch) otherwise."""
+        if self.tree and self.hostid:
+            return self.host_of.setdefault(mac, min(len(self.host_of) + 1, OTHER_PORT - 1))
         if self.tree:
             return in_port if 0 <= in_port < OTHER_PORT else OTHER_PORT
         return self._access_port(mac)
 
     def _macs_on(self, S, port):
         """Host MACs behind a port of switch S."""
+        if self.tree and self.hostid:
+            return [m for m, h in self.host_of.items() if h == port]
         if self.tree:
             return [m for m, q in self.mac_to_port.get(S.dpid, {}).items() if q == port]
         return [m for m, q in self.mac_to_port.get(self.access_dpid, {}).items() if q == port]
@@ -369,6 +382,14 @@ class LoftController(app_manager.RyuApp):
         eth = pkt.get_protocol(ethernet.ethernet)
         if eth is None:
             return
+        if self.hostid and in_port not in self.topo.get(dp.id, {}) and dp.id != self.dpid:
+            # Port security on an access switch's host port: one MAC per port.
+            owner = self.port_mac.setdefault((dp.id, in_port), eth.src)
+            if owner != eth.src:
+                S0 = self.sw.get(dp.id)
+                if S0 is not None:
+                    S0.cnt["spoof_drops"] = S0.cnt.get("spoof_drops", 0) + 1
+                return
         self.mac_to_port.setdefault(dp.id, {})[eth.src] = in_port
         out = self.mac_to_port[dp.id].get(eth.dst, o.OFPP_FLOOD)
         actions = [p.OFPActionOutput(out)]
