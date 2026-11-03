@@ -11,7 +11,9 @@ Environment variables:
   LOFT_DPID         monitored switch datapath id (int, default 1)
   LOFT_ACCESS_DPID  access switch datapath id; its learned MAC-to-port table gives each
                     flow's ingress (access) port for PortGuard (default: none)
-  LOFT_DEFENSE      none | dualguard | dms-btt | portguard | dualguard+portguard |
+  LOFT_DEFENSE      ensguard (FL-EnsGuard: federated RF + CatBoost, evict, block outlier hosts,
+                    PortGuard fallback; LOFT_MODEL_DIR/ens_config.json, loftbench.ensjson) |
+                    none | dualguard | dms-btt | portguard | dualguard+portguard |
                     dualguard+floodguard | ftmaster | ftop | flora | rdefender | dualguard+hold |
                     dualguard+portguard+hold | dualguard+evict | dualguard+fairevict |
                     dualguard+fairevictq (fair eviction with churn quarantine, knobs from
@@ -60,7 +62,8 @@ from ryu.ofproto import ofproto_v1_3
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender, SIFT, TableGuard  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
-from loftbench.defenses import DMSBTT, DualGuard, FloodGuard, PortGuard  # noqa: E402
+from loftbench.defenses import DMSBTT, DualGuard, EvictBlock, FloodGuard, PortGuard  # noqa: E402
+from loftbench.ensjson import EnsembleJSON  # noqa: E402
 from loftbench.fairevictq import QuarantineFairEvict, _parse as feq_parse  # noqa: E402
 from loftbench.features import FeatureTracker  # noqa: E402
 from loftbench.sim import Defense  # noqa: E402
@@ -76,7 +79,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
-            "dualguard+fairevictq")
+            "dualguard+fairevictq", "ensguard")
 
 
 def ip2int(s):
@@ -142,6 +145,15 @@ def build_defense(name, model_dir, domain, model_path=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
+    if name == "ensguard":
+        # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
+        # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
+        ec = json.load(open(os.path.join(model_dir, "ens_config.json")))
+        b = ec["block"]
+        eb = EvictBlock(EnsembleJSON(model_dir, ec), ec["tau"][domain], name="evictblock",
+                        rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
+                        f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,))
+        return PortGuard(eb, name=name, mode="full", **{k: pg[k] for k in pg if k != "mode"})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
     m = ExportedMLP(model_path or os.path.join(model_dir, f"v21_{domain}.json"))
@@ -189,6 +201,9 @@ class Switch:
                             "flow_port": self.port_of, "n_ports": N_PORTS})
         self.admit = getattr(self.defense, "admit_filter", None)
         self.pg = self.defense if isinstance(self.defense, PortGuard) else None
+        # ensguard: the evict-block layer inside PortGuard; its blocked hosts get drop rules.
+        self.eb = self.pg.inner if self.pg is not None and isinstance(self.pg.inner, EvictBlock) else None
+        self._blocks_logged = 0
         # Churn quarantine: a quarantined host's entries go with one delete matching its MAC,
         # and a drop rule keeps its new flows from the controller (as PortGuard's quota).
         self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
@@ -237,7 +252,7 @@ class LoftController(app_manager.RyuApp):
         # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
         # and access switches pin each host port to the first MAC seen on it (port security),
         # so a host cannot rotate MACs to get more quotas.
-        self.hostid = self.defense_name.endswith("+hostid")
+        self.hostid = self.defense_name.endswith("+hostid") or self.defense_name == "ensguard"
         self.host_of, self.port_mac = {}, {}
         self.t0 = time.time()
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
@@ -598,6 +613,18 @@ class LoftController(app_manager.RyuApp):
             now = time.time()
             for mac in qmacs:
                 self._drop_rule(S, mac, now, refresh=True)
+        if S.eb is not None:
+            # Hosts blocked by the evict-block layer: log new blocks, keep their drop rules.
+            for tb, q in S.eb.blocks[S._blocks_logged:]:
+                for mac in self._macs_on(S, q):
+                    self.fw.writerow([round(t, 3), "host_block", mac, "", "", "", "", S.name])
+            S._blocks_logged = len(S.eb.blocks)
+            if S.drop_rules:
+                now = time.time()
+                for q in np.flatnonzero(S.eb.blocked_until > t):
+                    if q != OTHER_PORT:
+                        for mac in self._macs_on(S, int(q)):
+                            self._drop_rule(S, mac, now, refresh=True)
         if S.drop_rules and S.pg is not None:
             # Ports whose quota is full refuse every new flow until the next poll. In the tree
             # a port may carry several hosts (the core's ports); only hosts refused there in

@@ -408,15 +408,16 @@ class EvictBlock(Defense):
     MAX_BLOCK_S = 240.0
 
     def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
-                 target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0):
+                 target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=()):
         self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
         self.rho, self.h_crit, self.target = rho, h_crit, target
         self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
+        self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
 
     def reset(self, ctx):
         self.port = ctx["flow_port"]
-        n_ports = int(self.port.max()) + 1
+        n_ports = int(ctx.get("n_ports") or int(self.port.max()) + 1)
         self.blocked_until = np.full(n_ports, -np.inf)
         self.probation_until = np.full(n_ports, -np.inf)
         self.hist = []                       # (t, evicted per port, flagged fraction per port)
@@ -453,6 +454,7 @@ class EvictBlock(Defense):
         self.share_max = np.maximum(self.share_max, np.where(ev_w >= self.n_min, share, 0.0))
         self.ev_max = np.maximum(self.ev_max, ev_w)
         new_block = (ev_w >= self.n_min) & (share >= self.f_min) & (self.blocked_until <= t)
+        new_block[self.exempt] = False
         for q in np.flatnonzero(new_block):
             self.n_blocks[q] += 1
             self.blocked_until[q] = t + min(self.block_s * 2 ** (self.n_blocks[q] - 1), self.MAX_BLOCK_S)

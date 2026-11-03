@@ -143,6 +143,15 @@ def summarize(d, attack_start, capacity=3500):
         info["_refused"], info["_installed"] = refused, keys
         info["_blocked"], info["_back"], info["_drops"], info["_t0"] = blocked, back, drops, t0
         info["drop_rules"] = len(drops)
+        # ensguard: hosts the evict-block layer blocked (a host counts once, on any switch).
+        # Attackers are the hosts ending :05 and :06 (h5, h6), benign hosts :01-:04.
+        hb = {e["src"] for e in ev if e["event"] == "host_block"}
+        if hb:
+            info["hosts_blocked_attack"] = sum(m[-2:] in ("05", "06") for m in hb)
+            info["hosts_blocked_benign"] = sum(m[-2:] not in ("05", "06") for m in hb)
+            t_hb = [float(e["t"]) for e in ev if e["event"] == "host_block"
+                    and e["src"][-2:] in ("05", "06")]
+            info["first_attack_block_s"] = round(min(t_hb) - attack_start, 1) if t_hb else "none"
         out[dom] = info
     hosts, benign, first = {}, {}, {}
     for t in sorted(glob.glob(os.path.join(d, "truth_*.csv"))):
