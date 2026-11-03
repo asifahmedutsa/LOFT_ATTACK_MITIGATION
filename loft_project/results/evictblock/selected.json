@@ -1,0 +1,8 @@
+{
+  "selected": {
+    "ens": "eb-ens-b0.001-n50f3-s60",
+    "mlp": null
+  },
+  "frozen_attack_occ_pct": 26.169,
+  "frozen_harm_pct": 0.996
+}

@@ -1,0 +1,13 @@
+defense,harm_pct,attack_occ_pct,benign_host_blocks,benign_deletes,eligible
+eb-ens-b0.005-n20f0.5,11.569,29.422,0,4370.267,False
+eb-ens-b0.005-n50f0.8,11.807,31.523,0,4647.067,False
+eb-ens-b0.002-n20f0.5,10.603,31.962,0,4573.578,False
+eb-ens-b0.002-n50f0.8,10.67,32.699,0,4630.378,False
+eb-ens-b0.001-n20f0.5,10.31,32.597,0,4715.756,False
+eb-ens-b0.001-n50f0.8,10.329,33.3,0,4739.178,False
+eb-mlp-b0.005-n20f0.5,10.995,37.179,0,18079.289,False
+eb-mlp-b0.005-n50f0.8,11.071,38.482,0,18127.267,False
+eb-mlp-b0.002-n20f0.5,11.023,38.17,0,18074.111,False
+eb-mlp-b0.002-n50f0.8,11.036,38.979,0,18075.756,False
+eb-mlp-b0.001-n20f0.5,11.04,38.426,0,18091.911,False
+eb-mlp-b0.001-n50f0.8,11.047,39.332,0,18090.778,False

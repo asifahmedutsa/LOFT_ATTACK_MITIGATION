@@ -4,22 +4,39 @@ block rule.
 
 Every poll while the table is at least rho full (or a released host is on probation):
   detect  score every entry with the detector;
-  evict   delete every entry scoring >= tau; if the table is still >= h_crit full, delete the
-          lowest-scoring non-elephant entries down to target (DualGuard's overflow guard);
+  evict   delete every entry scoring >= tau (no score-ordered overflow guard: when detection
+          misses, as under E9P, such a guard deletes mostly benign entries; a full table is
+          PortGuard's job);
   block   per host (access port, which port security ties to one MAC): over the last W s, if
-          at least n_min of its entries were evicted AND they are at least f_min of the entries
-          it held, delete all its entries and refuse its new flows for block_s; after release
-          it stays on probation (scored at every poll) for 2 W.
+          at least n_min of its entries were evicted AND at least k x as many as the median host's
+          (outlier among the hosts on the switch: measured on seed 2001, attackers evict 4-40x
+          the typical host under every attack, E9P included, while fixed counts overlap across
+          domains), delete all its entries and refuse its new flows for
+          block_s x 2^(k-1) (k-th block of that host, at most MAX_BLOCK_S); after release it
+          stays on probation (scored at every poll) for 2 W.
+  limit   the whole runs inside PortGuard (the frozen system's knobs, but mode "full" so that
+          detection and blocking keep running while PortGuard enforces): under table pressure no
+          host may hold more than its weighted fair share, the safety net when detection misses.
+
+In the names, f is k. Round 2 (share = flagged fraction of held entries, PortGuard gated) was
+stopped: gated PortGuard pauses detection while it enforces, and a held-fraction share stays
+low for an attacker that keeps replacing evicted entries.
+Round 1 (2026-11-03, no PortGuard, fixed 30 s blocks, share = evicted / held summed over the
+window, which counts an entry once per poll) failed on development seeds: A4 refilled the table
+after every release and E9P was never blocked (benign harm 37-38 %). Its episodes are kept in
+select_round1_episodes.csv.
 
 Stages (development seeds select, fresh seeds test once):
   select  detector {ens: RF 50/12 + CatBoost by model sharing, mlp: the frozen v2.1 MLP} x
-          tau budget {0.5, 0.2, 0.1 %} x (n_min, f_min) {(20, 0.5), (50, 0.8)}; D1-D3; A2, A4,
+          tau budget {0.2, 0.1 %} x n_min {50, 100} x k {3, 5}, first block 60 s (round 3 grid,
+          from the eviction counts measured on seed 2001); D1-D3; A2, A4,
           E9P, A6, benign; validation seeds 2000-2002. Rule, per detector: settings with no
           benign host blocked in any episode and mean attack occupancy after the attack start
           <= the frozen system's + 1 point; among them the lowest mean benign harm over all
           cells (ties within 0.05: fewer evictions of benign entries).
-  test    none, the frozen system (v2.1+pg), DMS-BTT with blocklist, and the selected setting of
-          each detector; same cells on fresh seeds 26000-26004; one shot.
+  test    none, the frozen system (v2.1+pg), DMS-BTT with blocklist, the selected setting of each
+          detector, and each selected setting without PortGuard (ablation); same cells on fresh
+          seeds 26000-26004; one shot.
 
     PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.evictblock {select,test} [--workers 4]
 
@@ -41,7 +58,8 @@ from . import flowhold as FH
 from . import ml_compare as M
 from .config import DOMAINS, attack_variant
 from .data import DOMAIN_IDX
-from .defenses import Defense, _elephants
+from . import revision5 as R5
+from .defenses import Defense, PortGuard
 from .e3_ens import _models as _ens_models
 from .experiment import SPLITS, _dump
 from .models import threshold_at_fpr
@@ -52,9 +70,11 @@ from .traffic import build_traffic
 OUT = "results/evictblock"
 DOMS = ["D1", "D2", "D3"]
 VARS = ["A2", "A4", "E9P", "A6", "benign"]
-BUDGETS = (0.005, 0.002, 0.001)
-BLOCK_RULES = ((20, 0.5), (50, 0.8))
+BUDGETS = (0.002, 0.001)
+BLOCK_RULES = ((50, 3.0), (50, 5.0), (100, 3.0), (100, 5.0))   # (n_min, k)
+BLOCK_S = (60.0,)
 TEST_SEEDS = list(range(26000, 26005))
+MAX_BLOCK_S = 240.0
 N_BENIGN_PORTS = 4          # dedicated ports: hosts 0-3 benign, 4-5 attackers
 _C = {}
 
@@ -74,8 +94,12 @@ class EvictBlock(Defense):
         n_ports = int(self.port.max()) + 1
         self.blocked_until = np.full(n_ports, -np.inf)
         self.probation_until = np.full(n_ports, -np.inf)
-        self.hist = []                       # (t, evicted per port, held per port)
+        self.hist = []                       # (t, evicted per port, flagged fraction per port)
         self.blocks = []                     # (t, port)
+        self.n_blocks = np.zeros(n_ports, int)
+        self.share_max = np.zeros(n_ports)   # diagnostics: highest windowed share per host
+        self.ev_max = np.zeros(n_ports)      # diagnostics: most evictions in a window per host
+        self.seen = np.zeros(n_ports, bool)  # hosts that have held an entry
 
     def _admit(self, fids, now):
         return self.blocked_until[self.port[fids]] <= now
@@ -86,7 +110,7 @@ class EvictBlock(Defense):
         released = (self.blocked_until <= t) & (self.blocked_until > t - obs.get("dt", 1.0) - 1e-9)
         self.probation_until[released] = t + 2 * self.window_s
         if n == 0 or (n / cap < self.rho and not (self.probation_until > t).any()):
-            self.hist.append((t, np.zeros(n_ports), np.zeros(n_ports)))
+            self.hist.append((t, np.zeros(n_ports)))
             return None, None
         X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
         s = self.model.predict_proba(X)
@@ -95,35 +119,31 @@ class EvictBlock(Defense):
             flag &= self.probation_until[self.port[fids]] > t
         p = self.port[fids]
         ev = np.bincount(p[flag], minlength=n_ports).astype(float)
-        held = np.bincount(p, minlength=n_ports).astype(float)
-        self.hist.append((t, ev, held))
+        self.seen |= np.bincount(p, minlength=n_ports) > 0
+        self.hist.append((t, ev))
         self.hist = [h for h in self.hist if h[0] > t - self.window_s]
         ev_w = np.sum([h[1] for h in self.hist], axis=0)
-        held_w = np.sum([h[2] for h in self.hist], axis=0)
-        share = ev_w / np.maximum(held_w, 1)
+        med = float(np.median(ev_w[self.seen])) if self.seen.any() else 0.0
+        share = ev_w / max(med, 1.0)         # evictions relative to the median host
+        self.share_max = np.maximum(self.share_max, np.where(ev_w >= self.n_min, share, 0.0))
+        self.ev_max = np.maximum(self.ev_max, ev_w)
         new_block = (ev_w >= self.n_min) & (share >= self.f_min) & (self.blocked_until <= t)
         for q in np.flatnonzero(new_block):
-            self.blocked_until[q] = t + self.block_s
+            self.n_blocks[q] += 1
+            self.blocked_until[q] = t + min(self.block_s * 2 ** (self.n_blocks[q] - 1), MAX_BLOCK_S)
             self.blocks.append((t, int(q)))
         gone = flag | (self.blocked_until[p] > t)
-        dels = fids[gone]
-        n_after = n - int(gone.sum())
-        if n_after / cap >= self.h_crit:
-            eleph = _elephants(obs["bytes"])
-            rest = np.flatnonzero(~gone & ~eleph)
-            rest = rest[np.argsort(-s[rest], kind="stable")]
-            dels = np.r_[dels, fids[rest[:n_after - int(self.target * cap)]]]
-        return dels, None
+        return fids[gone], None
 
 
-def _key(det, budget, rule):
-    return f"eb-{det}-b{budget:g}-n{rule[0]}f{rule[1]:g}"
+def _key(det, budget, rule, block_s=30.0):
+    return f"eb-{det}-b{budget:g}-n{rule[0]}f{rule[1]:g}-s{block_s:g}"
 
 
 def _parse(name):
-    _, det, b, nf = name.split("-")
+    _, det, b, nf, *rest = name.split("-")
     n, f = nf[1:].split("f")
-    return det, float(b[1:]), (int(n), float(f))
+    return det, float(b[1:]), (int(n), float(f)), float(rest[0][1:]) if rest else 30.0
 
 
 def _load():
@@ -142,15 +162,24 @@ def _load():
 
 
 def _make(name, d):
+    if name.endswith("-nopg"):               # ablation: the same defense without PortGuard
+        return _make(name[:-5], d).inner
     if name == "none":
         return Defense()
     if name in ("v2.1+pg", "dms-blocklist"):
         return FH._make(name, d)
-    det, b, (n_min, f_min) = _parse(name)
+    det, b, (n_min, f_min), block_s = _parse(name)
     dg = FH._dg(d)
     model, fidx = (_C["ens"], None) if det == "ens" else (dg.model, dg.feature_idx)
-    return EvictBlock(model, _C["thr"][(det, b, d)], feature_idx=fidx, name=name, rho=dg.rho,
-                      h_crit=dg.h_crit, target=dg.target, n_min=n_min, f_min=f_min)
+    eb = EvictBlock(model, _C["thr"][(det, b, d)], feature_idx=fidx, name=name, rho=dg.rho,
+                    h_crit=dg.h_crit, target=dg.target, n_min=n_min, f_min=f_min, block_s=block_s)
+    # PortGuard's selected knobs except mode: "gated" (the frozen system's) pauses the inner
+    # defense while PortGuard enforces, which stops detection and blocking exactly when the
+    # table is full; "full" keeps them running.
+    P = R5._CTX["P"]
+    pg = PortGuard(eb, name=name, mode="full", **{x: P[x] for x in ("share", "q", "rho_q",
+                                                                    "hold_s", "tau_s")})
+    return pg
 
 
 def _episode(args):
@@ -160,7 +189,7 @@ def _episode(args):
                                     FH.CFG.attack_start), "dedicated")
     df = _make(name, d)
     r = run_episode(tr, FH.CFG, df, record_ts=False).summary
-    blocks = getattr(df, "blocks", [])
+    blocks = getattr(getattr(df, "inner", None), "blocks", None) or getattr(df, "blocks", [])
     return dict(stage=stage, defense=name, domain=d, variant=v, seed=s,
                 benign_hosts_blocked=len({q for _, q in blocks if q < N_BENIGN_PORTS}),
                 attack_hosts_blocked=len({q for _, q in blocks if q >= N_BENIGN_PORTS}),
@@ -192,7 +221,8 @@ def _summary(df):
 
 def stage_select(workers):
     path = os.path.join(OUT, "select_episodes.csv")
-    names = [_key(det, b, r) for det in ("ens", "mlp") for b in BUDGETS for r in BLOCK_RULES]
+    names = [_key(det, b, r, bs) for det in ("ens", "mlp") for b in BUDGETS for r in BLOCK_RULES
+             for bs in BLOCK_S]
     if not os.path.exists(path):
         _load()
         cells = [(d, v, s) for d in DOMS for v in VARS for s in SPLITS["val"]]
@@ -236,7 +266,12 @@ def stage_test(workers):
         raise SystemExit("test already run; refusing to rerun (one-shot evaluation)")
     sel = json.load(open(os.path.join(OUT, "selected.json")))["selected"]
     _load()
-    defs = ["none", "v2.1+pg", "dms-blocklist"] + [x for x in sel.values() if x]
+    defs = ["none", "v2.1+pg", "dms-blocklist"] + [x for x in sel.values() if x] + \
+        [x + "-nopg" for x in sel.values() if x]
+    if sel.get("ens") and not sel.get("mlp"):
+        # Ablation: the selected setting with the frozen MLP as detector (no MLP setting passed
+        # selection: it blocked benign hosts).
+        defs.append(sel["ens"].replace("eb-ens-", "eb-mlp-"))
     tasks = [("test", n, d, v, s) for n in defs for d in DOMS for v in VARS for s in TEST_SEEDS]
     df = _run(tasks, workers)
     df.to_csv(path, index=False)

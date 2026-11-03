@@ -1,0 +1,17 @@
+defense,harm_pct,attack_occ_pct,benign_host_blocks,benign_deletes,eligible
+eb-ens-b0.002-n50f3-s60,0.74,5.11,0,229.533,True
+eb-ens-b0.002-n50f5-s60,0.859,5.452,0,326.733,True
+eb-ens-b0.002-n100f3-s60,0.641,4.889,0,233.644,True
+eb-ens-b0.002-n100f5-s60,0.761,5.23,0,330.8,True
+eb-ens-b0.001-n50f3-s60,0.598,8.363,0,199.0,True
+eb-ens-b0.001-n50f5-s60,0.673,8.747,0,261.8,True
+eb-ens-b0.001-n100f3-s60,0.66,10.653,0,210.444,True
+eb-ens-b0.001-n100f5-s60,0.728,10.999,0,265.444,True
+eb-mlp-b0.002-n50f3-s60,3.815,8.264,8,481.889,False
+eb-mlp-b0.002-n50f5-s60,3.584,12.258,6,1005.778,False
+eb-mlp-b0.002-n100f3-s60,3.146,10.096,7,453.422,False
+eb-mlp-b0.002-n100f5-s60,3.727,14.061,6,1271.356,False
+eb-mlp-b0.001-n50f3-s60,3.729,9.648,8,332.711,False
+eb-mlp-b0.001-n50f5-s60,3.736,13.852,7,1124.644,False
+eb-mlp-b0.001-n100f3-s60,3.796,11.058,10,421.267,False
+eb-mlp-b0.001-n100f5-s60,3.901,15.024,6,1201.333,False
