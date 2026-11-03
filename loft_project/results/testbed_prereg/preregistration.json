@@ -1,0 +1,36 @@
+{
+ "created_utc": "2026-11-03T04:38:12.071700+00:00",
+ "plan": "docs/testbed_plan.md sections 0a-0b (3-day core); campaign testbed/campaign.sh",
+ "topology": "tree3: core + two access switches, tables 3,500, idle 10 s, all monitored; one controller; 300 s, attack at 50 s; new-connection probe on",
+ "final_system": "dualguard+portguard+hostid",
+ "seeds": {
+  "five": [
+   4110,
+   4111,
+   4112,
+   4113,
+   4114
+  ],
+  "three": [
+   4110,
+   4111,
+   4112
+  ]
+ },
+ "outcome": "benign_harmed_pct from testbed/summarize_run.py (benign flow refused, blocked or evicted/deleted and back, at any switch on its path); eviction defenses: exact counts from the OpenFlow 1.4 monitor if T0 shows it works, else the poll inference",
+ "test": "one-sided exact sign test on paired runs (same cell, same seed); a tie counts against the hypothesis; Holm within each hypothesis family; alpha 0.05",
+ "hypotheses": {
+  "H1": "T1, attacks A2, A4, E9P, 5 seeds: for each of SIFT, TableGuard, DMS-BTT, FTMaster, FTOP, rDefender, dualguard+portguard+hostid harms fewer benign flows over the 15 paired runs (Holm over the 6 baselines)",
+  "H2": "T1, adaptive attack E9P: dualguard+portguard+hostid's mean harm over 5 seeds is below each of the 6 baselines' and below no defense's (descriptive, with seed ranges)",
+  "H3": "T1, benign only, 5 seeds: dualguard+portguard+hostid's mean harm <= 0.5 % and mean lost first packets <= 1 %",
+  "H4": "T1, A2, A4, E9P, 5 seeds: host identity (dualguard+portguard+hostid) harms fewer benign flows than port identity (dualguard+portguard) over the 15 paired runs",
+  "H5": "T1-fed, domain D1, attacks A2 (seen only by another controller) and A6 (seen by none), 5 seeds: dualguard+portguard+hostid with federated models harms fewer benign flows than with local models over the 10 paired runs",
+  "H6": "held out (never used in design): T4 attacks LA, HA, ALA, A2M (3 seeds) and T5 univ2 attacks A2, A4 (3 seeds): dualguard+portguard+hostid harms fewer benign flows than DMS-BTT (18 pairs), rDefender (18 pairs) and FTMaster (12 pairs, T4 only; no univ2 model), Holm over the 3"
+ },
+ "also_reported": "the papers' columns per switch (avg/max attack share, table usage, earliest overflow, overflow seconds, Packet-In, Table-Full), lost first packets, probe success, flow-mods, controller and switch CPU, controller RSS; T2 (table 2K/4K) descriptive; ablation portguard+hostid descriptive",
+ "deviations": [
+  "T5 uses SIFT in place of FTMaster: no univ2 FTMaster model, and training one needs simulator time during the campaign",
+  "each switch runs its own instance of every defense (the published defenses were described for one switch)",
+  "SIFT and TableGuard parameters selected by gate G1 on validation seeds (not stated by the comparison papers)"
+ ]
+}

@@ -53,7 +53,7 @@ for sp in "${specs[@]}"; do
     echo "=== [$n/${#specs[@]}] $name $(date +%T)"
     t_start=$(date +%s)
     sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$def" $prefix --seed "$4" \
-        --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} --out "$name" > "$RUNS/$name.log" 2>&1
+        --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} ${E5_CAP:+--capacity $E5_CAP} --out "$name" > "$RUNS/$name.log" 2>&1
     status=$?
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then
         echo "    FAILED (exit $status); see $RUNS/$name.log"; continue
@@ -68,7 +68,7 @@ for sp in "${specs[@]}"; do
         mkdir -p "$RUNS/_failed"; mv "$RUNS/$name" "$RUNS/_failed/$name.$(date +%s)"; continue
     fi
     mv "$RUNS/$name.log" "$RUNS/$name/runner.log"
-    python3 testbed/summarize_run.py "$RUNS/$name" > "$RUNS/$name/summary.txt"
+    python3 testbed/summarize_run.py "$RUNS/$name" ${E5_CAP:+--capacity $E5_CAP} > "$RUNS/$name/summary.txt"
     grep -E "benign_harmed_pct|probe_post_success_pct|probe_post_connect_ms_median|decision_ms" \
         "$RUNS/$name/summary.txt" | tr -s ' ' | paste -sd ' '
 done
