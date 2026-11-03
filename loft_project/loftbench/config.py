@@ -127,4 +127,16 @@ def attack_variant(key):
                              pkts_per_refresh=(1, 3), size_mode="benign", src_mode="pool")
     if key.startswith("X"):
         return gap_variant(float(key[1:]))
+    # rDefender's attacks (loftbench.e2_repro.ATTACKS, repeated here so the testbed driver need
+    # not import the simulator's experiment code): floods at 300 and 2,000 new flows/s, and the
+    # advanced low-rate attack ALA, 306 new flows/s with benign-like 1,400 B packets.
+    if key == "LA":
+        return AttackVariant("LA-flood300", 300, (1.0, 1.0), max_flows=10**9, src_mode="pool",
+                             burst_pps=300.0, n_attackers=1, refresh=False)
+    if key == "HA":
+        return AttackVariant("HA-flood2000", 2000, (1.0, 1.0), max_flows=10**9, src_mode="pool",
+                             burst_pps=2000.0, n_attackers=1, refresh=False)
+    if key == "ALA":
+        return AttackVariant("ALA-306", 306, (1.0, 1.0), max_flows=10**9, src_mode="pool",
+                             burst_pps=306.0, n_attackers=1, refresh=False, size_mode="benign")
     raise KeyError(key)

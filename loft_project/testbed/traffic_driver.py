@@ -84,7 +84,10 @@ def main():
         tr = build_traffic(prof, didx, None, a.seed, a.duration, a.start)
         port = int(a.share.split("/")[0])
     else:
-        tr = build_traffic(prof, didx, attack_variant(a.variant), a.seed, a.duration, a.start)
+        # A trailing "M" (for example A2M): the same attack from a fresh source MAC per flow,
+        # against per-host quotas keyed on MAC (T4, reviewer item R7).
+        base = a.variant[:-1] if a.variant.endswith("M") else a.variant
+        tr = build_traffic(prof, didx, attack_variant(base), a.seed, a.duration, a.start)
         port = 4 + a.attacker
     tr = assign_ports(tr, "dedicated")
     keep = tr.flow_port[tr.pkt_fid] == port
@@ -96,6 +99,7 @@ def main():
     s.bind((a.iface, 0))
     src_mac = s.getsockname()[4]
     dst_mac = mac_bytes(a.dst_mac)
+    rotate = a.mode == "attack" and a.variant.endswith("M")
     sport = lambda f: 1024 + (f * 7919) % 60000  # noqa: E731
     dport = lambda f: 1 + (f * 104729) % 1023    # noqa: E731
     seen = set()
@@ -110,7 +114,10 @@ def main():
             if delay > 0:
                 time.sleep(delay)
             sip = int2ip(src[f])
-            s.send(frame(src_mac, dst_mac, sip, a.dst, sport(int(f)), dport(int(f)), int(sz)))
+            smac = src_mac
+            if rotate:
+                smac = b"\x02" + int(f).to_bytes(5, "big")      # locally administered, one per flow
+            s.send(frame(smac, dst_mac, sip, a.dst, sport(int(f)), dport(int(f)), int(sz)))
             sent += 1
             if f not in seen:
                 seen.add(f)
