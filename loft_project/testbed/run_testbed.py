@@ -83,7 +83,7 @@ def main():
                          "crowd, no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
-                    choices=["none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+                    choices=["none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
                              "dualguard+portguard+hostid", "portguard+hostid",

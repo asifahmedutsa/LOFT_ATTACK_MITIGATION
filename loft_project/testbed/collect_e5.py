@@ -17,7 +17,7 @@ DOM = sys.argv[2] if len(sys.argv) > 2 else "T1"
 RUNS = os.path.expanduser("~/loft-runs")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results",
                    "testbed_e5" if TAG == "e5c" else f"testbed_{TAG}")
-DEFENSES = ["none", "evict", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard",
+DEFENSES = ["none", "evict", "sift", "tableguard", "dms-btt", "ftmaster", "ftop", "rdefender", "dualguard", "dualguard+portguard",
             "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+fairevictq", "dualguard+portguard+hostid", "portguard+hostid"]
 KEYS = ["benign_harmed_pct", "probe_post_success_pct", "probe_post_connect_ms_median",

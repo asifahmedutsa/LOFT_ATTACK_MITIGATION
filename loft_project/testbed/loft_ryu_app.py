@@ -58,7 +58,7 @@ from ryu.lib.packet import ethernet, ipv4, packet, tcp, udp
 from ryu.ofproto import ofproto_v1_3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender  # noqa: E402
+from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender, SIFT, TableGuard  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
 from loftbench.defenses import DMSBTT, DualGuard, FloodGuard, PortGuard  # noqa: E402
 from loftbench.fairevictq import QuarantineFairEvict, _parse as feq_parse  # noqa: E402
@@ -72,7 +72,7 @@ OTHER_PORT = N_PORTS - 1
 PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
-DEFENSES = ("none", "evict", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
+DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
@@ -110,6 +110,12 @@ def build_defense(name, model_dir, domain, model_path=None):
     # +hostid: PortGuard's quota per host (source MAC) instead of per ingress port; the
     # controller handles the identity and port security (LoftController._port).
     name = name[:-len("+hostid")] if name.endswith("+hostid") else name
+    if name in ("sift", "tableguard"):
+        # Settings selected on validation seeds by gate G1 (loftbench.gate_g1), copied next to
+        # the exported models.
+        sel = json.load(open(os.path.join(model_dir, "gate_g1_selected.json")))[name]["selected"]
+        kw = {k: float(v) for k, v in (x.split("=") for x in sel.split("|")[1].split(","))}
+        return (SIFT if name == "sift" else TableGuard)(**kw)
     if name in ("none", "evict"):
         # evict: no defense, Open vSwitch evicts the entry nearest expiry (run_testbed.py).
         d = Defense()
