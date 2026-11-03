@@ -53,7 +53,7 @@ for sp in "${specs[@]}"; do
     echo "=== [$n/${#specs[@]}] $name $(date +%T)"
     t_start=$(date +%s)
     sudo -n loft-testbed --domains "$1" --variant "$2" --defense "$def" $prefix --seed "$4" \
-        --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} ${E5_CAP:+--capacity $E5_CAP} --out "$name" > "$RUNS/$name.log" 2>&1
+        --duration "$5" --probe newflow ${E5_TOPO:+--topo $E5_TOPO} ${E5_CAP:+--capacity $E5_CAP} ${E5_BSCALE:+--benign-scale $E5_BSCALE} --out "$name" > "$RUNS/$name.log" 2>&1
     status=$?
     if [ $status -ne 0 ] || [ ! -f "$RUNS/$name/controller_$1.csv" ]; then
         echo "    FAILED (exit $status); see $RUNS/$name.log"; continue

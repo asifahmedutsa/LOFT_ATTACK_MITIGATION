@@ -71,9 +71,13 @@ def main():
     ap.add_argument("--start", type=float, default=50.0)
     ap.add_argument("--duration", type=float, default=300.0)
     ap.add_argument("--truth", required=True)
+    ap.add_argument("--benign-scale", type=float, default=1.0,
+                    help="multiplies the domain's benign new-flow rate (testbed load calibration)")
     a = ap.parse_args()
 
     prof, didx = profile_of(a.domain)
+    if a.benign_scale != 1.0:
+        prof = dataclasses.replace(prof, new_flow_rate=a.benign_scale * prof.new_flow_rate)
     if a.variant.startswith("F"):
         # F2 / F4: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
         # crowds per 300 s at 2x or 4x the domain's new-flow rate, from many external sources.

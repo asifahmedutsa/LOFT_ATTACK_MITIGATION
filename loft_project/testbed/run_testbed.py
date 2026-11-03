@@ -108,6 +108,12 @@ def main():
     ap.add_argument("--probe", default="none", choices=["none", "newflow"],
                     help="newflow: a benign host opens a new TCP connection to the server every "
                          "0.5 s (E5 service-level harm; testbed/probe_newflow.py)")
+    ap.add_argument("--benign-scale", type=float, default=1.0,
+                    help="multiplies every domain's benign new-flow rate (load calibration; the attack "
+                         "is unchanged)")
+    ap.add_argument("--inactivity-probe", type=int, default=30000,
+                    help="OVS inactivity probe to the controller, ms (OVS default 5000: a busy controller "
+                         "then misses the echo and the switch disconnects)")
     ap.add_argument("--controller-queue", type=int, default=512,
                     help="Open vSwitch queue to each controller, messages (OVS default 100; 0 = leave)")
     a = ap.parse_args()
@@ -161,13 +167,14 @@ def main():
                     ["ovs-vsctl", "--", "--id=@t", "create", "Flow_Table",
                      f"flow_limit={a.capacity}", *policy, "--",
                      "set", "Bridge", sw.name, "flow_tables:0=@t"])
-            if a.controller_queue:
+            ctl_opts = ([f"controller_queue_size={a.controller_queue}"] if a.controller_queue else []) + \
+                ([f"inactivity_probe={a.inactivity_probe}"] if a.inactivity_probe else [])
+            if ctl_opts:
                 for sw in (x.name for x in dm["switches"]):
                     for uuid in subprocess.check_output(
                             ["ovs-vsctl", "get", "Bridge", sw, "controller"]).decode().strip("[]\n ").split(","):
                         if uuid.strip():
-                            subprocess.check_call(["ovs-vsctl", "set", "Controller", uuid.strip(),
-                                                   f"controller_queue_size={a.controller_queue}"])
+                            subprocess.check_call(["ovs-vsctl", "set", "Controller", uuid.strip(), *ctl_opts])
         time.sleep(3)
         net.pingAll(timeout="1")
         diag = None
@@ -204,7 +211,7 @@ def main():
                 procs.append(h.popen(
                     [a.python, drv, "--mode", "benign", "--domain", dm["name"], "--seed", str(a.seed),
                      "--variant", a.variant, "--share", f"{i}/4", "--iface", f"{h.name}-eth0", "--dst", dst,
-                     "--dst-mac", dmac, "--duration", str(a.duration),
+                     "--dst-mac", dmac, "--duration", str(a.duration), "--benign-scale", str(a.benign_scale),
                      "--truth", os.path.join(a.out, f"truth_{h.name}.csv")]))
             # --variant benign or F2/F4: the attacker hosts stay silent.
             silent = a.variant == "benign" or a.variant.startswith("F")
@@ -213,7 +220,7 @@ def main():
                     [a.python, drv, "--mode", "attack", "--domain", dm["name"], "--variant", a.variant,
                      "--seed", str(a.seed), "--attacker", str(j), "--iface", f"{h.name}-eth0",
                      "--dst", dst, "--dst-mac", dmac, "--start", str(a.attack_start),
-                     "--duration", str(a.duration),
+                     "--duration", str(a.duration), "--benign-scale", str(a.benign_scale),
                      "--truth", os.path.join(a.out, f"truth_{h.name}.csv")]))
             # Legitimate service probe: RTT from a benign host every second.
             procs.append(dm["users"][0].popen(
