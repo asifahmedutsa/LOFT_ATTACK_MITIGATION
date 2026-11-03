@@ -10,6 +10,7 @@ refused an entry (TABLE_FULL, the defense, or its drop rule) or evicted while ac
 in the simulator; and flows lost on the way to the controller (never installed).
 """
 import argparse
+import bisect
 import csv
 import glob
 import os
@@ -51,6 +52,24 @@ def summarize(d, attack_start, capacity=3500):
         for e in ev:
             if e["event"] in ("install", "refused", "blocked"):
                 last_seen[key(e)] = float(e["t"])
+        # Open vSwitch evicts only from a full table: an inferred eviction (loft_ryu_app
+        # _evictions) counts only if that switch held >= 98 % of the capacity at the poll it is
+        # logged at or the next one; otherwise the entry expired between polls (the inference
+        # flagged 1,351 such entries in a benign-only tree run with the tables 42 % full).
+        polls = {}
+        for e in ev:
+            if e["event"] == "evict" and e.get("sw") and e["sw"] not in polls:
+                f = os.path.join(d, f"switch_{dom}_{e['sw']}.csv")
+                rr_ = _rows(f if os.path.exists(f) else log)
+                polls[e["sw"]] = ([x["t"] for x in rr_], [x["entries"] for x in rr_])
+
+        def full_at(sw, t):
+            if not sw or sw not in polls:
+                return True
+            ts, n = polls[sw]
+            i = bisect.bisect_left(ts, t - 1e-6)
+            return any(n[j] >= 0.98 * capacity for j in (i, i + 1) if j < len(n))
+        ev = [e for e in ev if e["event"] != "evict" or full_at(e.get("sw"), float(e["t"]))]
         for e in ev:
             if e["event"] in ("delete", "evict") and last_seen.get(key(e), -1.0) > float(e["t"]):
                 back.add(key(e))
