@@ -1,0 +1,86 @@
+{
+  "created_utc": "2026-11-01T04:23:46.949657+00:00",
+  "defenses": [
+    "ovs-evict",
+    "v2.1",
+    "v2.1+evict",
+    "v2.1+portguard",
+    "v2.1+portguard+evict"
+  ],
+  "cells": [
+    [
+      "flash2",
+      null
+    ],
+    [
+      "flash4",
+      null
+    ],
+    [
+      "flash2",
+      "A2"
+    ],
+    [
+      "normal",
+      "A1"
+    ],
+    [
+      "normal",
+      "A2"
+    ],
+    [
+      "normal",
+      "A3"
+    ],
+    [
+      "normal",
+      "A4"
+    ],
+    [
+      "normal",
+      "A5"
+    ],
+    [
+      "normal",
+      "A6"
+    ],
+    [
+      "normal",
+      "A7"
+    ],
+    [
+      "normal",
+      null
+    ],
+    [
+      "normal",
+      "t2-3_p1-1_benign_spoof_M1700"
+    ],
+    [
+      "normal",
+      "t2-3_p1-3_benign_pool_M1700"
+    ],
+    [
+      "normal",
+      "t2-3_p1-3_benign_pool_M600"
+    ]
+  ],
+  "seeds": [
+    17000,
+    17001,
+    17002,
+    17003,
+    17004,
+    17005,
+    17006,
+    17007,
+    17008,
+    17009
+  ],
+  "eviction": "OVSEvict._evict (closest to idle expiry) on overflow, under the unchanged defense; nothing selected or tuned",
+  "hypotheses": {
+    "HF1": "benign flash crowds without attack (2x and 4x): v2.1+evict harms fewer benign flows than v2.1, and at most OVS eviction + 0.5 points",
+    "HF2": "A1-A7 at normal load: v2.1+evict is non-inferior to v2.1 (<= 0.5 points)",
+    "HF3": "E9's selected attacks: v2.1+portguard+evict's worst case is at most v2.1+portguard's + 0.5 points"
+  }
+}

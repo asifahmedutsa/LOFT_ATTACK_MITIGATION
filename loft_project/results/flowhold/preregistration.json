@@ -1,0 +1,54 @@
+{
+  "created_utc": "2026-11-01T17:45:05.410322+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3",
+    "T1"
+  ],
+  "grid": {
+    "hold_s": [
+      10.0,
+      30.0,
+      60.0
+    ],
+    "strikes": [
+      1,
+      2
+    ],
+    "mode": [
+      "fixed",
+      "sticky"
+    ]
+  },
+  "bases": [
+    "v2.1",
+    "v2.1+pg"
+  ],
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    18000,
+    18001,
+    18002,
+    18003,
+    18004,
+    18005,
+    18006,
+    18007,
+    18008,
+    18009
+  ],
+  "load_metric": "flow_mods = installs + deletes + demotes per episode (Packet-Ins reported)",
+  "selection": "per base: fewest mean flow_mods over A1-A7 validation episodes among settings with mean benign harm (A1-A7 + benign) <= base + 0.0025; ties within 1 % of flow_mods: lower harm; none eligible: no hold",
+  "test_cells": "A1-A7, benign and E9's three selected attacks; dedicated ports",
+  "comparison": "dms-blocklist (revision 2 knobs B) as the load reference",
+  "hypotheses": {
+    "HH1": "load: each selected hold sends fewer flow-mods than its base under attack (A1-A7 and E9's attacks; paired cluster Wilcoxon, Holm), and at least 30 % fewer on T1 A2, the testbed case",
+    "HH2": "harm: each selected hold is non-inferior to its base over A1-A7 + benign (cluster bootstrap 95 % upper bound of the mean harm difference <= 0.5 points)",
+    "HH3": "adaptive: each selected hold's worst case over E9's attacks is at most its base's + 0.5 points"
+  }
+}

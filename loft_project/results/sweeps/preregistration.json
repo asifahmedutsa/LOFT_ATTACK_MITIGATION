@@ -1,0 +1,158 @@
+{
+  "created_utc": "2026-11-01T02:01:33.293845+00:00",
+  "e6": {
+    "configs": {
+      "cap1500": {
+        "capacity": 1500
+      },
+      "cap2000": {
+        "capacity": 2000
+      },
+      "cap3000": {
+        "capacity": 3000
+      },
+      "cap3500": {
+        "capacity": 3500
+      },
+      "cap4000": {
+        "capacity": 4000
+      },
+      "idle20": {
+        "idle_timeout": 20.0
+      },
+      "idle30": {
+        "idle_timeout": 30.0
+      }
+    },
+    "defenses": [
+      "none",
+      "ovs-evict",
+      "dms-btt",
+      "ftmaster",
+      "ftop",
+      "rdefender",
+      "v2.1"
+    ],
+    "attacks": [
+      "A1",
+      "A2",
+      "A3",
+      "benign"
+    ],
+    "seeds": [
+      15000,
+      15001,
+      15002,
+      15003,
+      15004
+    ],
+    "domains": [
+      "D1",
+      "D2",
+      "D3"
+    ]
+  },
+  "e7": {
+    "settings": [
+      {
+        "rho": 0.5,
+        "budget": 0.01
+      },
+      {
+        "rho": 0.6,
+        "budget": 0.01
+      },
+      {
+        "rho": 0.7,
+        "budget": 0.01
+      },
+      {
+        "rho": 0.8,
+        "budget": 0.01
+      },
+      {
+        "rho": 0.9,
+        "budget": 0.01
+      },
+      {
+        "rho": 0.7,
+        "budget": 0.005
+      },
+      {
+        "rho": 0.7,
+        "budget": 0.02
+      },
+      {
+        "rho": 0.7,
+        "budget": 0.05
+      }
+    ],
+    "seeds": [
+      2000,
+      2001,
+      2002
+    ],
+    "attacks": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6",
+      "A7",
+      "benign"
+    ]
+  },
+  "e8": {
+    "cells": [
+      [
+        "flash2",
+        null
+      ],
+      [
+        "flash4",
+        null
+      ],
+      [
+        "flash2",
+        "A2"
+      ]
+    ],
+    "defenses": [
+      "none",
+      "ovs-evict",
+      "dms-btt",
+      "ftmaster",
+      "ftop",
+      "flora",
+      "rdefender",
+      "v2.1",
+      "v2.1+portguard",
+      "v2.1+fg"
+    ],
+    "seeds": [
+      15000,
+      15001,
+      15002,
+      15003,
+      15004,
+      15005,
+      15006,
+      15007,
+      15008,
+      15009
+    ],
+    "flash": "3 crowds per 300 s, 12 s each, level x normal new-flow rate, external sources"
+  },
+  "fixed": {
+    "rdefender": "results/e2_baselines/rdefender_fix/selected.json",
+    "floodguard": "results/floodguard/selected.json",
+    "others": "results/e2_baselines/selected.json, results/v21/selected.json"
+  },
+  "hypotheses": {
+    "H6": "E6: at every table size and idle timeout, v2.1 harms fewer benign flows than each baseline over A1-A3 (paired over domain x seed clusters, Holm-corrected)",
+    "H6b": "E6: at every setting where the benign traffic alone fits the table (no defense, no overflow without attack), v2.1 holds the attacker below 15 % of the table on average",
+    "H7": "E7 (descriptive): with rho 0.6-0.8 and budget 0.5-2 %, v2.1 stays within its selection constraints (attack share <= 0.15, overflow <= 5 s, benign-only harm <= 1 %)",
+    "H8": "E8: under benign flash crowds without attack, v2.1 harms <= 1 % of benign flows and no more than the best baseline + 0.5 points"
+  }
+}

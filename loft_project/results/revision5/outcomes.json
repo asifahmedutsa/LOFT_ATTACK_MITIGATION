@@ -1,0 +1,12 @@
+{
+  "H1": false,
+  "H2": true,
+  "H3": false,
+  "H3_per_trace": {
+    "T1": 5.567,
+    "T2": 0.579,
+    "T3": 3.338
+  },
+  "H4": true,
+  "H5": true
+}

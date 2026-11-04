@@ -1,0 +1,378 @@
+<title>FL-DualGuard Progress Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of findings; each finding = claim, evidence table or chart, caveat. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #17202b; --muted: #5b6573; --line: #dde1e7;
+  --accent: #1f5f8b; --accent-soft: #e3eef6;
+  --local: #b9c2cd; --fed: #1f5f8b; --pooled: #7a9b3a; --warn: #a35a00; --warn-soft: #fbefdf;
+  --good: #2c7a4b;
+  --sans: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161c; --surface: #18202a; --fg: #e6eaef; --muted: #9aa5b3; --line: #2a3542;
+  --accent: #6fb0e0; --accent-soft: #1c3346;
+  --local: #56616e; --fed: #6fb0e0; --pooled: #a7c76a; --warn: #f0b060; --warn-soft: #3a2a14;
+  --good: #6cc28f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161c; --surface: #18202a; --fg: #e6eaef; --muted: #9aa5b3; --line: #2a3542;
+  --accent: #6fb0e0; --accent-soft: #1c3346;
+  --local: #56616e; --fed: #6fb0e0; --pooled: #a7c76a; --warn: #f0b060; --warn-soft: #3a2a14;
+  --good: #6cc28f; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 64px; }
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 44px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(28px, 4.5vw, 38px); line-height: 1.15; margin: 0; text-wrap: balance; font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 22px; margin: 0; text-wrap: balance; font-weight: 600; }
+h3 { font-size: 15px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 17px; }
+section { display: grid; gap: 14px; }
+.takeaways { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; display: grid; gap: 12px; }
+.takeaways ol { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
+.takeaways li { max-width: 72ch; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+thead th { font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; background: var(--bg); }
+tbody tr:last-child td { border-bottom: 0; }
+td { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.l { font-family: var(--sans); }
+tr.fed td { background: var(--accent-soft); }
+.hi { color: var(--good); font-weight: 600; }
+.bad { color: var(--warn); font-weight: 600; }
+.note { font-size: 14px; color: var(--muted); max-width: 72ch; }
+.callout { border-left: 3px solid var(--warn); background: var(--warn-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; display: grid; gap: 6px; }
+.chip { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); vertical-align: middle; }
+.chip.done { color: var(--good); border-color: currentColor; }
+.chip.run { color: var(--warn); border-color: currentColor; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 14px 10px; display: grid; gap: 8px; min-width: 0; }
+figcaption { font-size: 13px; color: var(--muted); }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+svg .val { fill: var(--fg); font-size: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.next { display: grid; gap: 8px; padding-left: 22px; margin: 0; }
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+code { font-family: var(--mono); font-size: 13px; }
+</style>
+
+<main>
+<header>
+  <div class="eyebrow">FL-DualGuard · progress brief · 1 Nov 2026</div>
+  <h1>Federated defense against low-rate flow-table overflow: what the new experiments show</h1>
+  <p class="lede">New since 30 Oct: the published papers' own experiments on our setup, namely the comparison against four recent defenses, table-size, timeout and threshold sweeps, benign flash crowds and an adaptive attacker (sections 4–6), plus a flood rule and a switch-eviction fallback. Earlier: local versus federated detectors on Mininet/Ryu, scaling from 3 to 9 controllers and a model-family comparison. Harm throughout means benign flows refused or evicted while active, as a % of benign flows.</p>
+</header>
+
+<section class="takeaways" aria-label="Key results">
+  <h2>Key results</h2>
+  <ol>
+    <li><b>Federation helps on real switches, and only where it should.</b> On Mininet/Ryu, attacks a controller never saw locally harm <span class="num">13.8 %</span> of benign flows with its local model and <span class="num">0.36 %</span> with the federated one (D1, attack A2). All 18 testbed runs fall inside or near the simulator's 10-seed range.</li>
+    <li><b>Federated detection keeps its lead as controllers are added.</b> With 9 controllers, F1 on attacks seen only by <i>other</i> controllers is <span class="num">96.1</span> federated against <span class="num">52.7</span> local. The same three controllers gain recall as the federation grows (73 → 89 → 87 at K = 3, 6, 9).</li>
+    <li><b>New problem found: plain FedAvg falsely demotes more benign flows at K ≥ 6</b>, mostly on IoT controllers (online harm 8.5–11 % against 2.6–2.9 % for pooled training). Calibrating the threshold on whole flows instead of single polls cuts FedAvg harm to 4.2 % at K = 9 (from 6.9 %), against 2.1 % for pooled. But on the main three-controller setup it leaves harm unchanged and lengthens overflow from 4.7 to 6.6 s (fresh seeds), so it is not the default. IoT controllers remain the open part.</li>
+    <li><b>FL-DualGuard beats four recent published defenses on the same simulator.</b> Against rDefender, FloRa, FTOP and FTMaster (and DMS-BTT), v2.1 harms <span class="num">1.6 %</span> of benign flows against 7.6–23.6 %, and leaves the attacker the smallest share of the table (14.5 % against 22.8–38.0 %), in all 30 controller × seed clusters.</li>
+    <li><b>An adaptive attacker breaks v2.1 alone; DualGuard + PortGuard holds.</b> Searching 72 attack settings against each defense, the best response (refresh every 2–3 s with benign-looking packets) harms 54 % of benign flows under v2.1, the worst of seven defenses, against 4.7 % under v2.1 + PortGuard, the best (all 30 clusters). Under a 4× benign flash crowd PortGuard itself harms 13.6 %, so no configuration wins everywhere.</li>
+    <li><b>The lead over published defenses holds from 2,000 to 4,000 entries and at idle 20 s.</b> It breaks where the benign traffic alone overflows the table (1,500 entries; OVS eviction is better) and ties at idle 30 s. Letting the switch evict on overflow underneath v2.1 cuts harm from 1.6 to 0.6 % and fixes benign flash crowds (11.3 → 1.7 %).</li>
+    <li><b>A per-port flood rule closes the high-rate-flood gap.</b> Under a 2,000 flows/s flood v2.1 harmed 66 % of benign flows; with FloodGuard 2.7 % (rDefender 29 %), and 1.75 % in rDefender's own setting (rDefender 31 %). Caveat: when benign hosts share the attacker's port, A1–A7 harm rises from 1.5 % to 3.0 %.</li>
+    <li><b>Offline F1 does not pick the best online detector.</b> In the papers' offline format (8 families, 3 seeds) federated Random Forest and CatBoost lead (F1 98.1 against 97.2 for our MLP). Inside DualGuard on fresh seeds, Random Forest harms 3.6× more benign flows (5.2 % against 1.45 %), though it shortens overflow (1.1 s against 4.3 s). The MLP is also 2.4 KB against 16 MB and 4–8× faster per poll.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1 · Local vs federated detector on Mininet/Ryu <span class="chip done">done · 18 runs</span></h2>
+  <p>Each controller is attacked with variants it never trained on: one seen by another controller, and A6, which no controller saw. Same DualGuard policy; only the model changes. OVS 3.3.9 with a 3,500-entry table, Ryu 4.34, 300 s per run, seed 4000.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Controller</th><th class="l">Attack</th><th class="l">Model</th><th>Testbed harm %</th><th>Simulator, same seed</th><th>Simulator mean [min, max]</th></tr></thead>
+    <tbody>
+      <tr><td>D1</td><td class="l">A2 (seen by D2)</td><td class="l">local</td><td class="bad">13.78</td><td>13.72</td><td>13.16 [7.97, 17.11]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A2 (seen by D2)</td><td class="l">federated</td><td class="hi">0.36</td><td>0.30</td><td>0.33 [0.11, 0.55]</td></tr>
+      <tr><td>D1</td><td class="l">A3 (seen by D3)</td><td class="l">local</td><td>0.01</td><td>0.14</td><td>0.68 [0.22, 1.25]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A3 (seen by D3)</td><td class="l">federated</td><td>0.47</td><td>0.15</td><td>0.58 [0.20, 1.15]</td></tr>
+      <tr><td>D1</td><td class="l">A6 (unseen)</td><td class="l">local</td><td>0.02</td><td>0.04</td><td>0.10 [0.02, 0.29]</td></tr>
+      <tr class="fed"><td>D1</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td>0.04</td><td>0.05</td><td>0.12 [0.04, 0.30]</td></tr>
+      <tr><td>D2</td><td class="l">A1 (seen by D1)</td><td class="l">local</td><td>0.19</td><td>3.49</td><td>3.09 [2.35, 4.01]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A1 (seen by D1)</td><td class="l">federated</td><td>2.61</td><td>3.33</td><td>2.88 [2.60, 3.26]</td></tr>
+      <tr><td>D2</td><td class="l">A3 (seen by D3)</td><td class="l">local</td><td>0.30</td><td>3.83</td><td>2.68 [2.17, 3.33]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A3 (seen by D3)</td><td class="l">federated</td><td>2.80</td><td>3.87</td><td>2.96 [2.49, 3.63]</td></tr>
+      <tr><td>D2</td><td class="l">A6 (unseen)</td><td class="l">local</td><td class="bad">6.13</td><td>9.58</td><td>7.58 [6.47, 8.46]</td></tr>
+      <tr class="fed"><td>D2</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td class="hi">3.08</td><td>2.27</td><td>2.26 [1.94, 2.75]</td></tr>
+      <tr><td>D3</td><td class="l">A1 (seen by D1)</td><td class="l">local</td><td>0.52</td><td>1.18</td><td>0.84 [0.11, 2.72]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A1 (seen by D1)</td><td class="l">federated</td><td>0.50</td><td>1.38</td><td>0.91 [0.10, 2.89]</td></tr>
+      <tr><td>D3</td><td class="l">A2 (seen by D2)</td><td class="l">local</td><td>0.22</td><td>1.28</td><td>0.64 [0.08, 1.84]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A2 (seen by D2)</td><td class="l">federated</td><td>0.36</td><td>1.38</td><td>0.74 [0.12, 1.97]</td></tr>
+      <tr><td>D3</td><td class="l">A6 (unseen)</td><td class="l">local</td><td class="bad">0.69</td><td>3.53</td><td>3.42 [0.66, 11.1]</td></tr>
+      <tr class="fed"><td>D3</td><td class="l">A6 (unseen)</td><td class="l">federated</td><td class="hi">0.10</td><td>0.34</td><td>0.36 [0.04, 2.08]</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Federation helps in the three cells where the simulator predicted it (D1 A2, D2 A6, D3 A6) and changes nothing elsewhere. One deviation: on D2 with attacks A1 and A3, the local model harms 0.2–0.3 % on the testbed against about 3 % simulated. Not yet explained; it does not change the conclusion. Benign Packet-In loss was 0–10 % per run and is reported separately, not as harm.</p>
+</section>
+
+<section>
+  <h2>2 · More controllers: 3 → 6 → 9 <span class="chip done">done · simulator</span></h2>
+  <p>Nine controller domains (three variants each of enterprise, IoT and cloud traffic), nested so K = 3 ⊂ 6 ⊂ 9. Each controller trains on <b>one</b> attack variant (A1, A2, A3, A4, A5, A7, then repeating), so a bigger federation also pools more attack knowledge. Local, FedAvg and pooled MLPs, 3 training seeds, threshold at 1 % benign per controller, 4,032 online episodes.</p>
+  <div class="legend"><span style="--c: var(--local)">Local only</span><span style="--c: var(--fed)">FedAvg</span><span style="--c: var(--pooled)">Pooled (all raw data, upper bound)</span></div>
+  <div class="charts">
+    <figure><svg id="c1" viewBox="0 0 340 220" role="img" aria-label="F1 on attacks seen by another controller"></svg>
+      <figcaption>Detection F1 on attacks this controller never saw, but another controller in the federation did.</figcaption></figure>
+    <figure><svg id="c2" viewBox="0 0 340 220" role="img" aria-label="F1 on attacks seen by no controller"></svg>
+      <figcaption>Detection F1 on attacks no controller in the federation saw (zero-day for everyone).</figcaption></figure>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Controllers (K)</th><th>No defense</th><th>Local</th><th>FedAvg</th><th>Pooled</th><th>FedAvg benign demotes / episode</th></tr></thead>
+    <tbody>
+      <tr><td>3</td><td>42.6</td><td>11.9</td><td class="hi">5.1</td><td>7.8</td><td>519</td></tr>
+      <tr><td>6</td><td>44.3</td><td>13.4</td><td class="bad">11.0</td><td>2.6</td><td>6,148</td></tr>
+      <tr><td>9</td><td>43.3</td><td>11.3</td><td class="bad">8.5</td><td>2.9</td><td>5,018</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Online harm %, mean over all controllers × 7 attacks × seeds. FedAvg always beats local, but at K = 6 and 9 it demotes about 10× more benign entries than pooled training. The worst are the IoT controllers C2, C5 and C8 (16–26 % harm), whose many low-rate periodic flows look like attack flows.</p>
+  <div class="callout">
+    <h3>Diagnosis: partly under-training on non-IID clients, partly an open problem</h3>
+    <p>Same data, K = 6 / 9, offline F1: FedAvg 30 rounds <span class="num">91.5 / 89.5</span>; <b>100 rounds <span class="num">94.4 / 92.7</span></b>; FedProx <span class="num">93.1 / 92.1</span>; 3 local epochs <span class="num">90.1 / 88.6</span>; local fine-tuning <span class="num">88.0 / 86.2</span>; pooled <span class="num">95.6 / 93.8</span>. More rounds closes most of the gap; fine-tuning hurts because it forgets other controllers' attacks.</p>
+    <p id="fedonline"><b>Online, the fixes help but do not close the gap.</b> Harm % at K = 6 / 9 (2 episode seeds): FedAvg 30 rounds <span class="num">11.0 / 8.5</span>; FedProx <span class="num">7.5 / 6.9</span>; 100 rounds <span class="num">7.3 / 7.7</span>; 3 local epochs <span class="num">10.3 / 7.5</span>; fine-tuning <span class="num">10.4 / 9.3</span>; pooled <span class="num">2.6 / 2.9</span>; local <span class="num">13.5 / 11.3</span>. On the IoT controllers every federated variant stays at 13–23 % against 4–6 % pooled. Offline every model keeps the 1 % benign budget per sampled entry, yet online FedAvg demotes 4,000–7,000 benign entries per episode against about 400–600 for pooled. A likely cause is that long-lived periodic IoT flows are scored at every poll, so each one gets hundreds of chances to cross the threshold.</p>
+  </div>
+  <div class="callout">
+    <h3>Fix tested: calibrate the threshold on whole flows <span class="chip done">done · 5,544 episodes</span></h3>
+    <p>Instead of flagging at most 1 % of sampled benign <i>rows</i>, each controller sets its threshold so that at most 1 % of benign <i>flows</i> ever cross it during its validation episodes (each flow's maximum score over all polls). The old row budget turned out to let about 5 % of benign flows cross. Also tested: weighting the federated average by each client's benign rows (favours IoT) or uniformly. Mean online harm %, 2 training seeds × 2 episode seeds:</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Model</th><th>K = 6, row budget</th><th>K = 6, flow 1 %</th><th>K = 9, row budget</th><th>K = 9, flow 1 %</th><th>IoT controllers, K = 9, flow 1 %</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Local</td><td>13.6</td><td>16.0</td><td>11.4</td><td>13.8</td><td>23.0</td></tr>
+        <tr class="fed"><td class="l">FedAvg</td><td>9.4</td><td>6.7</td><td>6.9</td><td class="hi">4.2</td><td>8.9</td></tr>
+        <tr class="fed"><td class="l">FedProx</td><td>8.5</td><td class="hi">5.4</td><td>8.6</td><td>5.8</td><td>11.3</td></tr>
+        <tr class="fed"><td class="l">FedProx, benign-weighted</td><td>10.3</td><td>6.4</td><td>9.1</td><td>5.9</td><td>11.3</td></tr>
+        <tr class="fed"><td class="l">FedProx, uniform weights</td><td>8.9</td><td>6.0</td><td>6.9</td><td>4.5</td><td>8.7</td></tr>
+        <tr><td class="l">Pooled (upper bound)</td><td>2.8</td><td>2.1</td><td>2.8</td><td>2.1</td><td>3.6</td></tr>
+      </tbody>
+    </table></div>
+    <p>Flow-level calibration cuts federated harm by about a third (FedAvg 6.9 → 4.2 % at K = 9) and halves benign demotes, while F1 on attacks seen by another controller stays at about 97. The cost is offline F1 on the attack no one saw (FedAvg 49 → 35 at K = 9). It helps pooled training too, but makes local models worse because they lose recall. Weighting by benign rows does not help. The gap to pooled training shrinks from about 6 points to about 2–3, and the IoT controllers (9–11 % against 3.6 %) remain the open part. These runs did not record attack containment.</p>
+  </div>
+  <div class="callout">
+    <h3>Check on the main three-controller setup: not adopted as default <span class="chip done">done · 480 episodes, unused seeds 10000–10009</span></h3>
+    <p>v2.1 with its current threshold against the same model with the flow-level threshold (fixed earlier on validation seeds, not retuned). Attacked episodes, means with 95 % cluster-bootstrap intervals; the paired test is over 30 controller × seed clusters.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Threshold</th><th>Benign harmed %</th><th>Evicted while active %</th><th>Attack's table share %</th><th>Overflow after attack, s (mean / p90)</th><th>D2 overflow, s</th></tr></thead>
+      <tbody>
+        <tr class="fed"><td class="l">Current (per poll)</td><td>1.56 [1.15, 2.01]</td><td>0.61</td><td>14.5</td><td class="hi">4.7 / 8.8</td><td>8.2</td></tr>
+        <tr><td class="l">Flow-level 1 %</td><td>1.49 [1.13, 1.88]</td><td>0.15</td><td>16.2</td><td>6.6 / 11.3</td><td>12.8</td></tr>
+      </tbody>
+    </table></div>
+    <p>With three controllers, harm does not change (p = 0.34) but containment gets worse in all 30 clusters: the attack holds 1.7 points more of the table and overflow lasts 1.9 s longer, above the 5 s limit set when v2.1 was chosen. This matches the earlier validation check. So the current threshold stays the default at K = 3. Flow-level calibration helps harm at K = 6 / 9, but whether it costs containment there too is not yet measured.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Does the model family change the outcome? <span class="chip done">done · 3 training seeds</span></h2>
+  <p>Our MLP against Random Forest and histogram gradient boosting (the families used by FTOP/FTMaster and SFTO-Guard). Trees cannot be weight-averaged, so their federated version averages the three controllers' local model outputs. Offline means over 3 controllers × 7 attacks; online harm from DualGuard episodes on unseen-by-self attacks. Values are mean ± standard deviation over 3 training seeds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Model</th><th class="l">Training</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>F1, zero-day A6</th><th>Online harm %</th><th>Model size</th></tr></thead>
+    <tbody>
+      <tr><td class="l">MLP (ours)</td><td class="l">local</td><td>91.3 ± 0.3</td><td>87.4 ± 2.8</td><td>72.1 ± 1.0</td><td>73.3 ± 1.4</td><td>33.7 ± 1.4</td><td>2.99 ± 0.77</td><td>2.4 KB</td></tr>
+      <tr class="fed"><td class="l">MLP (ours)</td><td class="l">federated</td><td>97.8 ± 0.6</td><td>97.2 ± 0.3</td><td>93.5 ± 2.7</td><td>94.7 ± 2.2</td><td>72.2 ± 14.5</td><td class="hi">1.33 ± 0.08</td><td>2.4 KB</td></tr>
+      <tr><td class="l">Random Forest</td><td class="l">local</td><td>94.8 ± 1.9</td><td>96.3 ± 1.4</td><td>83.8 ± 5.6</td><td>86.8 ± 5.7</td><td>72.1 ± 3.1</td><td>4.05 ± 0.49</td><td>16 MB</td></tr>
+      <tr class="fed"><td class="l">Random Forest</td><td class="l">federated</td><td class="hi">98.3 ± 0.1</td><td class="hi">97.4 ± 0.1</td><td class="hi">95.9 ± 0.4</td><td class="hi">96.5 ± 0.3</td><td class="hi">83.1 ± 1.8</td><td>4.89 ± 0.06</td><td>16 MB</td></tr>
+      <tr><td class="l">Gradient boosting</td><td class="l">local</td><td>90.7 ± 0.0</td><td>72.2 ± 0.2</td><td>69.2 ± 0.2</td><td>69.8 ± 0.1</td><td>24.1 ± 0.1</td><td>8.31 ± 0.13</td><td>650 KB</td></tr>
+      <tr class="fed"><td class="l">Gradient boosting</td><td class="l">federated</td><td>97.9 ± 0.0</td><td>97.3 ± 0.0</td><td>93.4 ± 0.2</td><td>94.7 ± 0.2</td><td>70.7 ± 1.1</td><td>5.45 ± 0.11</td><td>650 KB</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Federation lifts the MLP and gradient boosting by about 21–25 points of recall and Random Forest by 12. Random Forest is the best and most stable model offline, by about 2 points of F1 over the MLP; the MLP varies more between training seeds, mostly on the zero-day attack A6. Online the ranking reverses on every seed: the federated MLP harms 1.3 % of benign flows against 4.9 % for Random Forest, because the trees demote many more benign entries on the IoT domain. For Random Forest, output-averaging federation is even slightly worse online than local training.</p>
+  <div class="callout">
+    <h3>Random Forest inside DualGuard, full test protocol <span class="chip done">done · 960 episodes, unused seeds 12000–12009</span></h3>
+    <p>Same v2.1 policy and threshold rule, all 3 controllers, attacks A1–A7 plus benign-only. Attacked episodes; 95 % cluster-bootstrap intervals.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Detector</th><th>Benign harmed %</th><th>Attack's table share %</th><th>Overflow after attack, s (mean / p90)</th><th>Benign demotes</th><th>Decision time per poll</th></tr></thead>
+      <tbody>
+        <tr class="fed"><td class="l">MLP, FedAvg (v2.1)</td><td class="hi">1.45 [1.03, 1.89]</td><td>14.7</td><td>4.3 / 9.3</td><td class="hi">216</td><td class="hi">2.5 ms</td></tr>
+        <tr><td class="l">Random Forest, local</td><td>4.49 [3.19, 5.86]</td><td>14.8</td><td>2.6 / 4.0</td><td>2,836</td><td>9.2 ms</td></tr>
+        <tr class="fed"><td class="l">Random Forest, federated</td><td>5.19 [3.41, 7.01]</td><td>13.1</td><td class="hi">1.1 / 2.3</td><td>3,834</td><td>19.1 ms</td></tr>
+        <tr><td class="l">Random Forest, pooled</td><td>6.56 [4.07, 9.21]</td><td>13.2</td><td>1.2 / 2.4</td><td>3,169</td><td>8.9 ms</td></tr>
+      </tbody>
+    </table></div>
+    <p>The MLP harms 3–4.5× fewer benign flows than every forest, in all 30 controller × seed clusters and on every attack, including unseen A6 (0.86 % against 2.9–4.4 %). The forests hold the attack back harder (overflow 1.1–2.6 s against 4.3 s) because they demote 13–18× more benign entries. Their scores come in coarse steps, so the same 1 % row threshold lets far more benign flows cross at some poll.</p>
+  </div>
+  <div class="callout">
+    <h3>E1: offline table in the related papers' format <span class="chip done">done · 8 families × 3 training seeds</span></h3>
+    <p>Per-rule classification on our 17 features, D1–D3 test runs, all attacks mixed. Federated MLP = FedAvg; other federated families average the three local models' probabilities. Our operating point: τ at 1 % of benign validation rows. Mean over training seeds (KNN: seed 0 only).</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Family</th><th>Acc</th><th>Prec</th><th>Recall</th><th>F1</th><th>FPR</th><th>FNR</th><th>MCC</th><th>F1, unseen A6</th><th>F1, local</th><th>F1 fed. at 0.5</th><th>µs / rule</th></tr></thead>
+      <tbody>
+        <tr class="fed"><td class="l">MLP (ours)</td><td>97.4</td><td>98.6</td><td>95.8</td><td>97.2</td><td>1.19</td><td>4.3</td><td>94.8</td><td>72.2</td><td>85.4</td><td class="hi">95.2</td><td>0.5</td></tr>
+        <tr><td class="l">Random Forest</td><td class="hi">98.2</td><td class="hi">98.8</td><td>97.4</td><td class="hi">98.1</td><td>1.05</td><td>2.7</td><td>96.4</td><td>83.1</td><td class="hi">91.3</td><td>86.1</td><td>5.3</td></tr>
+        <tr><td class="l">CatBoost</td><td class="hi">98.2</td><td>98.6</td><td class="hi">97.7</td><td class="hi">98.1</td><td>1.22</td><td>2.4</td><td>96.4</td><td class="hi">83.9</td><td>89.3</td><td>86.1</td><td>0.5</td></tr>
+        <tr><td class="l">XGBoost</td><td>97.5</td><td>98.6</td><td>96.1</td><td>97.3</td><td>1.23</td><td>3.9</td><td>94.9</td><td>69.1</td><td>84.4</td><td>86.1</td><td>3.8</td></tr>
+        <tr><td class="l">LightGBM</td><td>97.5</td><td>98.5</td><td>96.2</td><td>97.3</td><td>1.24</td><td>3.9</td><td>95.0</td><td>71.4</td><td>84.1</td><td>86.0</td><td>21</td></tr>
+        <tr><td class="l">Logistic regression</td><td>92.5</td><td>98.5</td><td>84.8</td><td>91.0</td><td>1.16</td><td>15.2</td><td>85.3</td><td>13.7</td><td>85.5</td><td>85.7</td><td>0.1</td></tr>
+        <tr><td class="l">Linear SVM</td><td>89.3</td><td>98.4</td><td>78.5</td><td>87.3</td><td>1.12</td><td>21.5</td><td>79.7</td><td>5.7</td><td>85.7</td><td>85.7</td><td>0.2</td></tr>
+        <tr><td class="l">KNN</td><td>88.7</td><td>98.5</td><td>77.3</td><td>86.6</td><td>1.10</td><td>22.7</td><td>78.7</td><td>35.1</td><td>83.4</td><td>86.4</td><td>213</td></tr>
+      </tbody>
+    </table></div>
+    <p>Offline, the federated tree ensembles match or beat the MLP (F1 98.1 against 97.2) and generalise better to the unseen attack. Two caveats the papers' tables hide. At the papers' default 0.5 cut-off, output-averaged trees fall to F1 86 because an attack known to one controller is outvoted by the other two; FedAvg's MLP keeps 95.2. And offline rank does not predict online harm: the forest that wins here harms 3.6× more benign flows in DualGuard (callout above). DMS-BTT's table-state task (FN, APIT; three states) on our data: 93–94 % accuracy, 95 % attack detection, 3.3–4.1 % false alarms for all four tree families (DMS-BTT reports 87 % / 94 %).</p>
+  </div>
+</section>
+
+<section>
+  <h2>4 · Against four recent published defenses <span class="chip done">done · 2,160 test episodes, unused seeds 11000–11009</span></h2>
+  <p>rDefender (TIFS 2024), FloRa (TNSM 2024), FTOP (TNSE 2024) and FTMaster (TNSM 2023) reimplemented in our simulator from their papers, with each paper's stated parameters; settings a paper leaves open were tuned on validation seeds by the same rule that chose v2.1. Their classifiers are trained per controller, as these systems are deployed (and as DMS-BTT was). All 3 controllers, attacks A1–A7, 300 s, dedicated ports. Columns follow DMS-BTT's comparison table, then ours.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Defense</th><th>Avg attack share %</th><th>Max attack share %</th><th>Table usage %</th><th>Overflow after attack, s</th><th>TABLE_FULL</th><th>Benign harmed %</th><th>Benign Packet-In lost %</th><th>Decision ms</th></tr></thead>
+    <tbody>
+      <tr><td class="l">No defense</td><td>53.2</td><td>78.2</td><td>78.1</td><td>147.8</td><td>59,150</td><td>42.43</td><td>15.10</td><td>0.05</td></tr>
+      <tr><td class="l">EVICT (OVS)</td><td>51.1</td><td>83.5</td><td>78.2</td><td>158.4</td><td>0</td><td>12.62</td><td>0.00</td><td>0.05</td></tr>
+      <tr><td class="l">DMS-BTT (2025)</td><td>24.8</td><td>59.3</td><td>61.8</td><td>12.8</td><td>11,271</td><td>7.60</td><td>0.93</td><td>4.1</td></tr>
+      <tr><td class="l">rDefender (2024)</td><td>35.1</td><td>59.8</td><td>71.4</td><td>23.2</td><td>19,651</td><td>8.05</td><td>1.21</td><td>0.16</td></tr>
+      <tr><td class="l">FloRa (2024)</td><td>38.0</td><td>64.3</td><td>70.6</td><td>88.5</td><td>32,262</td><td>23.59</td><td>6.45</td><td>5.1</td></tr>
+      <tr><td class="l">FTOP (2024)</td><td>22.8</td><td>60.6</td><td>58.5</td><td>7.6</td><td>9,005</td><td>7.89</td><td>0.40</td><td>19.4</td></tr>
+      <tr><td class="l">FTMaster (2023)</td><td>25.7</td><td>60.7</td><td>61.9</td><td>43.3</td><td>22,103</td><td>12.71</td><td>4.05</td><td>9.7</td></tr>
+      <tr class="fed"><td class="l">FL-DualGuard v2.1</td><td class="hi">14.5</td><td class="hi">53.8</td><td class="hi">54.6</td><td>4.8</td><td>5,004</td><td class="hi">1.64</td><td class="hi">0.16</td><td>2.4</td></tr>
+      <tr class="fed"><td class="l">v2.1 + PortGuard</td><td>21.2</td><td class="hi">53.8</td><td>60.3</td><td class="hi">4.4</td><td class="hi">4,855</td><td>1.77</td><td>0.18</td><td>2.6</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">FL-DualGuard v2.1 harms 4.6–14× fewer benign flows than every published defense and holds the attacker to the smallest share of the table; both differences hold in all 30 controller × seed clusters (Holm-corrected p &lt; 0.001). Overflow time is lower than every baseline (DMS-BTT's difference is not significant, p = 0.19). The per-attack view explains the baselines' failures: FTMaster's local detector misses attacks its controller never trained on (A2 harm 16 %, mimicry A4 41 %); FloRa's 100 s age rule and per-source blocking work only on single-source or spoofed attacks (A5 0.1 %, A2 8 %) and miss pooled sources (A1, A3: 30–37 %); DMS-BTT and FTOP fail on mimicry A4 (19–24 %); rDefender is attack-agnostic but its random in-port deletion costs a steady 8 %. rDefender and FloRa did not halve the attacker's share on validation, so both were checked in their own papers' settings (below). A corrected rDefender (one deletion round per overflow event, as in the paper, instead of one per poll), re-tuned on validation and run on the same test seeds, gives 8.79 % harm, 32.2 % attack share and 18.2 s overflow: the conclusion does not change.</p>
+  <div class="callout">
+    <h3>Do the reimplementations reproduce their own papers? <span class="chip done">done · 645 episodes, unused seeds 13000–13004</span></h3>
+    <p>Each defense in its own paper's setting: idle timeout, switch replacement policy and attacks. Our benign traffic alone overflows a 2,000-entry table at these timeouts, so the table is sized for the same benign share as in our main setting (rDefender 5,000 entries; FloRa 4,000, inside its tested range). v2.1 is transferred unchanged, without retraining.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Setting · attack</th><th>No defense: harmed % / attack share %</th><th>FIFO or LRU switch</th><th>Published defense</th><th>FL-DualGuard v2.1</th></tr></thead>
+      <tbody>
+        <tr><td class="l">FloRa · F1–F4 (3 fixed attacker hosts, idle 20 s, FIFO)</td><td>—</td><td>13.8–14.3 / 53–56</td><td class="hi">0.2–3.5 / 4.6–18.3</td><td>5.3–10.2 / 6.7–16.1</td></tr>
+        <tr><td class="l">rDefender · LA flood, 300 new flows/s (idle 30 s)</td><td>56.8 / 55.1</td><td>LRU 0.5 / 64.6</td><td>5.9 / 24.3</td><td class="hi">2.4 / 10.8</td></tr>
+        <tr><td class="l">rDefender · HA flood, 2,000 new flows/s</td><td>77.0 / 75.1</td><td>LRU 22.6 / 86.0</td><td class="hi">31.0 / 44.0</td><td>55.0 / 57.1</td></tr>
+        <tr><td class="l">rDefender · LFTO A2</td><td>41.8 / 45.3</td><td>LRU 4.1 / 50.6</td><td>14.4 / 33.1</td><td class="hi">1.9 / 8.2</td></tr>
+        <tr><td class="l">rDefender · mimicry A4 (close to its ALA)</td><td>45.1 / 47.1</td><td>LRU 3.9 / 49.5</td><td>15.0 / 34.6</td><td class="hi">3.4 / 18.6</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>FloRa reproduces its paper.</b> Retrained in its setting, its classifier reaches 99.9 % offline accuracy (paper 99.5 %), attack rules stay at 5–18 % of the table (paper: under 35 %) and fall to 0 once the attacking hosts are blocked. In its own threat model, a few fixed attacker addresses, it beats v2.1. In ours (pooled and spoofed sources, idle 10 s) source blocking and the 100 s age rule do not apply, which is why it fails in E2. <b>rDefender reproduces its paper's ranking but not its absolute numbers.</b> It cuts the attacker's share well below LRU and no defense under both floods, as the paper reports, but cannot reach the paper's "under 10 attack rules" or zero Packet-In loss: our controller acts at a 1 s poll, and a 2,000 flows/s flood refills the table between polls. <b>New weakness for v2.1:</b> the high-rate flood HA, where v2.1 harms 55 % against rDefender's 31 %. v2.1's detector never saw floods and reacts only through the occupancy trigger. A per-port flood rule now closes this gap (next callout).</p>
+  </div>
+  <div class="callout">
+    <h3>Flood rule (FloodGuard) <span class="chip done">done · preregistered · 2,025 test episodes, unused seeds 14000–14009</span></h3>
+    <p>Each port's normal rate of new-flow requests is learned in quiet periods. Once the table is 70 % full, a port may install at most max(50, 10 × its normal rate) new entries per second; excess flows are refused at the controller (an OpenFlow meter on the table-miss rule could do this in the switch). Low-rate attacks stay under the cap and are left to v2.1. The 18 candidate settings, the selection rule and four hypotheses were fixed in a hashed file before any run; 10× / 50 / no purge was selected on validation seeds, then tested once.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Benign flows harmed %</th><th>v2.1</th><th>v2.1 + FloodGuard</th><th>rDefender</th></tr></thead>
+      <tbody>
+        <tr><td class="l">HA flood, attacker on its own port</td><td>65.7</td><td class="hi">2.7</td><td>29.0</td></tr>
+        <tr><td class="l">LA flood, own port</td><td>3.9</td><td class="hi">1.5</td><td>4.8</td></tr>
+        <tr><td class="l">A1–A7, own port</td><td>1.48</td><td class="hi">0.46</td><td>8.4</td></tr>
+        <tr><td class="l">HA flood, port shared with benign hosts</td><td>65.7</td><td class="hi">12.1</td><td>29.7</td></tr>
+        <tr><td class="l">A1–A7, shared port</td><td class="hi">1.48</td><td>2.97</td><td>11.3</td></tr>
+        <tr><td class="l">rDefender's setting · HA flood</td><td>56.0</td><td class="hi">1.75</td><td>31.2</td></tr>
+        <tr><td class="l">Benign traffic only</td><td>0.08</td><td>0.08</td><td>0.01</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>H1 (floods, better than v2.1) holds</b> in both port arrangements, all 30 clusters. <b>H3 (no harm without attack) holds.</b> <b>H4 (better than rDefender under HA in its own setting) holds:</b> 1.75 % against 31.2 %, all 15 clusters. <b>H2 (no worse than v2.1 on A1–A7) holds only when the attacker has its own port</b>, where FloodGuard even cuts harm from 1.48 to 0.46 % and overflow from 4.3 to 0.2 s. When benign hosts share the attacker's port, the cap also refuses their new flows: harm on A1–A7 doubles to 2.97 % (worse in all 30 clusters), and HA still harms 12 %. Validation averaged both port arrangements, which hid this. Paper framing: FloodGuard as an optional module for switch ports with one host (the common case at the edge), or combined with PortGuard's per-source split on shared ports — the next thing to test.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5 · Table size, thresholds and flash crowds <span class="chip done">done · preregistered · 4,416 episodes, unused seeds 15000–15009</span></h2>
+  <p>The sweeps the published papers run (FTMaster, FloRa, FTShield, rDefender, FTOP), on the same simulator and baselines as section 4. Every defense keeps its main-setting model and thresholds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Benign flows harmed %, A1–A3</th><th>No defense</th><th>EVICT</th><th>DMS-BTT</th><th>FTMaster</th><th>FTOP</th><th>rDefender</th><th>v2.1</th><th>v2.1 attack share %</th></tr></thead>
+    <tbody>
+      <tr><td class="l">1,500 entries (benign alone overflows)</td><td>71.9</td><td class="hi">22.5</td><td>47.5</td><td>46.0</td><td>28.6</td><td>36.8</td><td class="bad">32.1</td><td>5.1</td></tr>
+      <tr><td class="l">2,000 entries</td><td>67.1</td><td>20.7</td><td>21.4</td><td>23.5</td><td>20.2</td><td>29.0</td><td class="hi">15.8</td><td>9.2</td></tr>
+      <tr><td class="l">3,000 entries</td><td>56.3</td><td>15.8</td><td>6.4</td><td>10.2</td><td>10.0</td><td>15.2</td><td class="hi">4.1</td><td>13.4</td></tr>
+      <tr><td class="l">3,500 entries (main setting)</td><td>50.4</td><td>13.6</td><td>4.4</td><td>7.8</td><td>4.7</td><td>9.1</td><td class="hi">1.8</td><td>13.6</td></tr>
+      <tr><td class="l">4,000 entries</td><td>43.7</td><td>11.3</td><td>3.5</td><td>6.4</td><td>2.5</td><td>5.5</td><td class="hi">0.9</td><td>13.6</td></tr>
+      <tr><td class="l">Idle timeout 20 s</td><td>54.6</td><td>13.6</td><td>6.7</td><td>12.1</td><td>11.2</td><td>18.1</td><td class="hi">5.6</td><td>9.6</td></tr>
+      <tr><td class="l">Idle timeout 30 s</td><td>58.7</td><td>13.6</td><td>10.4</td><td>19.1</td><td>15.5</td><td>22.9</td><td>11.1</td><td>6.6</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>Table size and idle timeout (E6).</b> v2.1 has the lowest harm from 2,000 to 4,000 entries and at idle 20 s, and keeps the attacker below 15 % of the table in every setting (H6b holds). H6 (lowest harm everywhere) fails at the edges: at 1,500 entries the benign traffic alone overflows the table, and OVS eviction (22.5 %) beats v2.1 (32.1 %), which only removes suspected attack entries; at idle 30 s v2.1 ties DMS-BTT and EVICT (11.1 % against 10.4 and 13.6, not significant). With 5 seeds per cell, several pairwise wins in the middle of the range are not significant after Holm correction.</p>
+  <p class="note"><b>Threshold sensitivity (E7, validation seeds).</b> Across occupancy triggers 0.5–0.9 and flag budgets 0.5–5 %, attacked harm stays at 1.3–3.4 % and the attacker's share at 12–19 %. The trade-off is monotone: a lower trigger or larger budget cuts overflow but harms more benign flows, and a trigger of 0.5 breaks the 1 % benign-only limit. The preregistered claim (all of 0.6–0.8 and 0.5–2 % within the selection limits) fails narrowly: overflow reaches 5.1 s at trigger 0.8 and 5.3 s at budget 0.5 %, against the 5 s limit.</p>
+  <p class="note"><b>Benign flash crowds (E8, FTOP's test).</b> Three 12 s crowds adding 2× or 4× the normal new-flow rate, with no attack. H8 fails: v2.1 harms 1.2 % and 11.6 %, about as much as no defense (0.7 / 12.6 %), because the overflow is benign and v2.1 only removes suspected attack entries; OVS eviction is best (0.05 / 1.3 %). Under a flash crowd during attack A2, v2.1 + FloodGuard is the best defense (1.3 %, then v2.1 3.5 %, DMS-BTT 6.9 %). </p>
+  <div class="callout">
+    <h3>Follow-up: switch eviction as the overflow fallback <span class="chip done">done · preregistered · 2,100 episodes, unused seeds 17000–17009</span></h3>
+    <p>The switch evicts the entries closest to idle expiry when the table is full (OVS overflow_policy=evict), underneath the unchanged controller defense. Nothing tuned.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th class="l">Benign flows harmed %</th><th>EVICT</th><th>v2.1</th><th>v2.1 + evict</th><th>v2.1 + PortGuard</th><th>v2.1 + PortGuard + evict</th></tr></thead>
+      <tbody>
+        <tr><td class="l">Flash crowd 2×, no attack</td><td class="hi">0.13</td><td>1.30</td><td>0.73</td><td>1.92</td><td>1.92</td></tr>
+        <tr><td class="l">Flash crowd 4×, no attack</td><td class="hi">1.18</td><td>11.26</td><td>1.66</td><td class="bad">13.64</td><td class="bad">13.63</td></tr>
+        <tr><td class="l">Flash crowd 2× during A2</td><td>11.83</td><td>3.42</td><td class="hi">0.69</td><td>5.44</td><td>4.56</td></tr>
+        <tr><td class="l">A1–A7, normal load</td><td>12.5</td><td>1.59</td><td class="hi">0.60</td><td>1.67</td><td>0.79</td></tr>
+        <tr><td class="l">E9 worst case (fast refresh)</td><td>21.8</td><td class="bad">54.6</td><td>20.1</td><td class="hi">4.73</td><td class="hi">4.73</td></tr>
+      </tbody>
+    </table></div>
+    <p>Eviction underneath v2.1 is nearly free and helps everywhere: A1–A7 harm falls from 1.6 to 0.6 % (all 30 clusters), benign flash crowds from 1.3 / 11.3 % to 0.7 / 1.7 %, and the fast-refresh worst case from 55 to 20 %. HF2 (no worse on A1–A7) and HF3 (PortGuard's worst case unchanged) hold; HF1 fails narrowly: under flash crowds v2.1 + evict is 0.54 points above eviction alone (limit 0.5). <b>No configuration wins everywhere:</b> PortGuard is the only defense that holds against the adaptive attacker, but under a 4× benign flash crowd it refuses new benign flows (13.6 %, eviction does not help because the refusal is at admission). A PortGuard trigger that tells a benign surge from an attack (for example, many ports growing at once) is the next design question.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6 · Adaptive attacker: each defense against its own worst case <span class="chip done">done · preregistered · 3,654 episodes, unused seeds 16000–16009</span></h2>
+  <p>ALFO's attacker adapts to the switch's eviction policy; ours adapts to every defense. For each defense the attacker searched 72 LFTO settings (refresh every 2–3, 5–8.5 or 8–9.8 s; 1 or 1–3 packets per refresh; 64 B or benign-like sizes; pooled or spoofed sources; 600, 1,000 or 1,700 flows per attacker, the smaller ones staying under v2.1's 70 % trigger) on validation seeds, keeping the one that harmed most benign flows. Every defense then faced every selected attack on fresh seeds.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="l">Defense</th><th>Its best-response attack</th><th>Harmed %</th><th>Attack share %</th><th>Worst case over all selected attacks %</th></tr></thead>
+    <tbody>
+      <tr><td class="l">EVICT (OVS)</td><td class="l">refresh 2–3 s, benign sizes, pooled, 1,700</td><td>21.9</td><td>76.4</td><td>21.9</td></tr>
+      <tr><td class="l">DMS-BTT</td><td class="l">same</td><td>47.0</td><td>78.3</td><td>47.0</td></tr>
+      <tr><td class="l">FTOP</td><td class="l">same</td><td>29.2</td><td>73.5</td><td>29.2</td></tr>
+      <tr><td class="l">rDefender</td><td class="l">same</td><td>30.1</td><td>54.2</td><td>30.1</td></tr>
+      <tr class="fed"><td class="l">FL-DualGuard v2.1</td><td class="l">same</td><td class="bad">54.1</td><td>65.5</td><td class="bad">54.1</td></tr>
+      <tr class="fed"><td class="l">v2.1 + FloodGuard</td><td class="l">refresh 2–3 s, 1 packet, benign sizes, spoofed, 1,700</td><td>20.1</td><td>53.3</td><td>20.1</td></tr>
+      <tr class="fed"><td class="l">v2.1 + PortGuard</td><td class="l">refresh 2–3 s, benign sizes, pooled, 600</td><td class="hi">4.7</td><td>28.9</td><td class="hi">4.7</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note"><b>v2.1 alone is not robust to an adaptive attacker: its worst case is the worst of all seven defenses</b> (H9 and H9b fail). The same attack, fast refresh with benign-looking packets, is the best response to six of the seven defenses; its entries look like busy benign flows, so a detector cannot demote them (the revision 4 diagnosis). <b>v2.1 + PortGuard holds: 4.7 % worst case</b>, lower than every baseline's own worst case in all 30 controller × seed clusters (Holm p &lt; 0.001), because each port keeps its fair share whatever the attacker's timing, sizes or addresses (H9c). Its own best response is a smaller attack (600 flows per attacker) that stays under PortGuard's trigger. FloodGuard helps too (20.1 %) but does not stop fast refresh. <b>Paper consequence:</b> the claimed system against adaptive attackers must be DualGuard + PortGuard, with v2.1 alone reported as the non-adaptive result. PortGuard's caveats from revision 4 stay: it needs attackers on their own access ports, and on the testbed the refused attacker still floods Packet-Ins (24 % harm against fast refresh), so a switch-side meter is needed before claiming it on hardware.</p>
+</section>
+
+<section>
+  <h2>7 · Already established (testbed matrix, 29 Oct)</h2>
+  <p>48 Mininet/Ryu runs reproduce the simulator on D1–D3 for every defense, after we found and fixed a controller timing bug (entries dated by a lagging poll clock lost their per-flow history). DualGuard v2.1 alone: 0.26–5.3 % harm against 34–45 % with no defense. Open problem: on the bigFlows trace with the mimicry attack A4, DualGuard alone harms 40.9 % (27 % simulated); with PortGuard it is 3.2 %.</p>
+</section>
+
+<section>
+  <h2>What I'd like to discuss</h2>
+  <ul class="next">
+    <li>Does the scaling result plus the FedAvg diagnosis make a stronger paper story than a fixed 3-controller setup? It lets us claim FL keeps paying off as controllers join, and to show the convergence fix.</li>
+    <li>Which system do we claim? v2.1 + PortGuard is the only configuration robust to the adaptive attacker, but it needs per-host access ports and harms benign flash crowds; v2.1 + switch eviction is best on every non-adaptive test. A reasonable paper framing: DualGuard + eviction as the default, PortGuard as the adaptive-attacker module, with both limits stated.</li>
+    <li>E5 on the testbed is coded (rDefender, FTMaster, FTOP and FloRa in the Ryu controller, decisions identical to the simulator, and a new-connection probe) and waits for a reinstall and about 4 h of runs.</li>
+    <li>Next: a concurrent multi-controller Mininet topology, the automatic PortGuard switch, and the fair-share guarantee with a weight-inflation attacker.</li>
+  </ul>
+</section>
+
+<footer>Code and data: branch <code>loft-v2</code>. Scaling in <code>loftbench/scale.py</code>, <code>scale_fed.py</code>, results in <code>results/scale/</code>; Mininet runs in <code>results/testbed_fl/</code>; model comparison in <code>results/ml_compare/</code>; testbed matrix in <code>docs/results_v2.md</code> §18; sweeps in <code>loftbench/sweeps.py</code> (<code>results/sweeps/</code>), adaptive attacker in <code>loftbench/e9_adaptive.py</code> (<code>results/e9_adaptive/</code>), eviction fallback in <code>loftbench/evict_fallback.py</code> (<code>results/evict_fallback/</code>), testbed baselines in <code>loftbench/testbed_baselines.py</code> and <code>testbed/matrix_e5.sh</code>.</footer>
+</main>
+
+<script>
+(function () {
+  var data = {
+    c1: { K3: [67.5, 99.1, 99.1], K6: [47.2, 96.7, 98.0], K9: [52.7, 96.1, 98.0] },
+    c2: { K3: [36.9, 55.2, 50.9], K6: [19.1, 59.9, 80.8], K9: [14.5, 48.7, 67.8] }
+  };
+  var colors = ["var(--local)", "var(--fed)", "var(--pooled)"];
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  Object.keys(data).forEach(function (id) {
+    var svg = document.getElementById(id), L = 34, R = 330, T = 14, B = 186;
+    var y = function (v) { return B - (B - T) * v / 100; };
+    [0, 25, 50, 75, 100].forEach(function (t) {
+      svg.appendChild(el("line", { x1: L, x2: R, y1: y(t), y2: y(t), stroke: "var(--line)", "stroke-width": 1 }));
+      svg.appendChild(el("text", { x: L - 6, y: y(t) + 4, "text-anchor": "end" }, t));
+    });
+    var groups = Object.keys(data[id]), gw = (R - L) / groups.length, bw = 22;
+    groups.forEach(function (g, gi) {
+      var x0 = L + gi * gw + (gw - 3 * bw - 8) / 2;
+      data[id][g].forEach(function (v, i) {
+        var x = x0 + i * (bw + 4);
+        svg.appendChild(el("rect", { x: x, y: y(v), width: bw, height: B - y(v), fill: colors[i], rx: 2 }));
+        svg.appendChild(el("text", { x: x + bw / 2, y: y(v) - 4, "text-anchor": "middle", "class": "val" }, Math.round(v)));
+      });
+      svg.appendChild(el("text", { x: L + gi * gw + gw / 2, y: B + 18, "text-anchor": "middle" }, "K = " + g.slice(1)));
+    });
+  });
+})();
+</script>

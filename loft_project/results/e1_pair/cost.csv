@@ -1,0 +1,5 @@
+model,bytes_per_controller,ms_per_10k_entries
+rf100,16335229,125.0
+rf50d12,3681684,71.8
+rf30d10,1363085,39.9
+cb,342156,18.9

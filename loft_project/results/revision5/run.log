@@ -1,0 +1,85 @@
+collected 69 runs
+{
+ "T1": {
+  "train_rows": 362053,
+  "train_attack_rows": 168640,
+  "val_benign_rows": 32122,
+  "tau_fedavg": 0.9998195777402649,
+  "tau_local_lib": 0.10544662277562714
+ },
+ "T2": {
+  "train_rows": 221902,
+  "train_attack_rows": 191502,
+  "val_benign_rows": 3632,
+  "tau_fedavg": 5.26316518428539e-08,
+  "tau_local_lib": 0.0851186151371727
+ },
+ "T3": {
+  "train_rows": 317678,
+  "train_attack_rows": 181873,
+  "val_benign_rows": 24494,
+  "tau_fedavg": 0.9840206513868103,
+  "tau_local_lib": 0.0040657013410160545
+ },
+ "tau_fedavg_synthetic": {
+  "fedavg/D1": 0.006994208855314017,
+  "fedavg/D2": 0.003045911270884633,
+  "fedavg/D3": 0.0031114712578634023
+ }
+}
+  [test] 200/2250 episodes, 126s
+  [test] 400/2250 episodes, 302s
+  [test] 600/2250 episodes, 481s
+  [test] 800/2250 episodes, 654s
+  [test] 1000/2250 episodes, 954s
+  [test] 1200/2250 episodes, 1122s
+  [test] 1400/2250 episodes, 1430s
+  [test] 1600/2250 episodes, 1647s
+  [test] 1800/2250 episodes, 1873s
+  [test] 2000/2250 episodes, 2082s
+  [test] 2200/2250 episodes, 2374s
+== hypothesis_tests.csv
+hypothesis                               a                                             b  mean_cluster_diff_points  a_wins  a_losses            p       p_holm
+        H1 FL-DualGuard v2.1 (transferred)  DMS-BTT tuned + blocklist (trained on trace)                  0.508598      10        20 8.793857e-02 8.793857e-02
+        H2 FL-DualGuard v2.1 (transferred) Local MLP + public library (trained on trace)                 -2.578888      22         8 2.688542e-05          NaN
+        H4      v2.1 + PortGuard (step 4b)               FL-DualGuard v2.1 (transferred)                -57.800633      30         0 1.862645e-09 3.725290e-09
+        H5      v2.1 + PortGuard (step 4b)               FL-DualGuard v2.1 (transferred)                 -0.836311      16        10 1.019201e-01          NaN
+== table_main_dmsbtt_format.csv
+trace                                        method           harmed (%)  avg Pa (%)  max Pa (%)  avg table usage (%)  earliest overflow (s)  overflow time (s)  Packet-In  TABLE_FULL
+   T1                                    No defense 45.27 [44.20, 46.66]       58.47       86.44                81.57                   63.1             133.22      91608       62727
+   T1  DMS-BTT tuned + blocklist (trained on trace)    3.36 [3.03, 3.69]       16.89       42.15                56.11                  136.5               4.24     105638        3222
+   T1 Local MLP + public library (trained on trace)    8.27 [7.84, 8.78]       24.16       66.32                61.47                   76.5              23.68     105327       12816
+   T1               FL-DualGuard v2.1 (transferred)    5.57 [5.16, 6.02]       27.29       64.76                65.36                   71.8              15.71      99341       10639
+   T1                    v2.1 + PortGuard (step 4b)    2.13 [1.89, 2.41]       31.65       63.79                69.87                   69.6               4.12      91291        4503
+   T2                                    No defense 27.05 [23.23, 31.38]       64.83       93.52                58.89                   79.0              50.64      14888        6126
+   T2  DMS-BTT tuned + blocklist (trained on trace)    0.51 [0.40, 0.65]       36.39       72.34                35.89                  180.9               0.06      46753          16
+   T2 Local MLP + public library (trained on trace)    0.41 [0.25, 0.62]       32.22       81.51                32.31                  100.9               0.23      55642          32
+   T2               FL-DualGuard v2.1 (transferred)    0.58 [0.53, 0.65]       25.49       77.15                26.36                  173.8               0.00      66604           0
+   T2                    v2.1 + PortGuard (step 4b)    0.56 [0.51, 0.63]       25.71       77.15                26.56                  173.8               0.00      66314           0
+   T3                                    No defense 45.28 [42.63, 47.69]       61.16       89.37                74.15                   71.4             107.95     179088      157281
+   T3  DMS-BTT tuned + blocklist (trained on trace)    4.09 [3.74, 4.46]       20.88       54.43                48.83                   97.8               7.43      96406        9620
+   T3 Local MLP + public library (trained on trace)    8.54 [7.97, 9.15]       25.99       72.62                52.15                   77.8              19.30     103537       20914
+   T3               FL-DualGuard v2.1 (transferred)    3.34 [2.59, 4.08]       25.64       70.59                52.01                   77.8               4.28      96197        6730
+   T3                    v2.1 + PortGuard (step 4b)    4.29 [3.20, 5.38]       30.89       72.20                56.32                   77.8               1.92      94727        3658
+ both                                    No defense 39.20 [35.51, 42.55]       61.48       89.78                71.54                   63.1              97.27      95195       75378
+ both  DMS-BTT tuned + blocklist (trained on trace)    2.65 [2.06, 3.22]       24.72       56.31                46.94                   97.8               3.91      82933        4286
+ both Local MLP + public library (trained on trace)    5.74 [4.31, 7.09]       27.46       73.48                48.64                   76.5              14.41      88168       11254
+ both               FL-DualGuard v2.1 (transferred)    3.16 [2.35, 3.93]       26.14       70.83                47.91                   71.8               6.67      87381        5790
+ both                    v2.1 + PortGuard (step 4b)    2.32 [1.71, 3.01]       29.42       71.05                50.91                   69.6               2.02      84111        2720
+== table_benign_only.csv
+domain  DMS-BTT tuned + blocklist (trained on trace)  Local MLP + public library (trained on trace)  No defense  FL-DualGuard v2.1 (transferred)  v2.1 + PortGuard (step 4b)
+    T1                                           0.0                                          0.000         0.0                            0.000                       0.000
+    T2                                           0.0                                          0.000         0.0                            0.000                       0.000
+    T3                                           0.0                                          0.057         0.0                            0.411                       0.411
+{
+ "H1": false,
+ "H2": true,
+ "H3": false,
+ "H3_per_trace": {
+  "T1": 5.567,
+  "T2": 0.579,
+  "T3": 3.338
+ },
+ "H4": true,
+ "H5": true
+}

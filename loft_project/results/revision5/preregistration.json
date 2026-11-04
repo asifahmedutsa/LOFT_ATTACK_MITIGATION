@@ -1,0 +1,116 @@
+{
+  "created_utc": "2026-10-29T07:31:12.692258+00:00",
+  "traces": {
+    "T1": {
+      "trace": "bigFlows.pcap",
+      "rate_pps": 1200.0,
+      "file": "bigflows.npz"
+    },
+    "T2": {
+      "trace": "IMC-10 univ2 (first 3,000,000 packets of univ2_pt1)",
+      "rate_pps": 1000.0,
+      "file": "univ2.npz",
+      "note": "FTOP's rate"
+    },
+    "T3": {
+      "trace": "same univ2 window",
+      "rate_pps": 9000.0,
+      "file": "univ2.npz",
+      "note": "native rate"
+    }
+  },
+  "defenses": [
+    "none",
+    "dms-blocklist",
+    "local-lib",
+    "v2.1",
+    "v2.1+pfs4b"
+  ],
+  "library": [
+    "A1",
+    "A2",
+    "A3"
+  ],
+  "hypotheses": {
+    "H1": "traces, A1-A7: v2.1 (transferred, recalibrated only) harms fewer benign flows than DMS-BTT tuned + blocklist trained on the trace (cluster Wilcoxon over (trace, seed), Holm)",
+    "H2": "traces, A1-A7: v2.1 transferred is non-inferior to local-lib trained on the trace (mean harm difference <= 0.5 points)",
+    "H3": "each trace, A1-A7: v2.1 transferred harms <= 3 % of benign flows on average",
+    "H4": "traces, gaps <= 1 s: v2.1+pfs4b harms fewer benign flows than v2.1",
+    "H5": "traces, A1-A7: v2.1+pfs4b is non-inferior to v2.1 (<= 0.5 points)"
+  },
+  "fixed": {
+    "v21": "results/v21 + results/v21 (fedavg, rho 0.7, t_short 1 s, no hard guard)",
+    "dms_blocklist": {
+      "family": "B",
+      "h2": 0.6,
+      "h1": 0.9,
+      "p": 0.7,
+      "numb": "bytes",
+      "block": 60,
+      "id": "family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60"
+    },
+    "pfs4b": {
+      "id": "gated-weighted-q0.9",
+      "mode": "gated",
+      "share": "weighted",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    }
+  },
+  "ports": "dedicated (DMS-BTT topology; trace flows anchored to their client host)",
+  "train_seeds": [
+    1000,
+    1001,
+    1002,
+    1003,
+    1004
+  ],
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    9000,
+    9001,
+    9002,
+    9003,
+    9004,
+    9005,
+    9006,
+    9007,
+    9008,
+    9009
+  ],
+  "attacks": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "X0.25",
+    "X0.5",
+    "X0.8",
+    "X1",
+    "X2",
+    "X5",
+    "X9"
+  ],
+  "gaps_s": [
+    0.25,
+    0.5,
+    0.8,
+    1.0,
+    2.0,
+    5.0,
+    9.0
+  ],
+  "calibration_budget": 0.01,
+  "primary_metric": "benign_flows_harmed_frac",
+  "statistics": "cluster bootstrap and cluster Wilcoxon over (trace, seed); Holm across H1, H4",
+  "also_reported": "DMS-BTT Table 6 format: average and max attack share, average table usage, earliest overflow, total overflow time, Packet-In and TABLE_FULL counts"
+}

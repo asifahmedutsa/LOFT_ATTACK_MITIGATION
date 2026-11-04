@@ -1,0 +1,56 @@
+{
+  "train/D1": {
+    "rows": 238144,
+    "attack_frac": 0.435211468691212,
+    "runs": 15,
+    "state_rows": 3600
+  },
+  "train/D2": {
+    "rows": 261957,
+    "attack_frac": 0.36270074859614365,
+    "runs": 15,
+    "state_rows": 3600
+  },
+  "train/D3": {
+    "rows": 228317,
+    "attack_frac": 0.45164836608750114,
+    "runs": 15,
+    "state_rows": 3600
+  },
+  "val/D1": {
+    "rows": 143585,
+    "attack_frac": 0.43776856914023055,
+    "runs": 9,
+    "state_rows": 2160
+  },
+  "val/D2": {
+    "rows": 156497,
+    "attack_frac": 0.35659469510597647,
+    "runs": 9,
+    "state_rows": 2160
+  },
+  "val/D3": {
+    "rows": 132456,
+    "attack_frac": 0.45596273479495075,
+    "runs": 9,
+    "state_rows": 2160
+  },
+  "test_off/D1": {
+    "rows": 688647,
+    "attack_frac": 0.4929405050773473,
+    "runs": 40,
+    "state_rows": 9600
+  },
+  "test_off/D2": {
+    "rows": 736134,
+    "attack_frac": 0.4060483553266117,
+    "runs": 40,
+    "state_rows": 9600
+  },
+  "test_off/D3": {
+    "rows": 661917,
+    "attack_frac": 0.523938801994812,
+    "runs": 40,
+    "state_rows": 9600
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "ftmaster/D1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 0
+  },
+  "ftop/D1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 240505
+  },
+  "flora/D1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 37465
+  },
+  "rdefender/D1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 84292
+  },
+  "ftmaster/T1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 234555
+  },
+  "ftop/T1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 227180
+  },
+  "flora/T1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 25623
+  },
+  "rdefender/T1": {
+    "identical": true,
+    "polls": 161,
+    "actions": 156113
+  }
+}

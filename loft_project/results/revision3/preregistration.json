@@ -1,0 +1,191 @@
+{
+  "created_utc": "2026-10-26T05:41:00.463094+00:00",
+  "methods": [
+    "local",
+    "fedavg",
+    "pooled",
+    "ensemble",
+    "lib-dms",
+    "lib-all"
+  ],
+  "policy": {
+    "rho": 0.7,
+    "t_short": 1.0,
+    "hard": false
+  },
+  "calibration": "per-domain per-poll, budget 0.01, own validation benign",
+  "main_exposure": {
+    "D1": [
+      "A1",
+      "A4"
+    ],
+    "D2": [
+      "A2",
+      "A5"
+    ],
+    "D3": [
+      "A3",
+      "A7"
+    ]
+  },
+  "lovo_exposure": {
+    "A1": {
+      "D1": [
+        "A2",
+        "A5"
+      ],
+      "D2": [
+        "A3",
+        "A6"
+      ],
+      "D3": [
+        "A4",
+        "A7"
+      ]
+    },
+    "A2": {
+      "D1": [
+        "A1",
+        "A5"
+      ],
+      "D2": [
+        "A3",
+        "A6"
+      ],
+      "D3": [
+        "A4",
+        "A7"
+      ]
+    },
+    "A3": {
+      "D1": [
+        "A1",
+        "A5"
+      ],
+      "D2": [
+        "A2",
+        "A6"
+      ],
+      "D3": [
+        "A4",
+        "A7"
+      ]
+    },
+    "A4": {
+      "D1": [
+        "A1",
+        "A5"
+      ],
+      "D2": [
+        "A2",
+        "A6"
+      ],
+      "D3": [
+        "A3",
+        "A7"
+      ]
+    },
+    "A5": {
+      "D1": [
+        "A1",
+        "A4"
+      ],
+      "D2": [
+        "A2",
+        "A6"
+      ],
+      "D3": [
+        "A3",
+        "A7"
+      ]
+    },
+    "A6": {
+      "D1": [
+        "A1",
+        "A4"
+      ],
+      "D2": [
+        "A2",
+        "A5"
+      ],
+      "D3": [
+        "A3",
+        "A7"
+      ]
+    },
+    "A7": {
+      "D1": [
+        "A1",
+        "A4"
+      ],
+      "D2": [
+        "A2",
+        "A5"
+      ],
+      "D3": [
+        "A3",
+        "A6"
+      ]
+    }
+  },
+  "library_dms": [
+    "A1",
+    "A2",
+    "A3"
+  ],
+  "library_all": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A7"
+  ],
+  "alphas": [
+    0.05,
+    0.2,
+    1.0,
+    5.0,
+    "inf"
+  ],
+  "sweep_draws": 3,
+  "eval_seeds": [
+    7000,
+    7001,
+    7002,
+    7003,
+    7004,
+    7005,
+    7006,
+    7007,
+    7008,
+    7009
+  ],
+  "lovo_online_seeds": [
+    7000,
+    7001,
+    7002,
+    7003,
+    7004
+  ],
+  "train_seeds": [
+    1000,
+    1001,
+    1002,
+    1003,
+    1004
+  ],
+  "offline_eval": "test_off split (seeds 3000-3004)",
+  "hypotheses": {
+    "H1": "fedavg harms fewer benign flows than lib-dms (main design, online)",
+    "H2": "fedavg harms fewer benign flows than ensemble (main design, online)",
+    "H3": "fedavg harms fewer benign flows than lib-all (main design, online)",
+    "H4": "fedavg is within 1 percentage point of pooled on benign flows harmed (main design)",
+    "H5": "on held-out variants (LOVO, online) fedavg harms fewer benign flows than local and lib-dms",
+    "H6": "the fedavg - local gap in offline held-out TPR shrinks as exposure skew decreases (alpha up)"
+  },
+  "decision": "If lib-dms is not worse than fedavg on benign flows harmed (cluster Wilcoxon, Holm p >= 0.05, or mean difference < 0.5 points), federation is not necessary given a public attack library: re-scope the paper to the mitigation policy with federation as an optional deployment. lib-all is reported as an upper bound for libraries but is not part of the decision, because it assumes generators for every attack variant are public.",
+  "reference_baseline": "DMS-BTT tuned + blocklist (results/revision2, family B)",
+  "primary_metric": "benign_flows_harmed_frac",
+  "statistics": "cluster bootstrap / cluster Wilcoxon, Holm"
+}

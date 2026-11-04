@@ -1,0 +1,74 @@
+{
+  "created_utc": "2026-11-01T02:10:00.253564+00:00",
+  "grid": {
+    "t1": [
+      [
+        2.0,
+        3.0
+      ],
+      [
+        5.0,
+        8.5
+      ],
+      [
+        8.0,
+        9.8
+      ]
+    ],
+    "pkts": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "size": [
+      "fixed",
+      "benign"
+    ],
+    "src": [
+      "pool",
+      "spoof"
+    ],
+    "m": [
+      600,
+      1000,
+      1700
+    ]
+  },
+  "n_attacks": 72,
+  "defenses": [
+    "ovs-evict",
+    "dms-btt",
+    "ftop",
+    "rdefender",
+    "v2.1",
+    "v2.1+fg",
+    "v2.1+portguard"
+  ],
+  "search_seeds": [
+    2000,
+    2001
+  ],
+  "test_seeds": [
+    16000,
+    16001,
+    16002,
+    16003,
+    16004,
+    16005,
+    16006,
+    16007,
+    16008,
+    16009
+  ],
+  "attacker_objective": "max mean benign_flows_harmed_frac over search episodes (ties within 0.1 points: higher avg_attack_occ_post)",
+  "hypotheses": {
+    "H9": "v2.1's worst case over all selected attacks is lower than every baseline's worst case (benign harm, test seeds)",
+    "H9b": "v2.1's harm under its own best-response attack stays below each baseline's harm under that baseline's own best-response attack, in paired cluster tests",
+    "H9c": "the same two statements for v2.1 + PortGuard and v2.1 + FloodGuard (reported separately; PortGuard is the fix for fast refresh from revision step 4)"
+  }
+}

@@ -1,0 +1,10 @@
+metric,baseline,mean_diff_mlp_minus,mlp_lower,mlp_higher,p
+benign_flows_harmed_frac,rf-local,-0.030433457624336708,30,0,1.862645149230957e-09
+benign_flows_harmed_frac,rf-federated,-0.03741508152611176,30,0,1.862645149230957e-09
+benign_flows_harmed_frac,rf-pooled,-0.05106696809846894,30,0,1.862645149230957e-09
+avg_attack_occ_post,rf-local,-0.001732446258503414,10,20,0.6701805889606476
+avg_attack_occ_post,rf-federated,0.015211014965986385,0,30,1.862645149230957e-09
+avg_attack_occ_post,rf-pooled,0.014347967346938769,0,30,1.862645149230957e-09
+overflow_seconds_post_attack,rf-local,1.6442857142857141,1,29,3.177874094726491e-06
+overflow_seconds_post_attack,rf-federated,3.1704761904761907,0,30,1.862645149230957e-09
+overflow_seconds_post_attack,rf-pooled,3.1185714285714288,0,30,1.862645149230957e-09

@@ -1,0 +1,194 @@
+{
+ "r100e1/6/0": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 1461600,
+  "downlink_bytes": 1461600,
+  "normalization_bytes": 1680,
+  "total_bytes": 2924880
+ },
+ "r100e1/6/1": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 1461600,
+  "downlink_bytes": 1461600,
+  "normalization_bytes": 1680,
+  "total_bytes": 2924880
+ },
+ "r100e1/6/2": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 1461600,
+  "downlink_bytes": 1461600,
+  "normalization_bytes": 1680,
+  "total_bytes": 2924880
+ },
+ "r100e1/9/0": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 2192400,
+  "downlink_bytes": 2192400,
+  "normalization_bytes": 2520,
+  "total_bytes": 4387320
+ },
+ "r100e1/9/1": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 2192400,
+  "downlink_bytes": 2192400,
+  "normalization_bytes": 2520,
+  "total_bytes": 4387320
+ },
+ "r100e1/9/2": {
+  "rounds": 100,
+  "model_bytes": 2436,
+  "uplink_bytes": 2192400,
+  "downlink_bytes": 2192400,
+  "normalization_bytes": 2520,
+  "total_bytes": 4387320
+ },
+ "r30e3/6/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "r30e3/6/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "r30e3/6/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "r30e3/9/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "r30e3/9/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "r30e3/9/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "prox/6/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "prox/6/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "prox/6/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "prox/9/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "prox/9/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "prox/9/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "ft/6/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "ft/6/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "ft/6/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 438480,
+  "downlink_bytes": 438480,
+  "normalization_bytes": 1680,
+  "total_bytes": 878640
+ },
+ "ft/9/0": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "ft/9/1": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ },
+ "ft/9/2": {
+  "rounds": 30,
+  "model_bytes": 2436,
+  "uplink_bytes": 657720,
+  "downlink_bytes": 657720,
+  "normalization_bytes": 2520,
+  "total_bytes": 1317960
+ }
+}

@@ -1,0 +1,15 @@
+defense,flash_pct,a1_a7_pct,e9_worst_pct,benign_pct,eligible
+v2.1+pg,7.611,1.368,4.57,0.039,False
+v2.1+pg|gate0.35t60,6.361,1.38,3.89,0.039,True
+v2.1+pg|gate0.35t60+evict,2.439,0.546,5.7,0.039,False
+v2.1+pg|gate0.35t300,6.361,1.38,3.89,0.039,True
+v2.1+pg|gate0.35t300+evict,2.447,0.54,5.33,0.039,False
+v2.1+pg|gate0.5t60,6.188,1.306,15.85,0.039,False
+v2.1+pg|gate0.5t60+evict,2.231,0.483,8.72,0.039,False
+v2.1+pg|gate0.5t300,6.189,1.302,16.82,0.039,False
+v2.1+pg|gate0.5t300+evict,2.114,0.488,9.12,0.039,False
+v2.1+pg|gate0.65t60,5.988,1.252,53.71,0.039,False
+v2.1+pg|gate0.65t60+evict,2.082,0.472,20.48,0.039,False
+v2.1+pg|gate0.65t300,5.789,1.229,53.71,0.039,False
+v2.1+pg|gate0.65t300+evict,1.825,0.461,20.48,0.039,False
+v2.1+pg+evict,7.236,0.587,4.57,0.039,True

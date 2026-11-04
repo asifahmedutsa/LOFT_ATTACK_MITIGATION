@@ -1,0 +1,39 @@
+== select
+  [select] 200/1848 episodes, 192 s
+  [select] 400/1848 episodes, 369 s
+  [select] 600/1848 episodes, 544 s
+  [select] 800/1848 episodes, 720 s
+  [select] 1000/1848 episodes, 895 s
+  [select] 1200/1848 episodes, 1071 s
+  [select] 1400/1848 episodes, 1244 s
+  [select] 1600/1848 episodes, 1418 s
+  [select] 1800/1848 episodes, 1590 s
+               defense  harm_pct  e9_worst_pct  flow_mods  eligible
+               v2.1+pg     1.552          3.91      79359     False
+      v2.1+pg|hold10s2     1.450          5.04      79985     False
+v2.1+pg|hold10s2sticky     1.149          4.97      64508     False
+      v2.1+pg|hold10s3     1.547          5.31      79304     False
+v2.1+pg|hold10s3sticky     1.350          5.13      72972     False
+      v2.1+pg|hold30s2     1.359          5.06      77815     False
+v2.1+pg|hold30s2sticky     1.143          4.97      64120     False
+      v2.1+pg|hold30s3     1.445          5.18      79250     False
+v2.1+pg|hold30s3sticky     1.348          5.09      72848     False
+      v2.1+pg|hold60s2     1.272          5.03      72862     False
+v2.1+pg|hold60s2sticky     1.143          4.97      64120     False
+      v2.1+pg|hold60s3     1.419          5.17      76451     False
+v2.1+pg|hold60s3sticky     1.348          5.09      72848     False
+v2.1+pg|hold30s1sticky     0.632          7.18      34184     False
+selected v2.1+pg
+== select done, 1635 s
+== test
+  [test] 200/440 episodes, 174 s
+  [test] 400/440 episodes, 344 s
+== test done, 2019 s
+== report
+                benign_flows_harmed_frac  benign_flows_blocked_frac  benign_demotes  flow_mods  packet_in
+group  defense                                                                                           
+A1-A7  v2.1+pg                      1.69                       0.21          112.30   80239.60   90401.21
+E9     v2.1+pg                      1.94                       0.44          795.73   45335.60  202210.92
+benign v2.1+pg                      0.02                       0.00           38.08   25554.92   25516.85
+no hold selected; nothing to test
+== report done, 2019 s

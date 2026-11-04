@@ -1,0 +1,6 @@
+[collect] 251 s
+[train] 770 s
+[calibrate] 876 s
+[offline] 1296 s
+[online] 5544 episodes
+done in 5042 s

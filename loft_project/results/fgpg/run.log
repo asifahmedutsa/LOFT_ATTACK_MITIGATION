@@ -1,0 +1,101 @@
+== test
+  [test] 200/3120 episodes, 157 s
+  [test] 400/3120 episodes, 319 s
+  [test] 600/3120 episodes, 469 s
+  [test] 800/3120 episodes, 631 s
+  [test] 1000/3120 episodes, 823 s
+  [test] 1200/3120 episodes, 1009 s
+  [test] 1400/3120 episodes, 1208 s
+  [test] 1600/3120 episodes, 1392 s
+  [test] 1800/3120 episodes, 1581 s
+  [test] 2000/3120 episodes, 1747 s
+  [test] 2200/3120 episodes, 1942 s
+  [test] 2400/3120 episodes, 2115 s
+  [test] 2600/3120 episodes, 2329 s
+  [test] 2800/3120 episodes, 2520 s
+  [test] 3000/3120 episodes, 2735 s
+== test done, 2858 s
+== report
+ scenario    defense  group               harmed  attack_share  overflow_s  flow_mods
+dedicated       v2.1  A1-A7    1.57 [1.16, 2.01]         14.49        4.55     107294
+dedicated       v2.1     E9 32.87 [30.86, 34.96]         52.30      121.52      74781
+dedicated       v2.1 benign    0.07 [0.02, 0.15]          0.00        0.04      22179
+dedicated       v2.1 floods 34.67 [34.16, 35.11]         49.06      105.01     195683
+dedicated    v2.1+fg  A1-A7    0.47 [0.32, 0.65]          8.90        0.23      43588
+dedicated    v2.1+fg     E9 14.64 [11.49, 17.96]         45.84       37.67      72290
+dedicated    v2.1+fg benign    0.07 [0.02, 0.15]          0.00        0.04      22179
+dedicated    v2.1+fg floods    2.16 [1.71, 2.67]         16.77        3.81      91288
+dedicated    v2.1+pg  A1-A7    1.68 [1.27, 2.16]         20.29        4.07      82030
+dedicated    v2.1+pg     E9    2.66 [2.03, 3.37]         37.81        0.71      43855
+dedicated    v2.1+pg benign    0.10 [0.02, 0.25]          0.00        0.00      22153
+dedicated    v2.1+pg floods    0.98 [0.56, 1.48]         36.72        0.19      83497
+dedicated v2.1+pg+fg  A1-A7    0.56 [0.33, 0.86]         10.51        0.11      42201
+dedicated v2.1+pg+fg     E9    3.36 [2.46, 4.34]         36.56        0.01      46170
+dedicated v2.1+pg+fg benign    0.10 [0.02, 0.25]          0.00        0.00      22153
+dedicated v2.1+pg+fg floods    1.84 [1.22, 2.62]         20.00        0.27      81454
+   shared       v2.1  A1-A7    1.57 [1.16, 2.01]         14.49        4.55     107294
+   shared       v2.1     E9 32.87 [30.86, 34.96]         52.30      121.52      74781
+   shared       v2.1 benign    0.07 [0.02, 0.15]          0.00        0.04      22179
+   shared       v2.1 floods 34.67 [34.16, 35.11]         49.06      105.01     195683
+   shared    v2.1+fg  A1-A7    2.96 [2.36, 3.62]          9.69        0.19      53943
+   shared    v2.1+fg     E9 28.54 [25.89, 31.30]         51.18       90.91      74252
+   shared    v2.1+fg benign    0.07 [0.02, 0.15]          0.00        0.04      22179
+   shared    v2.1+fg floods    8.13 [7.31, 8.95]         22.86        4.86     119065
+   shared    v2.1+pg  A1-A7    3.83 [2.96, 4.76]         20.40        3.90      81822
+   shared    v2.1+pg     E9 17.39 [14.67, 20.35]         44.64        0.08      39509
+   shared    v2.1+pg benign    0.12 [0.02, 0.29]          0.00        0.00      22152
+   shared    v2.1+pg floods    7.10 [6.70, 7.55]         38.40        0.29      85430
+   shared v2.1+pg+fg  A1-A7    3.11 [2.50, 3.75]         10.60        0.09      53090
+   shared v2.1+pg+fg     E9 17.41 [14.69, 20.36]         44.58        0.05      39373
+   shared v2.1+pg+fg benign    0.12 [0.02, 0.29]          0.00        0.00      22152
+   shared v2.1+pg+fg floods    8.12 [7.37, 8.91]         27.29        0.29      93388
+variant                 A1    A2    A3    A4    A5    A6    A7     HA    LA  benign  t2-3_p1-1_benign_spoof_M1700  t2-3_p1-3_benign_pool_M1700  t2-3_p1-3_benign_pool_M600
+scenario  defense                                                                                                                                                         
+dedicated v2.1        1.52  1.35  1.59  2.82  1.56  0.95  1.22  65.49  3.85    0.07                         40.68                        53.60                        4.33
+          v2.1+fg     0.42  0.38  0.37  0.77  0.39  0.43  0.53   2.67  1.66    0.07                         20.38                        19.18                        4.36
+          v2.1+pg     1.86  1.86  1.90  1.91  1.90  0.92  1.43   0.28  1.67    0.10                          1.73                         1.48                        4.78
+          v2.1+pg+fg  0.61  0.41  0.42  0.90  0.43  0.52  0.60   1.42  2.26    0.10                          2.51                         2.77                        4.79
+shared    v2.1        1.52  1.35  1.59  2.82  1.56  0.95  1.22  65.49  3.85    0.07                         40.68                        53.60                        4.33
+          v2.1+fg     2.79  2.79  2.74  5.24  2.83  1.86  2.48  12.31  3.95    0.07                         35.49                        45.76                        4.38
+          v2.1+pg     3.93  3.98  4.20  6.15  4.09  1.33  3.15  10.18  4.02    0.12                         23.03                        24.22                        4.92
+          v2.1+pg+fg  2.93  2.93  2.91  5.41  3.04  1.95  2.59  11.16  5.08    0.12                         23.03                        24.25                        4.95
+hyp  scenario          a       b  mean_diff  a_lower  a_higher       p  p_holm  holds
+FP1 dedicated v2.1+pg+fg v2.1+pg    0.00867        1        29 0.00000 0.00000  False
+FP2 dedicated v2.1+pg+fg v2.1+fg   -0.11283       28         2 0.00000 0.00000   True
+FP1    shared v2.1+pg+fg v2.1+pg    0.01018        7        23 0.00014 0.00014  False
+FP2    shared v2.1+pg+fg v2.1+fg   -0.11135       30         0 0.00000 0.00000   True
+{
+ "verdict": {
+  "FP1": false,
+  "FP2": true,
+  "FP3": true,
+  "FP4": true
+ },
+ "checks": {
+  "FP2_worst_dedicated": {
+   "pg_fg": 4.79,
+   "pg": 4.78
+  },
+  "FP3_dedicated": {
+   "diff": -1.127,
+   "upper95": -0.925
+  },
+  "FP4_dedicated": {
+   "pg_fg": 0.105,
+   "v21": 0.073
+  },
+  "FP2_worst_shared": {
+   "pg_fg": 24.25,
+   "pg": 24.22
+  },
+  "FP3_shared": {
+   "diff": -0.724,
+   "upper95": -0.415
+  },
+  "FP4_shared": {
+   "pg_fg": 0.119,
+   "v21": 0.073
+  }
+ }
+}
+== report done, 2859 s

@@ -1,0 +1,30 @@
+== D1
+  seconds                    336
+  entries_before_attack      mean 830, max 1268
+  entries_after_attack       mean 1694, max 3368
+  table_full                 176
+  packet_in                  185202
+  installs                   96349
+  distinct_flows_installed   27586
+  distinct_flows_refused     176
+  deletes                    0
+  demotes                    9740
+  decision_ms                mean 32, max 1123
+  ping                       279/300 received, 7% loss
+  rtt_ms                     min 38.070, avg 612.418, max 15051.265
+  final_dump_flows_lines     4
+  drop_rules                 0
+  benign_flows               25354
+  benign_refused_at_least_once_pct 0.03
+  benign_never_installed_pct 4.65
+  benign_dropped_by_rule_pct 0.0
+  benign_packet_in_lost_pct  4.65
+  benign_harmed_pct          0.36
+  benign_impact_pct          5.01
+== flows sent per host (total, attack)
+  d1h1       4568      0
+  d1h2       4516      0
+  d1h3      12738      0
+  d1h4       3532      0
+  d1h5       1700   1700
+  d1h6       1700   1700

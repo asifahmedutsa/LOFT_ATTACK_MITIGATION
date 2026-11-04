@@ -1,0 +1,57 @@
+{
+  "created_utc": "2026-11-02T07:40:16.582362+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3",
+    "T1"
+  ],
+  "grid": {
+    "hold_s": [
+      10.0,
+      30.0,
+      60.0
+    ],
+    "strikes": [
+      2,
+      3
+    ],
+    "mode": [
+      "fixed",
+      "sticky"
+    ]
+  },
+  "reference_candidate": "v2.1+pg|hold30s1sticky",
+  "base": "v2.1+pg",
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    19000,
+    19001,
+    19002,
+    19003,
+    19004,
+    19005,
+    19006,
+    19007,
+    19008,
+    19009
+  ],
+  "e9_attacks": [
+    "t2-3_p1-1_benign_spoof_M1700",
+    "t2-3_p1-3_benign_pool_M1700",
+    "t2-3_p1-3_benign_pool_M600"
+  ],
+  "load_metric": "flow_mods = installs + deletes + demotes per episode",
+  "selection": "eligible: mean harm (A1-A7 + benign) <= base + 0.0025 and worst E9 attack's mean harm <= base's + 0.005; among eligible, fewest mean flow_mods over A1-A7; ties within 1 %: lower harm; none eligible: no hold",
+  "test_cells": "A1-A7, benign and E9's three selected attacks; dedicated ports",
+  "hypotheses": {
+    "HH1": "load: each selected hold sends fewer flow-mods than its base under attack (A1-A7 and E9's attacks; paired cluster Wilcoxon, Holm), and at least 30 % fewer on T1 A2, the testbed case",
+    "HH2": "harm: each selected hold is non-inferior to its base over A1-A7 + benign (cluster bootstrap 95 % upper bound of the mean harm difference <= 0.5 points)",
+    "HH3": "adaptive: each selected hold's worst case over E9's attacks is at most its base's + 0.5 points"
+  },
+  "motivation": "round one (results/flowhold) failed HH3 for v2.1 + PortGuard"
+}

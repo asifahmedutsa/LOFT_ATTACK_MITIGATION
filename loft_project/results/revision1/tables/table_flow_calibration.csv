@@ -1,0 +1,4 @@
+domain,tau_poll,tau_flow,val_flow_rate_tau_poll,val_flow_rate_tau_flow,test_flow_rate_tau_poll_attacked,test_flow_rate_tau_poll_benign_only,test_flow_rate_tau_flow_attacked,test_flow_rate_tau_flow_benign_only,test_acted_on_rate_benign_only
+D1,0.007,0.1324,0.0467,0.01,0.0262,0.0264,0.0068,0.0055,0.0
+D2,0.003,0.4729,0.0503,0.01,0.0626,0.0355,0.0148,0.0066,0.0
+D3,0.0031,0.1359,0.0504,0.01,0.04,0.0686,0.0057,0.0082,0.0122

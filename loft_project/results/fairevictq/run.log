@@ -1,0 +1,86 @@
+== select
+  [select] 200/1134 episodes, 197 s
+  [select] 400/1134 episodes, 401 s
+  [select] 600/1134 episodes, 604 s
+  [select] 800/1134 episodes, 799 s
+  [select] 1000/1134 episodes, 994 s
+           defense  flash_pct  a1_a7_pct  e9_worst_pct  benign_pct  e9_ctl_msgs  q_events_flash  eligible  theta  r_min  hold
+fe-weighted-expiry      0.913      0.621          3.77       0.039       432609            0.00     False    0.0      0   0.0
+     feq0.5r150h10      0.974      0.430          3.77       0.039        90051            0.67      True    0.5    150  10.0
+     feq0.5r150h30      0.974      0.388          3.77       0.039        90051            0.67      True    0.5    150  30.0
+     feq0.5r300h10      0.975      0.482          3.77       0.039       104350            0.63      True    0.5    300  10.0
+     feq0.5r300h30      0.975      0.468          3.77       0.039       104350            0.63      True    0.5    300  30.0
+     feq0.8r150h10      0.974      0.433          3.77       0.039        87945            0.67      True    0.8    150  10.0
+     feq0.8r150h30      0.974      0.390          3.77       0.039        87945            0.67      True    0.8    150  30.0
+     feq0.8r300h10      0.975      0.485          3.77       0.039        87945            0.63      True    0.8    300  10.0
+     feq0.8r300h30      0.975      0.471          3.77       0.039        87945            0.63      True    0.8    300  30.0
+selected feq0.8r300h10
+== select done, 1123 s
+== test
+  [test] 200/1260 episodes, 151 s
+  [test] 400/1260 episodes, 308 s
+  [test] 600/1260 episodes, 449 s
+  [test] 800/1260 episodes, 592 s
+  [test] 1000/1260 episodes, 785 s
+  [test] 1200/1260 episodes, 975 s
+== test done, 2168 s
+== report
+           defense  group            harmed  attack_share  flow_mods  ctl_msgs  q_events
+fe-weighted-expiry  A1-A7 0.60 [0.37, 0.85]         14.71     111413    210029      0.00
+fe-weighted-expiry     E9 1.64 [1.13, 2.19]         43.15     219507    435798      0.00
+fe-weighted-expiry benign 0.07 [0.02, 0.14]          0.00      22590     45059      0.00
+fe-weighted-expiry  flash 0.90 [0.65, 1.18]          4.11      67166    125652      0.00
+     feq0.8r300h10  A1-A7 0.51 [0.33, 0.72]          9.23      72860    132300      1.77
+     feq0.8r300h10     E9 1.67 [1.16, 2.21]         13.38      47777     89294      1.33
+     feq0.8r300h10 benign 0.07 [0.02, 0.14]          0.00      22590     45059      0.00
+     feq0.8r300h10  flash 0.92 [0.66, 1.22]          1.94      45534     85198      0.64
+           v2.1+pg  A1-A7 1.88 [1.37, 2.53]         21.49      79815    169475      0.00
+           v2.1+pg     E9 3.27 [2.23, 4.61]         37.41      46372    253157      0.00
+           v2.1+pg benign 0.18 [0.02, 0.41]          0.00      22510     45089      0.00
+           v2.1+pg  flash 7.35 [5.90, 8.82]          7.67      47092    106925      0.00
+defense                              fe-weighted-expiry  feq0.8r300h10  v2.1+pg
+cell                                                                           
+flash2/A2                                          0.65           0.72     5.79
+flash2/benign                                      0.66           0.66     2.10
+flash4/benign                                      1.37           1.37    14.17
+normal/A1                                          0.52           0.45     1.89
+normal/A2                                          0.51           0.39     2.03
+normal/A3                                          0.54           0.46     2.36
+normal/A4                                          0.86           0.62     2.08
+normal/A5                                          0.52           0.39     2.10
+normal/A6                                          0.77           0.77     0.94
+normal/A7                                          0.52           0.50     1.78
+normal/benign                                      0.07           0.07     0.18
+normal/t2-3_p1-1_benign_spoof_M1700                0.32           0.36     2.39
+normal/t2-3_p1-3_benign_pool_M1700                 0.61           0.65     2.15
+normal/t2-3_p1-3_benign_pool_M600                  3.98           3.98     5.28
+{
+ "selected": "feq0.8r300h10",
+ "verdict": {
+  "FQ1": true,
+  "FQ2": true,
+  "FQ3": true,
+  "FQ4": true
+ },
+ "e9_ctl_msgs": {
+  "fe-weighted-expiry": 435798,
+  "feq0.8r300h10": 89294,
+  "v2.1+pg": 253157
+ },
+ "fq1": {
+  "mean_diff": -346504.8,
+  "sel_lower": 30,
+  "sel_higher": 0,
+  "p": 1.862645149230957e-09
+ },
+ "e9_worst": {
+  "v2.1+pg": 5.28,
+  "fe-weighted-expiry": 3.98,
+  "feq0.8r300h10": 3.98
+ },
+ "flash_diff": 0.023,
+ "flash_upper95": 0.055,
+ "a1_a7_diff": -0.092,
+ "a1_a7_upper95": -0.04
+}
+== report done, 2168 s

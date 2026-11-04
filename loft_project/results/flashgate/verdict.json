@@ -1,0 +1,18 @@
+{
+  "selected": "v2.1+pg|gate0.35t300",
+  "verdict": {
+    "FC1": true,
+    "FC2": true,
+    "FC3": true
+  },
+  "e9_worst_sel": 4.21,
+  "e9_worst_base": 4.73,
+  "a1_a7_diff": -0.012,
+  "a1_a7_upper95": 0.008,
+  "flash": {
+    "v2.1": 5.88,
+    "v2.1+evict": 1.11,
+    "v2.1+pg": 7.38,
+    "v2.1+pg|gate0.35t300": 6.36
+  }
+}

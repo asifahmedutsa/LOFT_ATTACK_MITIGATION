@@ -1,0 +1,20 @@
+{
+  "selected": {
+    "detector": "fedavg",
+    "hard": "off",
+    "rho": 0.7,
+    "t_short": 1.0
+  },
+  "feasible_count": 11,
+  "validation_metrics": {
+    "cfg_detector": "fedavg",
+    "cfg_hard": "off",
+    "cfg_rho": 0.7,
+    "cfg_t_short": 1.0,
+    "benign_flows_impacted_frac": 0.019233023200868324,
+    "avg_attack_occ_post": 0.14466887981859408,
+    "overflow_seconds_post_attack": 4.552380952380952,
+    "benign_only_impacted": 0.003093169161142369,
+    "feasible": true
+  }
+}

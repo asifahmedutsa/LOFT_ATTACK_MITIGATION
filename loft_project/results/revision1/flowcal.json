@@ -1,0 +1,28 @@
+{
+  "budget": 0.01,
+  "detector": "fedavg",
+  "definition": "tau_flow = (1-budget) quantile of each benign flow's max score over all polls while installed, validation runs without defense",
+  "domains": {
+    "D1": {
+      "n_benign_flows": 154958,
+      "tau_poll": 0.006994208855314017,
+      "tau_flow": 0.13235974382026247,
+      "val_flow_flag_rate_at_tau_poll": 0.04670943094257799,
+      "val_flow_flag_rate_at_tau_flow": 0.010002710411853534
+    },
+    "D2": {
+      "n_benign_flows": 108242,
+      "tau_poll": 0.003045911270884633,
+      "tau_flow": 0.47288801382644213,
+      "val_flow_flag_rate_at_tau_poll": 0.05027623288557122,
+      "val_flow_flag_rate_at_tau_flow": 0.0100053583636666
+    },
+    "D3": {
+      "n_benign_flows": 135421,
+      "tau_poll": 0.0031114712578634023,
+      "tau_flow": 0.13588930170400018,
+      "val_flow_flag_rate_at_tau_poll": 0.05036884973527001,
+      "val_flow_flag_rate_at_tau_flow": 0.010005833659476743
+    }
+  }
+}

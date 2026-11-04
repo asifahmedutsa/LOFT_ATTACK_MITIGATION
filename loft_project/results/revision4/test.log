@@ -1,0 +1,174 @@
+  [test] 300/5400 episodes, 183s
+  [test] 600/5400 episodes, 460s
+  [test] 900/5400 episodes, 787s
+  [test] 1200/5400 episodes, 1068s
+  [test] 1500/5400 episodes, 1376s
+  [test] 1800/5400 episodes, 1655s
+  [test] 2100/5400 episodes, 1999s
+  [test] 2400/5400 episodes, 2360s
+  [test] 2700/5400 episodes, 2727s
+  [test] 3000/5400 episodes, 2958s
+  [test] 3300/5400 episodes, 3303s
+  [test] 3600/5400 episodes, 3583s
+  [test] 3900/5400 episodes, 3927s
+  [test] 4200/5400 episodes, 4200s
+  [test] 4500/5400 episodes, 4496s
+  [test] 4800/5400 episodes, 4745s
+  [test] 5100/5400 episodes, 5021s
+  [test] 5400/5400 episodes, 5368s
+== hypothesis_tests.csv
+hypothesis                a                                     b  mean_cluster_diff_points  a_wins  a_losses            p       p_holm
+        H1 v2.1 + PortGuard                     FL-DualGuard v2.1                -36.828602      30         0 1.862645e-09 9.313226e-09
+        H2 v2.1 + PortGuard                     FL-DualGuard v2.1                  0.178818      12        18 2.932586e-02 5.865172e-02
+        H3 v2.1 + PortGuard                       PortGuard alone                 -4.282784      30         0 1.862645e-09 9.313226e-09
+        H4 v2.1 + PortGuard DMS-BTT tuned + blocklist + PortGuard                 -3.617837      20        10 1.141767e-01 1.141767e-01
+        H6 v2.1 + PortGuard                     FL-DualGuard v2.1                  2.708636       0        15 6.103516e-05 1.831055e-04
+== table_attacker_pps.csv
+variant  attack_pps
+  X0.25     14203.0
+   X0.5      7045.0
+   X0.8      4360.0
+     X1      3464.0
+     X2      1676.0
+     X5       604.0
+     X9       287.0
+== table_benign_only.csv
+   scenario  DMS-BTT tuned + blocklist  DMS-BTT tuned + blocklist + PortGuard  No defense  PortGuard alone  FL-DualGuard v2.1  v2.1 + PortGuard
+  dedicated                      0.001                                  0.001         0.0              0.0              0.030             0.030
+distributed                      0.000                                  0.000         0.0              0.0              0.033             0.033
+     shared                      0.000                                  0.000         0.0              0.0              0.033             0.033
+== table_budget_curve_harm.csv
+   scenario variant  No defense  DMS-BTT tuned + blocklist  FL-DualGuard v2.1  PortGuard alone  v2.1 + PortGuard  DMS-BTT tuned + blocklist + PortGuard
+  dedicated   X0.25       82.31                      74.88              81.20             6.23             58.73                                  48.26
+  dedicated    X0.5       81.22                      66.78              76.87             6.19             46.97                                  40.55
+  dedicated    X0.8       79.92                      55.60              66.72             6.15             19.98                                  29.80
+  dedicated      X1       79.06                      49.94              64.93             6.14             16.74                                  24.43
+  dedicated      X2       74.86                      49.28              52.22             6.14             10.52                                  25.17
+  dedicated      X5       61.72                      22.73              30.81             7.51              7.26                                  19.43
+  dedicated      X9       44.87                      14.73              15.69             6.46              4.81                                  13.50
+distributed   X0.25       82.52                      75.07              81.45            83.68             81.09                                  75.37
+distributed    X0.5       81.38                      66.96              77.08            82.65             78.40                                  67.27
+distributed    X0.8       80.07                      55.75              66.84            81.27             71.37                                  56.06
+distributed      X1       79.21                      50.12              65.07            80.42             70.41                                  50.43
+distributed      X2       74.96                      49.22              52.88            76.26             62.37                                  49.62
+distributed      X5       61.61                      22.70              29.95            64.58             32.32                                  22.29
+distributed      X9       44.29                      14.46              14.65            47.65             13.54                                  14.52
+     shared   X0.25       82.52                      75.07              81.45            26.64             61.01                                  54.66
+     shared    X0.5       81.38                      66.96              77.08            26.32             58.44                                  46.84
+     shared    X0.8       80.07                      55.75              66.84            25.76             41.57                                  35.98
+     shared      X1       79.21                      50.12              65.07            25.53             37.86                                  30.54
+     shared      X2       74.96                      49.22              52.88            24.04             29.00                                  30.63
+     shared      X5       61.61                      22.70              29.95            20.07             14.83                                  20.28
+     shared      X9       44.29                      14.46              14.65            14.29              7.32                                  13.79
+== table_budget_curve_occ.csv
+   scenario variant  No defense  DMS-BTT tuned + blocklist  FL-DualGuard v2.1  PortGuard alone  v2.1 + PortGuard  DMS-BTT tuned + blocklist + PortGuard
+  dedicated   X0.25       92.29                      93.08              94.94            49.74             91.17                                  80.95
+  dedicated    X0.5       90.58                      89.26              92.30            49.45             83.54                                  77.56
+  dedicated    X0.8       88.73                      84.73              86.68            49.10             70.34                                  73.50
+  dedicated      X1       87.61                      82.85              79.62            48.89             66.33                                  71.89
+  dedicated      X2       82.30                      70.84              68.59            47.87             57.69                                  61.06
+  dedicated      X5       68.36                      42.02              53.96            45.64             45.67                                  41.79
+  dedicated      X9       55.48                      34.67              43.65            41.85             39.20                                  34.39
+distributed   X0.25       92.27                      93.09              94.95            89.78             90.97                                  92.23
+distributed    X0.5       90.53                      89.27              92.31            88.31             88.00                                  88.49
+distributed    X0.8       88.68                      84.72              86.70            86.45             82.93                                  83.94
+distributed      X1       87.55                      82.80              79.77            85.38             76.63                                  82.07
+distributed      X2       82.27                      70.94              68.71            79.98             67.25                                  70.19
+distributed      X5       68.09                      41.54              53.71            67.55             50.55                                  41.07
+distributed      X9       55.28                      34.45              43.41            54.28             40.15                                  34.51
+     shared   X0.25       92.27                      93.09              94.95            63.27             92.68                                  84.01
+     shared    X0.5       90.53                      89.27              92.31            62.75             91.26                                  80.55
+     shared    X0.8       88.68                      84.72              86.70            61.88             80.03                                  76.38
+     shared      X1       87.55                      82.80              79.77            61.44             74.07                                  74.61
+     shared      X2       82.27                      70.94              68.71            58.51             63.48                                  63.41
+     shared      X5       68.09                      41.54              53.71            51.59             47.74                                  41.50
+     shared      X9       55.28                      34.45              43.41            44.42             39.81                                  34.30
+== table_dedicated_by_variant.csv
+variant  No defense  DMS-BTT tuned + blocklist  FL-DualGuard v2.1  PortGuard alone  v2.1 + PortGuard  DMS-BTT tuned + blocklist + PortGuard
+     A1       45.17                       0.32               1.46             6.49              1.81                                   0.28
+     A2       50.48                       0.23               1.25             6.90              1.47                                   0.23
+     A3       53.33                       0.22               1.47             6.99              1.73                                   0.22
+     A4       51.52                      21.43               2.71             6.42              2.61                                  16.59
+     A5       50.78                       0.23               1.48             6.83              1.72                                   0.23
+     A6       11.86                       8.62               0.84             3.35              0.99                                   8.47
+     A7       31.63                       0.17               1.21             4.66              1.34                                   0.17
+  X0.25       82.31                      74.88              81.20             6.23             58.73                                  48.26
+   X0.5       81.22                      66.78              76.87             6.19             46.97                                  40.55
+   X0.8       79.92                      55.60              66.72             6.15             19.98                                  29.80
+     X1       79.06                      49.94              64.93             6.14             16.74                                  24.43
+     X2       74.86                      49.28              52.22             6.14             10.52                                  25.17
+     X5       61.72                      22.73              30.81             7.51              7.26                                  19.43
+     X9       44.87                      14.73              15.69             6.46              4.81                                  13.50
+== table_summary.csv
+   scenario  attacks                                method           harmed (%)  mal_occ (%)  overflow_s  packet_in_per_s
+  dedicated standard                            No defense 42.11 [41.09, 43.13]        53.40      147.12            259.2
+  dedicated standard             DMS-BTT tuned + blocklist    4.46 [3.43, 5.48]        14.04        3.73            326.0
+  dedicated standard                     FL-DualGuard v2.1    1.49 [1.07, 1.93]        14.53        4.63            327.5
+  dedicated standard                       PortGuard alone    5.95 [4.18, 7.80]        40.20        3.97            216.5
+  dedicated standard                      v2.1 + PortGuard    1.67 [1.14, 2.23]        14.26        2.88            330.1
+  dedicated standard DMS-BTT tuned + blocklist + PortGuard    3.74 [2.74, 4.82]        13.91        1.23            323.8
+  dedicated     fast                            No defense 80.63 [80.14, 81.07]        89.80      243.37            927.6
+  dedicated     fast             DMS-BTT tuned + blocklist 61.80 [56.54, 67.07]        87.48      159.06           1466.9
+  dedicated     fast                     FL-DualGuard v2.1 72.43 [71.37, 73.52]        88.39      223.25            969.1
+  dedicated     fast                       PortGuard alone    6.18 [3.79, 8.68]        49.29        0.18           3025.1
+  dedicated     fast                      v2.1 + PortGuard 35.60 [34.79, 36.27]        77.85       59.70           1123.1
+  dedicated     fast DMS-BTT tuned + blocklist + PortGuard 35.76 [27.27, 44.08]        75.97       78.22           2001.9
+  dedicated     gaps                            No defense 71.99 [71.51, 72.47]        80.76      223.02            712.6
+  dedicated     gaps             DMS-BTT tuned + blocklist 47.71 [42.82, 52.41]        71.07      112.97           1062.4
+  dedicated     gaps                     FL-DualGuard v2.1 55.49 [53.86, 57.18]        74.25      179.94            716.7
+  dedicated     gaps                       PortGuard alone    6.40 [4.14, 8.77]        47.51        1.57           1911.4
+  dedicated     gaps                      v2.1 + PortGuard 23.57 [22.93, 24.28]        64.85       37.42            816.3
+  dedicated     gaps DMS-BTT tuned + blocklist + PortGuard 28.73 [22.52, 34.85]        63.02       53.78           1365.7
+distributed standard                            No defense 41.84 [40.56, 43.17]        53.43      147.14            257.4
+distributed standard             DMS-BTT tuned + blocklist    4.41 [2.94, 5.82]        14.05        3.66            325.4
+distributed standard                     FL-DualGuard v2.1    1.43 [0.90, 2.05]        14.49        4.45            327.2
+distributed standard                       PortGuard alone 45.06 [43.55, 46.69]        52.57        0.14            328.4
+distributed standard                      v2.1 + PortGuard    2.82 [2.05, 3.69]        14.44        2.97            331.3
+distributed standard DMS-BTT tuned + blocklist + PortGuard    4.37 [2.92, 5.79]        14.00        0.61            327.4
+distributed     fast                            No defense 80.79 [80.37, 81.25]        89.75      243.40            927.4
+distributed     fast             DMS-BTT tuned + blocklist 61.97 [54.30, 69.53]        87.47      158.93           1465.3
+distributed     fast                     FL-DualGuard v2.1 72.61 [71.29, 74.06]        88.43      223.19            967.0
+distributed     fast                       PortGuard alone 82.00 [81.57, 82.44]        87.48        0.45           1158.2
+distributed     fast                      v2.1 + PortGuard 75.32 [74.04, 76.68]        84.63        1.56           1250.2
+distributed     fast DMS-BTT tuned + blocklist + PortGuard 62.28 [54.30, 70.07]        86.68       78.13           1561.8
+distributed     gaps                            No defense 72.00 [71.60, 72.43]        80.67      223.05            711.5
+distributed     gaps             DMS-BTT tuned + blocklist 47.75 [40.83, 54.53]        70.97      112.72           1060.8
+distributed     gaps                     FL-DualGuard v2.1 55.42 [53.35, 57.70]        74.22      180.07            715.0
+distributed     gaps                       PortGuard alone 73.79 [73.31, 74.26]        78.82        0.26            884.1
+distributed     gaps                      v2.1 + PortGuard 58.50 [56.91, 60.31]        70.92        3.80            911.8
+distributed     gaps DMS-BTT tuned + blocklist + PortGuard 47.94 [40.93, 54.82]        70.36       52.51           1125.9
+     shared standard                            No defense 41.84 [40.56, 43.17]        53.43      147.14            257.4
+     shared standard             DMS-BTT tuned + blocklist    4.41 [2.94, 5.82]        14.05        3.66            325.4
+     shared standard                     FL-DualGuard v2.1    1.43 [0.90, 2.05]        14.49        4.45            327.2
+     shared standard                       PortGuard alone 14.09 [10.39, 18.22]        43.27        0.70            235.3
+     shared standard                      v2.1 + PortGuard    2.05 [1.28, 2.94]        14.24        2.79            330.5
+     shared standard DMS-BTT tuned + blocklist + PortGuard    3.92 [2.49, 5.36]        13.98        1.06            324.8
+     shared     fast                            No defense 80.79 [80.37, 81.25]        89.75      243.40            927.4
+     shared     fast             DMS-BTT tuned + blocklist 61.97 [54.30, 69.53]        87.47      158.93           1465.3
+     shared     fast                     FL-DualGuard v2.1 72.61 [71.29, 74.06]        88.43      223.19            967.0
+     shared     fast                       PortGuard alone 26.06 [20.63, 32.07]        62.33        0.20           2358.5
+     shared     fast                      v2.1 + PortGuard 49.72 [45.29, 54.80]        84.51       48.10            882.3
+     shared     fast DMS-BTT tuned + blocklist + PortGuard 42.01 [34.10, 49.54]        78.89       78.09           1877.5
+     shared     gaps                            No defense 72.00 [71.60, 72.43]        80.67      223.05            711.5
+     shared     gaps             DMS-BTT tuned + blocklist 47.75 [40.83, 54.53]        70.97      112.72           1060.8
+     shared     gaps                     FL-DualGuard v2.1 55.42 [53.35, 57.70]        74.22      180.07            715.0
+     shared     gaps                       PortGuard alone 23.24 [18.21, 28.73]        57.70        0.28           1532.1
+     shared     gaps                      v2.1 + PortGuard 35.72 [31.64, 40.53]        69.87       30.18            679.0
+     shared     gaps DMS-BTT tuned + blocklist + PortGuard 33.25 [27.56, 39.43]        64.96       53.49           1296.9
+{
+ "H1": true,
+ "H2": true,
+ "H3": true,
+ "H4": false,
+ "H5": false,
+ "H5_per_gap_harm": {
+  "X0.25": 58.725,
+  "X0.5": 46.967,
+  "X0.8": 19.979,
+  "X1": 16.736,
+  "X2": 10.516,
+  "X5": 7.261,
+  "X9": 4.812
+ },
+ "H6_no_reduction": true
+}

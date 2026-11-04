@@ -1,0 +1,29 @@
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/revision5.py", line 104, in _collect
+    return t, v, s, collect_run(t, v, s, COLLECT_CFG)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/data.py", line 86, in collect_run
+    return Dataset(np.concatenate(rows_X), np.concatenate(rows_d),
+                   ^^^^^^^^^^^^^^^^^^^^^^
+ValueError: need at least one array to concatenate
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/revision5.py", line 287, in <module>
+    main()
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/revision5.py", line 276, in main
+    stage_collect(a.out, a.workers)
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/revision5.py", line 112, in stage_collect
+    for t, v, s, ds in p.imap_unordered(_collect, tasks):
+  File "/usr/lib/python3.12/multiprocessing/pool.py", line 873, in next
+    raise value
+ValueError: need at least one array to concatenate

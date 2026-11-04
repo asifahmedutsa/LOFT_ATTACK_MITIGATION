@@ -1,0 +1,59 @@
+== test
+  [test] 200/2100 episodes, 120 s
+  [test] 400/2100 episodes, 248 s
+  [test] 600/2100 episodes, 389 s
+  [test] 800/2100 episodes, 563 s
+  [test] 1000/2100 episodes, 723 s
+  [test] 1200/2100 episodes, 889 s
+  [test] 1400/2100 episodes, 1077 s
+  [test] 1600/2100 episodes, 1254 s
+  [test] 1800/2100 episodes, 1457 s
+  [test] 2000/2100 episodes, 1627 s
+== test done, 1753 s
+== report
+defense                              ovs-evict   v2.1  v2.1+evict  v2.1+portguard  v2.1+portguard+evict
+cell                                                                                                   
+flash2/A2                                11.83   3.42        0.69            5.44                  4.56
+flash2/benign                             0.13   1.30        0.73            1.92                  1.92
+flash4/benign                             1.18  11.26        1.66           13.64                 13.63
+normal/A1                                12.95   1.60        0.53            1.88                  0.84
+normal/A2                                13.88   1.38        0.50            1.85                  0.60
+normal/A3                                14.30   1.58        0.50            1.85                  0.79
+normal/A4                                13.64   2.87        0.90            1.93                  1.21
+normal/A5                                13.73   1.52        0.52            1.81                  0.73
+normal/A6                                 4.27   0.94        0.77            0.95                  0.86
+normal/A7                                14.66   1.21        0.51            1.41                  0.49
+normal/benign                             0.00   0.05        0.05            0.05                  0.05
+normal/t2-3_p1-1_benign_spoof_M1700      21.74  40.90       20.05            1.95                  3.98
+normal/t2-3_p1-3_benign_pool_M1700       21.83  54.55       19.98            1.70                  1.70
+normal/t2-3_p1-3_benign_pool_M600         0.03   4.13        3.92            4.73                  4.73
+                          group                    a              b  mean_diff  a_lower  a_higher       p  p_holm
+               flash, no attack           v2.1+evict           v2.1   -0.05083       29         0 0.00000 0.00002
+               flash, no attack           v2.1+evict      ovs-evict    0.00538        0        29 0.00000 0.00002
+               flash, no attack v2.1+portguard+evict v2.1+portguard   -0.00002        3         0 0.32511 1.00000
+               flash, no attack v2.1+portguard+evict      ovs-evict    0.07117        0        29 0.00000 0.00002
+                    flash2 + A2           v2.1+evict           v2.1   -0.02728       30         0 0.00000 0.00000
+                    flash2 + A2           v2.1+evict      ovs-evict   -0.11134       30         0 0.00000 0.00000
+                    flash2 + A2 v2.1+portguard+evict v2.1+portguard   -0.00880       27         3 0.00000 0.00001
+                    flash2 + A2 v2.1+portguard+evict      ovs-evict   -0.07273       27         3 0.00000 0.00001
+                          A1-A7           v2.1+evict           v2.1   -0.00981       30         0 0.00000 0.00000
+                          A1-A7           v2.1+evict      ovs-evict   -0.11887       30         0 0.00000 0.00000
+                          A1-A7 v2.1+portguard+evict v2.1+portguard   -0.00880       30         0 0.00000 0.00000
+                          A1-A7 v2.1+portguard+evict      ovs-evict   -0.11704       30         0 0.00000 0.00000
+                         benign           v2.1+evict           v2.1    0.00000        0         0 1.00000 1.00000
+                         benign           v2.1+evict      ovs-evict    0.00054        0        10 0.00653 0.05225
+                         benign v2.1+portguard+evict v2.1+portguard    0.00000        0         0 1.00000 1.00000
+                         benign v2.1+portguard+evict      ovs-evict    0.00054        0        10 0.00653 0.05225
+E9 t2-3_p1-1_benign_spoof_M1700           v2.1+evict           v2.1   -0.20853       30         0 0.00000 0.00000
+E9 t2-3_p1-1_benign_spoof_M1700           v2.1+evict      ovs-evict   -0.01692       30         0 0.00000 0.00000
+E9 t2-3_p1-1_benign_spoof_M1700 v2.1+portguard+evict v2.1+portguard    0.02031        8        21 0.00044 0.00393
+E9 t2-3_p1-1_benign_spoof_M1700 v2.1+portguard+evict      ovs-evict   -0.17760       30         0 0.00000 0.00000
+ E9 t2-3_p1-3_benign_pool_M1700           v2.1+evict           v2.1   -0.34579       30         0 0.00000 0.00000
+ E9 t2-3_p1-3_benign_pool_M1700           v2.1+evict      ovs-evict   -0.01853       30         0 0.00000 0.00000
+ E9 t2-3_p1-3_benign_pool_M1700 v2.1+portguard+evict v2.1+portguard   -0.00008        2         0 0.49934 1.00000
+ E9 t2-3_p1-3_benign_pool_M1700 v2.1+portguard+evict      ovs-evict   -0.20134       30         0 0.00000 0.00000
+  E9 t2-3_p1-3_benign_pool_M600           v2.1+evict           v2.1   -0.00217        7         0 0.03970 0.23817
+  E9 t2-3_p1-3_benign_pool_M600           v2.1+evict      ovs-evict    0.03883        0        30 0.00000 0.00000
+  E9 t2-3_p1-3_benign_pool_M600 v2.1+portguard+evict v2.1+portguard    0.00001        1         1 0.99086 1.00000
+  E9 t2-3_p1-3_benign_pool_M600 v2.1+portguard+evict      ovs-evict    0.04694        0        30 0.00000 0.00000
+== report done, 1753 s

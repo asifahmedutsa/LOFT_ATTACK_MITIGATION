@@ -1,0 +1,9 @@
+{
+  "frozen": "2026-11-03, gate G3 (docs/testbed_plan.md), before T1",
+  "final_system": "dualguard+portguard+hostid",
+  "description": "FL-DualGuard: federated MLP v2.1 (results/v21/exported/v21_<domain>.json, unchanged) + PortGuard (revision 4b knobs) with per-host quotas keyed on source MAC and port security on access switches (one MAC per host port)",
+  "gate_G1": "passed: SIFT q=0.3 r_low=0.2 (16.3 % harm), TableGuard min_age=5 r_small=0.2 (16.8 %), between none 50.7 % and DMS-BTT 4.4 % (results/gate_g1)",
+  "gate_G2": "failed in the simulator: churn quarantine round 2 had no eligible setting (flash harm 1.27-3.60 % vs fair eviction 0.91 % + 0.25 allowed; results/fairevictq2/select_summary.csv); fair eviction is not part of the final system and the quarantine testbed block is dropped",
+  "ablations_T1": ["dualguard+portguard (port identity)", "portguard+hostid (no DualGuard)"],
+  "ablation_T1_fed": "dualguard+portguard+hostid with local models on D1 (A2, A6)"
+}

@@ -1,0 +1,317 @@
+{
+  "all_identical": true,
+  "runs": [
+    {
+      "defense": "ftmaster",
+      "domain": "D1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.49802464306669275,
+        0.49802464306669275
+      ],
+      "avg_attack_occ_post": [
+        0.6268594285714293,
+        0.6268594285714293
+      ],
+      "overflow_seconds": [
+        172.60000000000002,
+        172.60000000000002
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftmaster",
+      "domain": "D1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftmaster",
+      "domain": "T1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.03705257142857143,
+        0.03705257142857143
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        4217,
+        4217
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftmaster",
+      "domain": "T1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftop",
+      "domain": "D1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.03942890670839038,
+        0.03942890670839038
+      ],
+      "avg_attack_occ_post": [
+        0.18798171428571436,
+        0.18798171428571436
+      ],
+      "overflow_seconds": [
+        7.2,
+        7.2
+      ],
+      "deletes": [
+        75355,
+        75355
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftop",
+      "domain": "D1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftop",
+      "domain": "T1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.04545689878332902,
+        0.04545689878332902
+      ],
+      "avg_attack_occ_post": [
+        0.22299314285714283,
+        0.22299314285714283
+      ],
+      "overflow_seconds": [
+        9.3,
+        9.3
+      ],
+      "deletes": [
+        76952,
+        76952
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "ftop",
+      "domain": "T1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "flora",
+      "domain": "D1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.05796988069626442,
+        0.05796988069626442
+      ],
+      "avg_attack_occ_post": [
+        0.2852857142857156,
+        0.2852857142857156
+      ],
+      "overflow_seconds": [
+        29.1,
+        29.1
+      ],
+      "deletes": [
+        2290,
+        2290
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "flora",
+      "domain": "D1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        0,
+        0
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "flora",
+      "domain": "T1",
+      "variant": "A2",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.07439813616360341,
+        0.07439813616360341
+      ],
+      "avg_attack_occ_post": [
+        0.2941874285714296,
+        0.2941874285714296
+      ],
+      "overflow_seconds": [
+        16.400000000000002,
+        16.400000000000002
+      ],
+      "deletes": [
+        2571,
+        2571
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    },
+    {
+      "defense": "flora",
+      "domain": "T1",
+      "variant": "benign",
+      "identical": true,
+      "benign_flows_harmed_frac": [
+        0.0,
+        0.0
+      ],
+      "avg_attack_occ_post": [
+        0.0,
+        0.0
+      ],
+      "overflow_seconds": [
+        0.0,
+        0.0
+      ],
+      "deletes": [
+        26,
+        26
+      ],
+      "demotes": [
+        0,
+        0
+      ]
+    }
+  ]
+}

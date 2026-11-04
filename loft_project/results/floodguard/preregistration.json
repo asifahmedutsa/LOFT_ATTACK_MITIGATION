@@ -1,0 +1,85 @@
+{
+  "created_utc": "2026-10-31T17:45:39.239229+00:00",
+  "candidates": {
+    "mult": [
+      3.0,
+      5.0,
+      10.0
+    ],
+    "r_min": [
+      20.0,
+      50.0,
+      100.0
+    ],
+    "purge": [
+      false,
+      true
+    ]
+  },
+  "rule": {
+    "objective": "minimise mean benign harm over all attacked validation episodes (A1-A7, LA, HA; dedicated and shared ports)",
+    "constraints": {
+      "avg_attack_occ_post_max": 0.15,
+      "overflow_seconds_post_attack_max": 5.0,
+      "benign_only_harmed_max": 0.01,
+      "a1_a7_harm_vs_v21_max_points": 0.5
+    },
+    "tie_break": "within 0.05 points: purge off, then larger mult, then larger r_min (gentler)",
+    "fallback": "if none is feasible: minimise total constraint violation, then the objective"
+  },
+  "validation": {
+    "seeds": [
+      2000,
+      2001,
+      2002
+    ],
+    "attacks": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6",
+      "A7",
+      "LA",
+      "HA"
+    ],
+    "scenarios": [
+      "dedicated",
+      "shared"
+    ]
+  },
+  "test": {
+    "seeds": [
+      14000,
+      14001,
+      14002,
+      14003,
+      14004,
+      14005,
+      14006,
+      14007,
+      14008,
+      14009
+    ],
+    "rdefender_setting_seeds": [
+      14000,
+      14001,
+      14002,
+      14003,
+      14004
+    ],
+    "defenses": [
+      "v2.1",
+      "v2.1+fg",
+      "rdefender"
+    ]
+  },
+  "hypotheses": {
+    "H1": "floods LA and HA, both scenarios: v2.1+fg harms fewer benign flows than v2.1",
+    "H2": "A1-A7, both scenarios: v2.1+fg is non-inferior to v2.1 (<= 0.5 points)",
+    "H3": "benign-only traffic: v2.1+fg harms <= v2.1 + 0.1 points",
+    "H4": "rDefender's setting, HA: v2.1+fg harms fewer benign flows than rDefender"
+  },
+  "note": "Motivated by E2's reproduction of rDefender's setting, where v2.1 harmed 55 % under the high-rate flood HA."
+}

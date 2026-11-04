@@ -1,0 +1,95 @@
+{
+  "created_utc": "2026-11-02T18:21:59.151287+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3"
+  ],
+  "candidates": [
+    "feq0.3r30h10",
+    "feq0.3r60h10",
+    "feq0.5r30h10",
+    "feq0.5r60h10"
+  ],
+  "reference": "fe-weighted-expiry",
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    25000,
+    25001,
+    25002,
+    25003,
+    25004,
+    25005,
+    25006,
+    25007,
+    25008,
+    25009
+  ],
+  "constants": {
+    "return_s": 10.0,
+    "window_s": 10.0,
+    "drop_s": 2.0
+  },
+  "cells": [
+    "flash2/benign",
+    "flash4/benign",
+    "flash2/A2",
+    "normal/A1",
+    "normal/A2",
+    "normal/A3",
+    "normal/A4",
+    "normal/A5",
+    "normal/A6",
+    "normal/A7",
+    "normal/t2-3_p1-1_benign_spoof_M1700",
+    "normal/t2-3_p1-3_benign_pool_M1700",
+    "normal/t2-3_p1-3_benign_pool_M600",
+    "normal/benign"
+  ],
+  "e9_attacks": [
+    "t2-3_p1-1_benign_spoof_M1700",
+    "t2-3_p1-3_benign_pool_M1700",
+    "t2-3_p1-3_benign_pool_M600"
+  ],
+  "scenario": "dedicated",
+  "selection": "eligible: flash mean harm <= fe-weighted-expiry + 0.0025, E9 worst mean harm <= fe-weighted-expiry + 0.005, A1-A7 mean harm <= fe-weighted-expiry + 0.0025; among eligible, fewest mean controller messages over E9's attacks; ties within 2 %: higher r_min, then higher theta, then shorter hold; none eligible: report, no test",
+  "test_defenses": [
+    "v2.1+pg",
+    "fe-weighted-expiry",
+    "<selected>"
+  ],
+  "hypotheses": {
+    "FQ1": "load: under E9's three attacks the selection sends fewer controller messages than fair eviction (paired cluster Wilcoxon over domain x seed), and at most half as many on average",
+    "FQ2": "adaptive: the selection's worst E9 attack mean harm is <= fair eviction's + 0.5 points",
+    "FQ3": "flash crowds: non-inferior to fair eviction (cluster bootstrap 95 % upper bound of the mean harm difference over the flash cells <= 0.5 points)",
+    "FQ4": "A1-A7: non-inferior to fair eviction (same bound, <= 0.5 points)",
+    "FQ5": "descriptive: controller messages and harm against v2.1 + PortGuard"
+  },
+  "grid": [
+    [
+      0.3,
+      30,
+      10.0
+    ],
+    [
+      0.3,
+      60,
+      10.0
+    ],
+    [
+      0.5,
+      30,
+      10.0
+    ],
+    [
+      0.5,
+      60,
+      10.0
+    ]
+  ],
+  "testbed": "then D1, A2 / E9P / F4, seeds 4100-4102 against results/testbed_fe; primary testbed measure: benign impact (harm + unanswered first packets) under E9P"
+}

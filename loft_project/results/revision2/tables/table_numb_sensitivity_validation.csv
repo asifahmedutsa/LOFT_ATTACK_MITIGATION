@@ -1,0 +1,7 @@
+family,numb,cfg,feasible,val_impacted,val_harmed,val_mal_occ,val_overflow
+DMS-BTT tuned,bytes,"family=A,h2=0.6,h1=0.85,p=0.7,numb=bytes",False,12.1,7.11,21.8,10.93
+DMS-BTT tuned,packets,"family=A,h2=0.6,h1=0.85,p=0.5,numb=packets",False,13.22,7.49,22.06,11.02
+DMS-BTT tuned + blocklist,bytes,"family=B,h2=0.6,h1=0.9,p=0.7,numb=bytes,block=60",True,8.1,4.41,13.94,3.85
+DMS-BTT tuned + blocklist,packets,"family=B,h2=0.6,h1=0.9,p=0.7,numb=packets,block=60",True,8.83,4.46,14.18,3.77
+DMS-BTT detector + DualGuard policy,bytes,"family=C,rho=0.7,gate=False,hard=h0.90,numb=bytes",False,8.71,3.98,18.41,2.61
+DMS-BTT detector + DualGuard policy,packets,"family=C,rho=0.5,gate=True,hard=h0.90,numb=packets",False,9.51,4.78,17.84,5.27

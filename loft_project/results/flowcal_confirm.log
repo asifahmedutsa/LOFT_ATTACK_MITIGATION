@@ -1,0 +1,17 @@
+  [confirm] 200/480 episodes, 158s
+  [confirm] 400/480 episodes, 308s
+     defense       scope  episodes            harmed    active_evicted              mal_occ  overflow_mean  overflow_p90  share_gt_5s  flow_flag_rate
+        v2.1    attacked       210 1.56 [1.15, 2.01] 0.61 [0.36, 0.87] 14.49 [13.95, 15.03]           4.71          8.76        0.400          0.0432
+        v2.1 benign-only        30 0.04 [0.01, 0.07] 0.04 [0.01, 0.07]    0.00 [0.00, 0.00]           0.00          0.00        0.000          0.0476
+v2.1-flowcal    attacked       210 1.49 [1.13, 1.88] 0.15 [0.08, 0.21] 16.17 [15.74, 16.59]           6.57         11.33        0.438          0.0103
+v2.1-flowcal benign-only        30 0.00 [0.00, 0.01] 0.00 [0.00, 0.01]    0.00 [0.00, 0.00]           0.00          0.00        0.000          0.0074
+        avg_attack_occ_post              benign_flows_harmed_frac              overflow_seconds_post_attack             
+defense                v2.1 v2.1-flowcal                     v2.1 v2.1-flowcal                         v2.1 v2.1-flowcal
+domain                                                                                                                  
+D1                   0.1528       0.1660                   0.0049       0.0049                       2.5986       2.9243
+D2                   0.1246       0.1469                   0.0315       0.0285                       8.1857      12.8014
+D3                   0.1573       0.1720                   0.0105       0.0112                       3.3314       3.9771
+                      metric  mean_cluster_diff_flowcal_minus_poll  flowcal_lower  flowcal_higher       p
+    benign_flows_harmed_frac                              -0.00072             14              16 0.33874
+         avg_attack_occ_post                               0.01672              0              30 0.00000
+overflow_seconds_post_attack                               1.86238              0              30 0.00000

@@ -1,0 +1,69 @@
+{
+  "created_utc": "2026-11-02T13:24:20.207254+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3"
+  ],
+  "candidates": [
+    "fe-equal-expiry",
+    "fe-equal-rate2",
+    "fe-equal-rate5",
+    "fe-weighted-expiry",
+    "fe-weighted-rate2",
+    "fe-weighted-rate5"
+  ],
+  "reference": "v2.1+pg",
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    23000,
+    23001,
+    23002,
+    23003,
+    23004,
+    23005,
+    23006,
+    23007,
+    23008,
+    23009
+  ],
+  "cells": [
+    "flash2/benign",
+    "flash4/benign",
+    "flash2/A2",
+    "normal/A1",
+    "normal/A2",
+    "normal/A3",
+    "normal/A4",
+    "normal/A5",
+    "normal/A6",
+    "normal/A7",
+    "normal/t2-3_p1-1_benign_spoof_M1700",
+    "normal/t2-3_p1-3_benign_pool_M1700",
+    "normal/t2-3_p1-3_benign_pool_M600",
+    "normal/benign"
+  ],
+  "e9_attacks": [
+    "t2-3_p1-1_benign_spoof_M1700",
+    "t2-3_p1-3_benign_pool_M1700",
+    "t2-3_p1-3_benign_pool_M600"
+  ],
+  "scenario": "dedicated",
+  "selection": "eligible: E9 worst mean harm <= v2.1+pg + 0.005 and A1-A7 mean harm <= v2.1+pg + 0.0025; among eligible, lowest mean harm over ['flash2/benign', 'flash4/benign', 'flash2/A2']; ties within 0.0005: equal before weighted, expiry before rate, smaller min_age; none eligible: report, no test",
+  "test_defenses": [
+    "v2.1",
+    "v2.1+evict",
+    "v2.1+pg",
+    "<selected>"
+  ],
+  "hypotheses": {
+    "FE1": "flash crowds: over flash 2x and 4x without attack and flash 2x + A2, fair eviction harms fewer benign flows than v2.1 + PortGuard (paired cluster Wilcoxon over domain x seed, Holm over FE1 and FE3's test)",
+    "FE2": "adaptive: fair eviction's worst E9 attack mean harm is <= v2.1 + PortGuard's + 0.5 points",
+    "FE3": "A1-A7: fair eviction is non-inferior to v2.1 + PortGuard (cluster bootstrap 95 % upper bound of the mean harm difference <= 0.5 points)",
+    "FE4": "descriptive: flash harm of fair eviction against v2.1 + eviction"
+  }
+}

@@ -1,0 +1,12 @@
+defense,bytes_D1,bytes_T1
+none,43,43
+ovs-evict,91,91
+dms-btt,991290,990034
+ftmaster,818800,520215
+ftop,92816376,10494615
+flora,342743,341871
+rdefender,188,188
+v2.1,3243,3243
+v2.1+evict,3287,3287
+v2.1+hold,3306,3306
+v2.1+portguard,3493,3493

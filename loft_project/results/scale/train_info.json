@@ -1,0 +1,117 @@
+{
+ "exposure": {
+  "C1": [
+   "A1"
+  ],
+  "C2": [
+   "A2"
+  ],
+  "C3": [
+   "A3"
+  ],
+  "C4": [
+   "A4"
+  ],
+  "C5": [
+   "A5"
+  ],
+  "C6": [
+   "A7"
+  ],
+  "C7": [
+   "A1"
+  ],
+  "C8": [
+   "A2"
+  ],
+  "C9": [
+   "A3"
+  ]
+ },
+ "profiles": {
+  "C1": "C1-enterprise",
+  "C2": "C2-iot",
+  "C3": "C3-cloud",
+  "C4": "C4-campus",
+  "C5": "C5-iot-dense",
+  "C6": "C6-cloud-heavy",
+  "C7": "C7-branch",
+  "C8": "C8-iot-fast",
+  "C9": "C9-cloud-light"
+ },
+ "fedavg_comm": {
+  "K3/seed0": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 219240,
+   "downlink_bytes": 219240,
+   "normalization_bytes": 840,
+   "total_bytes": 439320
+  },
+  "K3/seed1": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 219240,
+   "downlink_bytes": 219240,
+   "normalization_bytes": 840,
+   "total_bytes": 439320
+  },
+  "K3/seed2": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 219240,
+   "downlink_bytes": 219240,
+   "normalization_bytes": 840,
+   "total_bytes": 439320
+  },
+  "K6/seed0": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 438480,
+   "downlink_bytes": 438480,
+   "normalization_bytes": 1680,
+   "total_bytes": 878640
+  },
+  "K6/seed1": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 438480,
+   "downlink_bytes": 438480,
+   "normalization_bytes": 1680,
+   "total_bytes": 878640
+  },
+  "K6/seed2": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 438480,
+   "downlink_bytes": 438480,
+   "normalization_bytes": 1680,
+   "total_bytes": 878640
+  },
+  "K9/seed0": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 657720,
+   "downlink_bytes": 657720,
+   "normalization_bytes": 2520,
+   "total_bytes": 1317960
+  },
+  "K9/seed1": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 657720,
+   "downlink_bytes": 657720,
+   "normalization_bytes": 2520,
+   "total_bytes": 1317960
+  },
+  "K9/seed2": {
+   "rounds": 30,
+   "model_bytes": 2436,
+   "uplink_bytes": 657720,
+   "downlink_bytes": 657720,
+   "normalization_bytes": 2520,
+   "total_bytes": 1317960
+  }
+ },
+ "total_seconds": 3683
+}

@@ -1,0 +1,153 @@
+== select
+  [select] 100/1080 episodes, 61 s
+  [select] 200/1080 episodes, 140 s
+  [select] 300/1080 episodes, 217 s
+  [select] 400/1080 episodes, 294 s
+  [select] 500/1080 episodes, 366 s
+  [select] 600/1080 episodes, 441 s
+  [select] 700/1080 episodes, 513 s
+  [select] 800/1080 episodes, 558 s
+  [select] 900/1080 episodes, 600 s
+  [select] 1000/1080 episodes, 687 s
+  defense                                 knobs  benign_flows_harmed_frac  avg_attack_occ_post  overflow_seconds_post_attack  benign_only_harmed  feasible
+    flora   {"block_after": 10, "trigger": 0.5}                    0.2273               0.3806                       86.9778                 0.0     False
+    flora   {"block_after": 10, "trigger": 0.7}                    0.2274               0.3997                       87.0159                 0.0     False
+    flora   {"block_after": 10, "trigger": 0.9}                    0.2287               0.4264                       87.5413                 0.0     False
+    flora {"block_after": 1750, "trigger": 0.5}                    0.2636               0.4227                      101.1905                 0.0     False
+    flora {"block_after": 1750, "trigger": 0.7}                    0.2640               0.4297                      101.3222                 0.0     False
+    flora {"block_after": 1750, "trigger": 0.9}                    0.2666               0.4423                      102.3365                 0.0     False
+    flora   {"block_after": 50, "trigger": 0.5}                    0.2284               0.3878                       87.3444                 0.0     False
+    flora   {"block_after": 50, "trigger": 0.7}                    0.2288               0.4008                       87.4762                 0.0     False
+    flora   {"block_after": 50, "trigger": 0.9}                    0.2314               0.4214                       88.4905                 0.0     False
+ ftmaster                                    {}                    0.1233               0.2557                       43.0683                 0.0     False
+     ftop                                    {}                    0.0766               0.2264                        7.5571                 0.0     False
+     none                                    {}                    0.4117               0.5328                      146.8048                 0.0     False
+rdefender                       {"gamma": 0.02}                    0.1066               0.3752                       23.6286                 0.0     False
+rdefender                       {"gamma": 0.05}                    0.0923               0.3700                       23.4429                 0.0     False
+rdefender                        {"gamma": 0.1}                    0.0767               0.3506                       22.7413                 0.0     False
+{
+ "flora": {
+  "feasible": false,
+  "knobs": {
+   "block_after": 10,
+   "trigger": 0.5
+  },
+  "attack_occ": 0.3806,
+  "attack_occ_none": 0.5328,
+  "passes_G1": false,
+  "harmed": 0.2273,
+  "overflow_s": 86.98
+ },
+ "rdefender": {
+  "feasible": false,
+  "knobs": {
+   "gamma": 0.1
+  },
+  "attack_occ": 0.3506,
+  "attack_occ_none": 0.5328,
+  "passes_G1": false,
+  "harmed": 0.0767,
+  "overflow_s": 22.74
+ },
+ "ftmaster": {
+  "feasible": false,
+  "knobs": {},
+  "attack_occ": 0.2557,
+  "attack_occ_none": 0.5328,
+  "passes_G1": true,
+  "harmed": 0.1233,
+  "overflow_s": 43.07
+ },
+ "ftop": {
+  "feasible": false,
+  "knobs": {},
+  "attack_occ": 0.2264,
+  "attack_occ_none": 0.5328,
+  "passes_G1": true,
+  "harmed": 0.0766,
+  "overflow_s": 7.56
+ }
+}
+== select done, 813 s
+== test
+  [test] 100/2160 episodes, 41 s
+  [test] 200/2160 episodes, 79 s
+  [test] 300/2160 episodes, 125 s
+  [test] 400/2160 episodes, 170 s
+  [test] 500/2160 episodes, 225 s
+  [test] 600/2160 episodes, 300 s
+  [test] 700/2160 episodes, 371 s
+  [test] 800/2160 episodes, 472 s
+  [test] 900/2160 episodes, 585 s
+  [test] 1000/2160 episodes, 754 s
+  [test] 1100/2160 episodes, 935 s
+  [test] 1200/2160 episodes, 1060 s
+  [test] 1300/2160 episodes, 1147 s
+  [test] 1400/2160 episodes, 1235 s
+  [test] 1500/2160 episodes, 1299 s
+  [test] 1600/2160 episodes, 1336 s
+  [test] 1700/2160 episodes, 1384 s
+  [test] 1800/2160 episodes, 1443 s
+  [test] 1900/2160 episodes, 1503 s
+  [test] 2000/2160 episodes, 1567 s
+  [test] 2100/2160 episodes, 1637 s
+== test done, 2488 s
+== report
+                      defense  Avg Pa (%)  Max Pa (%)  Avg table usage (%)  Earliest overflow (s)  Runs with overflow (%)  Overflow after attack (s)  Packet-In  TABLE_FULL    Benign harmed (%) Benign harmed, no attack (%)  Benign Packet-In lost (%)  Decision time (ms)
+          No defense (REFUSE)       53.24       78.22                78.06                  126.2                   100.0                     147.84      78772       59150 42.43 [41.24, 43.62]            0.04 [0.00, 0.11]                      15.10               54.30
+                  EVICT (OVS)       51.07       83.49                78.18                  126.2                   100.0                     158.42      85817           0  12.62 [9.33, 15.99]            0.00 [0.00, 0.00]                       0.00               54.10
+                      DMS-BTT       24.83       59.30                61.75                  142.5                    96.7                      12.75      95994       11271    7.60 [6.39, 8.81]            0.04 [0.00, 0.11]                       0.93             4065.81
+                     FTMaster       25.65       60.65                61.88                  139.7                    86.2                      43.25      92908       22103 12.71 [11.80, 13.60]            0.03 [0.00, 0.10]                       4.05             9667.42
+                         FTOP       22.81       60.61                58.45                  126.4                    84.3                       7.56      99238        9005    7.89 [6.55, 9.32]            0.07 [0.00, 0.19]                       0.40            19418.07
+                        FloRa       37.95       64.30                70.56                  123.5                    87.1                      88.51      76823       32262 23.59 [22.11, 25.06]            0.04 [0.00, 0.10]                       6.45             5069.83
+                    rDefender       35.13       59.78                71.35                  126.2                   100.0                      23.15      77984       19651    8.05 [7.09, 9.09]            0.04 [0.00, 0.11]                       1.21              156.50
+            FL-DualGuard v2.1       14.50       53.83                54.56                  154.0                    91.0                       4.83      98855        5004    1.64 [1.20, 2.10]            0.07 [0.01, 0.15]                       0.16             2374.40
+FL-DualGuard v2.1 + PortGuard       21.22       53.80                60.33                  151.1                    91.4                       4.38      89558        4855    1.77 [1.37, 2.21]            0.10 [0.01, 0.24]                       0.18             2610.22
+variant                           A1     A2     A3     A4     A5     A6     A7
+defense                                                                       
+No defense (REFUSE)            45.85  51.19  53.59  52.41  50.77  12.31  30.93
+EVICT (OVS)                    13.20  14.01  14.25  13.89  13.94   4.19  14.85
+DMS-BTT                         4.08   4.55   4.27  24.26   4.33   8.52   3.17
+FTMaster                        3.60  16.36   3.59  41.33   3.75  10.44   9.91
+FTOP                            4.94   4.88   4.83  19.45   4.94  12.19   3.98
+FloRa                          30.12   8.06  36.73  49.66   0.09   9.54  30.92
+rDefender                       8.75   8.55   8.66  10.96   8.19   5.17   6.07
+FL-DualGuard v2.1               1.62   1.37   1.62   3.03   1.55   1.02   1.23
+FL-DualGuard v2.1 + PortGuard   1.96   1.91   2.07   1.96   2.05   0.90   1.53
+variant                           A1     A2     A3     A4     A5     A6     A7
+defense                                                                       
+No defense (REFUSE)            55.57  59.41  60.69  60.55  59.01  34.79  42.67
+EVICT (OVS)                    53.47  55.73  56.65  55.55  55.39  34.80  45.89
+DMS-BTT                        19.90  19.97  19.22  49.06  19.34  30.08  16.28
+FTMaster                       17.75  23.04  17.18  55.19  17.48  32.68  16.24
+FTOP                           18.71  18.12  17.75  44.50  17.92  27.94  14.74
+FloRa                          48.56  26.14  52.76  58.70   6.17  30.65  42.67
+rDefender                      35.68  37.03  35.47  39.17  35.97  32.56  30.02
+FL-DualGuard v2.1              14.25  13.19  13.43  22.35  13.69  12.37  12.24
+FL-DualGuard v2.1 + PortGuard  21.70  22.20  23.02  28.02  22.14  13.22  18.24
+                      metric                      baseline  mean_diff_v21_minus  v21_lower  v21_higher       p  p_holm
+    benign_flows_harmed_frac           No defense (REFUSE)             -0.40799         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                   EVICT (OVS)             -0.10983         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                       DMS-BTT             -0.05963         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                      FTMaster             -0.11076         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                          FTOP             -0.06251         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                         FloRa             -0.21954         30           0 0.00000 0.00000
+    benign_flows_harmed_frac                     rDefender             -0.06415         30           0 0.00000 0.00000
+    benign_flows_harmed_frac FL-DualGuard v2.1 + PortGuard             -0.00135         18          12 0.54253 0.54253
+         avg_attack_occ_post           No defense (REFUSE)             -0.38739         30           0 0.00000 0.00000
+         avg_attack_occ_post                   EVICT (OVS)             -0.36567         30           0 0.00000 0.00000
+         avg_attack_occ_post                       DMS-BTT             -0.10333         30           0 0.00000 0.00000
+         avg_attack_occ_post                      FTMaster             -0.11150         30           0 0.00000 0.00000
+         avg_attack_occ_post                          FTOP             -0.08308         30           0 0.00000 0.00000
+         avg_attack_occ_post                         FloRa             -0.23449         30           0 0.00000 0.00000
+         avg_attack_occ_post                     rDefender             -0.20627         30           0 0.00000 0.00000
+         avg_attack_occ_post FL-DualGuard v2.1 + PortGuard             -0.06717         30           0 0.00000 0.00000
+overflow_seconds_post_attack           No defense (REFUSE)           -143.00619         30           0 0.00000 0.00000
+overflow_seconds_post_attack                   EVICT (OVS)           -153.58714         30           0 0.00000 0.00000
+overflow_seconds_post_attack                       DMS-BTT             -7.91810         20          10 0.11418 0.18733
+overflow_seconds_post_attack                      FTMaster            -38.42143         30           0 0.00000 0.00000
+overflow_seconds_post_attack                          FTOP             -2.72476         30           0 0.00000 0.00000
+overflow_seconds_post_attack                         FloRa            -83.67429         30           0 0.00000 0.00001
+overflow_seconds_post_attack                     rDefender            -18.32095         30           0 0.00000 0.00000
+overflow_seconds_post_attack FL-DualGuard v2.1 + PortGuard              0.45238         12          18 0.09367 0.18733
+== report done, 2488 s

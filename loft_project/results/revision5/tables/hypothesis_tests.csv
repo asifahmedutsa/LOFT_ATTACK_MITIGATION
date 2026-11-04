@@ -1,0 +1,5 @@
+hypothesis,a,b,mean_cluster_diff_points,a_wins,a_losses,p,p_holm
+H1,FL-DualGuard v2.1 (transferred),DMS-BTT tuned + blocklist (trained on trace),0.5085984166800234,10,20,0.08793856762349606,0.08793856762349606
+H2,FL-DualGuard v2.1 (transferred),Local MLP + public library (trained on trace),-2.5788880786400776,22,8,2.6885420083999634e-05,
+H4,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1 (transferred),-57.80063254378845,30,0,1.862645149230957e-09,3.725290298461914e-09
+H5,v2.1 + PortGuard (step 4b),FL-DualGuard v2.1 (transferred),-0.8363109275699889,16,10,0.10192008230815931,

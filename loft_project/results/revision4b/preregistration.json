@@ -1,0 +1,154 @@
+{
+  "created_utc": "2026-10-28T17:44:13.314035+00:00",
+  "motivation": "results_v2.md section 14.4: DualGuard and PortGuard conflict under sustained pressure",
+  "candidates": [
+    {
+      "id": "gated-equal-q0.9",
+      "mode": "gated",
+      "share": "equal",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "gated-equal-q0.95",
+      "mode": "gated",
+      "share": "equal",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "gated-weighted-q0.9",
+      "mode": "gated",
+      "share": "weighted",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "gated-weighted-q0.95",
+      "mode": "gated",
+      "share": "weighted",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "scoped-equal-q0.9",
+      "mode": "scoped",
+      "share": "equal",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "scoped-equal-q0.95",
+      "mode": "scoped",
+      "share": "equal",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "scoped-weighted-q0.9",
+      "mode": "scoped",
+      "share": "weighted",
+      "q": 0.9,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    },
+    {
+      "id": "scoped-weighted-q0.95",
+      "mode": "scoped",
+      "share": "weighted",
+      "q": 0.95,
+      "rho_q": 0.9,
+      "hold_s": 30.0,
+      "tau_s": 60.0
+    }
+  ],
+  "rule": {
+    "data": "validation seeds 2000-2002, dedicated ports, D1-D3, A1-A7 + gap sweep + benign-only",
+    "feasible": "mean benign harm on A1-A7 <= v2.1's + 0.5 points and benign-only harm <= v2.1's + 0.1 points",
+    "objective": "minimise mean benign harm over the gap sweep",
+    "tie_break": "within 0.05 points: lower mean attacker occupancy over the gap sweep, then fewer overflow seconds",
+    "fallback": "if none is feasible: minimise total constraint violation (points), then the objective",
+    "applies_to": "the selected candidate is v2.1+pfs4b; pfs-sel is PortGuard alone with the selected share and q"
+  },
+  "hypotheses": {
+    "H1": "dedicated, gaps <= 1 s: v2.1+pfs4b harms fewer benign flows than the step-4 composition v2.1+pfs",
+    "H2": "dedicated, A1-A7: v2.1+pfs4b is non-inferior to v2.1 (mean harm difference <= 0.5 points)",
+    "H3": "dedicated: v2.1+pfs4b mean harm <= 3 % at every refresh gap",
+    "H4": "dedicated, A1-A7: v2.1+pfs4b harms fewer than PortGuard alone with the same share and q (pfs-sel)",
+    "H5": "shared, gaps <= 1 s: v2.1+pfs4b harms fewer than v2.1",
+    "H6": "distributed, A1-A7: v2.1+pfs4b is non-inferior to v2.1 (<= 0.5 points)",
+    "H7": "distributed, gaps <= 1 s (expected negative): v2.1+pfs4b does not reduce harm vs v2.1"
+  },
+  "defenses": [
+    "none",
+    "dms-blocklist",
+    "v2.1",
+    "pfs",
+    "pfs-sel",
+    "v2.1+pfs",
+    "v2.1+pfs4b"
+  ],
+  "step4_knobs": {
+    "q": 0.95,
+    "rho_q": 0.9,
+    "hold_s": 30.0
+  },
+  "gaps_s": [
+    0.25,
+    0.5,
+    0.8,
+    1.0,
+    2.0,
+    5.0,
+    9.0
+  ],
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": {
+    "dedicated": [
+      8000,
+      8001,
+      8002,
+      8003,
+      8004,
+      8005,
+      8006,
+      8007,
+      8008,
+      8009
+    ],
+    "shared": [
+      8000,
+      8001,
+      8002,
+      8003,
+      8004
+    ],
+    "distributed": [
+      8000,
+      8001,
+      8002,
+      8003,
+      8004
+    ]
+  },
+  "development_note": "modes and weighted shares were developed on training seed 1000 only",
+  "primary_metric": "benign_flows_harmed_frac",
+  "statistics": "cluster bootstrap and cluster Wilcoxon over (domain, seed), Holm across H1-H7 tests"
+}

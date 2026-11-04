@@ -1,0 +1,56 @@
+{
+ "selected": {
+  "events": "replay",
+  "gamma": 0.02
+ },
+ "table": [
+  {
+   "knobs": "{\"events\": \"poll\", \"gamma\": 0.02}",
+   "benign_flows_harmed_frac": 0.1065774115758312,
+   "avg_attack_occ_post": 0.37516328344671207,
+   "overflow_seconds_post_attack": 23.62857142857143,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  },
+  {
+   "knobs": "{\"events\": \"poll\", \"gamma\": 0.05}",
+   "benign_flows_harmed_frac": 0.0923084601346226,
+   "avg_attack_occ_post": 0.3700244716553287,
+   "overflow_seconds_post_attack": 23.442857142857143,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  },
+  {
+   "knobs": "{\"events\": \"poll\", \"gamma\": 0.1}",
+   "benign_flows_harmed_frac": 0.07665479715113492,
+   "avg_attack_occ_post": 0.3506488707482993,
+   "overflow_seconds_post_attack": 22.741269841269837,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  },
+  {
+   "knobs": "{\"events\": \"replay\", \"gamma\": 0.02}",
+   "benign_flows_harmed_frac": 0.08034041306524685,
+   "avg_attack_occ_post": 0.31884039909297046,
+   "overflow_seconds_post_attack": 17.863492063492064,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  },
+  {
+   "knobs": "{\"events\": \"replay\", \"gamma\": 0.05}",
+   "benign_flows_harmed_frac": 0.06957963545833162,
+   "avg_attack_occ_post": 0.3243518911564624,
+   "overflow_seconds_post_attack": 18.684126984126983,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  },
+  {
+   "knobs": "{\"events\": \"replay\", \"gamma\": 0.1}",
+   "benign_flows_harmed_frac": 0.07559604202550266,
+   "avg_attack_occ_post": 0.3050193015873015,
+   "overflow_seconds_post_attack": 21.02380952380953,
+   "benign_only_harmed": 0.0,
+   "feasible": false
+  }
+ ]
+}

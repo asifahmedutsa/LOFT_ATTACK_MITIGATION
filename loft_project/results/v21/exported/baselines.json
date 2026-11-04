@@ -1,0 +1,18 @@
+{
+  "flora": {
+    "block_after": 10,
+    "trigger": 0.5
+  },
+  "ftmaster": {},
+  "ftop": {},
+  "rdefender": {
+    "events": "replay",
+    "gamma": 0.02
+  },
+  "floodguard": {
+    "mult": 10.0,
+    "purge": false,
+    "r_min": 50.0
+  },
+  "source": "results/e2_baselines/selected.json, rdefender_fix/selected.json, results/floodguard/selected.json; models: loftbench.testbed_baselines"
+}

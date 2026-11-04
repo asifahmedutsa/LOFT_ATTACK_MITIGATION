@@ -1,0 +1,91 @@
+{
+  "created_utc": "2026-11-02T12:22:33.830716+00:00",
+  "domains": [
+    "D1",
+    "D2",
+    "D3"
+  ],
+  "grid": {
+    "skew": [
+      0.35,
+      0.5,
+      0.65
+    ],
+    "tau": [
+      60.0,
+      300.0
+    ],
+    "evict": [
+      false,
+      true
+    ]
+  },
+  "base": "v2.1+pg",
+  "candidates": [
+    "v2.1+pg|gate0.35t60",
+    "v2.1+pg|gate0.35t60+evict",
+    "v2.1+pg|gate0.35t300",
+    "v2.1+pg|gate0.35t300+evict",
+    "v2.1+pg|gate0.5t60",
+    "v2.1+pg|gate0.5t60+evict",
+    "v2.1+pg|gate0.5t300",
+    "v2.1+pg|gate0.5t300+evict",
+    "v2.1+pg|gate0.65t60",
+    "v2.1+pg|gate0.65t60+evict",
+    "v2.1+pg|gate0.65t300",
+    "v2.1+pg|gate0.65t300+evict",
+    "v2.1+pg+evict"
+  ],
+  "val_seeds": [
+    2000,
+    2001,
+    2002
+  ],
+  "test_seeds": [
+    22000,
+    22001,
+    22002,
+    22003,
+    22004,
+    22005,
+    22006,
+    22007,
+    22008,
+    22009
+  ],
+  "cells": [
+    "flash2/benign",
+    "flash4/benign",
+    "flash2/A2",
+    "normal/A1",
+    "normal/A2",
+    "normal/A3",
+    "normal/A4",
+    "normal/A5",
+    "normal/A6",
+    "normal/A7",
+    "normal/t2-3_p1-1_benign_spoof_M1700",
+    "normal/t2-3_p1-3_benign_pool_M1700",
+    "normal/t2-3_p1-3_benign_pool_M600",
+    "normal/benign"
+  ],
+  "e9_attacks": [
+    "t2-3_p1-1_benign_spoof_M1700",
+    "t2-3_p1-3_benign_pool_M1700",
+    "t2-3_p1-3_benign_pool_M600"
+  ],
+  "scenario": "dedicated",
+  "selection": "eligible: E9 worst mean harm <= base + 0.005 and A1-A7 mean harm <= base + 0.0025; among eligible, lowest mean harm over ['flash2/benign', 'flash4/benign', 'flash2/A2']; ties within 0.0005: higher skew, then evict off, then longer tau; none: no gate",
+  "test_defenses": [
+    "v2.1",
+    "v2.1+evict",
+    "v2.1+pg",
+    "<selected>"
+  ],
+  "hypotheses": {
+    "FC1": "flash crowds: over flash 2x and 4x without attack and flash 2x + A2, the selected gate harms fewer benign flows than v2.1 + PortGuard (paired cluster Wilcoxon over domain x seed, Holm over FC1 and FC3's test)",
+    "FC2": "adaptive: the selected gate's worst E9 attack mean harm is <= v2.1 + PortGuard's + 0.5 points",
+    "FC3": "A1-A7: the selected gate is non-inferior to v2.1 + PortGuard (cluster bootstrap 95 % upper bound of the mean harm difference <= 0.5 points)",
+    "FC4": "descriptive: flash harm of the selected gate against v2.1 + eviction"
+  }
+}

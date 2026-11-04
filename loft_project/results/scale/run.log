@@ -1,0 +1,5 @@
+[collect] 260 s
+[train] 659 s
+[offline] 840 s
+[online] 4032 episodes
+done in 3683 s

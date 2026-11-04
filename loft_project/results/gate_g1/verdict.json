@@ -1,0 +1,14 @@
+{
+  "sift": {
+    "selected": "sift|q=0.3,r_low=0.2",
+    "harm": 16.26,
+    "passes": true
+  },
+  "tableguard": {
+    "selected": "tableguard|min_age=5,r_small=0.2",
+    "harm": 16.81,
+    "passes": true
+  },
+  "none_harm": 50.74,
+  "dms_btt_harm": 4.38
+}

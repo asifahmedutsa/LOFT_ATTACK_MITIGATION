@@ -1,0 +1,16 @@
+{
+  "selected": {
+    "id": "q0.95-r0.90-h30",
+    "q": 0.95,
+    "rho_q": 0.9,
+    "hold_s": 30.0
+  },
+  "rule": {
+    "data": "validation seeds 2000-2002, dedicated ports, D1-D3, A1-A7 + gap sweep + benign-only",
+    "feasible": "mean benign harm on A1-A7 <= v2.1's + 0.5 points and benign-only harm <= v2.1's + 0.1 points",
+    "objective": "minimise mean benign harm over the gap sweep",
+    "tie_break": "within 0.05 points: lower mean attacker occupancy over the gap sweep, then fewer overflow seconds",
+    "fallback": "if none is feasible: minimise total constraint violation (points), then the objective",
+    "applies_to": "the selected knobs are used for v2.1+pfs, pfs and dms-blocklist+pfs"
+  }
+}

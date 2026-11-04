@@ -1,0 +1,10 @@
+defense,A1,A2,A3,A4,A5,A6,A7
+No defense,45.4,51.32,53.62,51.81,51.13,13.41,32.71
+DMS-BTT (original knobs),4.51,4.71,4.7,24.29,4.52,8.7,3.99
+DMS-BTT tuned,3.78,3.91,3.94,25.04,3.83,11.11,3.38
+DMS-BTT tuned + blocklist,0.46,0.41,0.3,21.74,0.44,9.25,0.33
+DMS-BTT detector + DualGuard policy,1.4,1.41,1.45,15.6,1.4,6.38,1.26
+DMS-BTT federated (MLP),4.06,4.17,4.24,22.71,4.17,9.05,3.6
+Federated DMS features + v2.1 policy,1.24,1.22,1.25,50.36,1.23,10.77,1.08
+Local MLP (no ctx) + v2.1 policy,1.33,2.5,1.34,32.64,1.3,6.29,7.85
+FL-DualGuard v2.1,1.66,1.46,1.66,3.17,1.58,1.1,1.44

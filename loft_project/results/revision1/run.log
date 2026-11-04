@@ -1,0 +1,76 @@
+  [remeasure] 200/1680 episodes, 87s
+  [remeasure] 400/1680 episodes, 236s
+  [remeasure] 600/1680 episodes, 385s
+  [remeasure] 800/1680 episodes, 521s
+  [remeasure] 1000/1680 episodes, 659s
+  [remeasure] 1200/1680 episodes, 789s
+  [remeasure] 1400/1680 episodes, 936s
+  [remeasure] 1600/1680 episodes, 1054s
+determinism: OK
+== cluster_paired_tests.csv
+                      metric                         baseline  clusters  mean_cluster_diff  cluster_wins  cluster_losses            p       p_holm
+    benign_flows_harmed_frac                       No defense        30          -0.410447            30               0 1.862645e-09 1.117587e-08
+    benign_flows_harmed_frac                DMS-BTT (reimpl.)        30          -0.061919            30               0 1.862645e-09 1.117587e-08
+    benign_flows_harmed_frac            Local MLP + DG policy        30          -0.094693            30               0 1.862645e-09 1.117587e-08
+    benign_flows_harmed_frac Local MLP (no ctx) + v2.1 policy        30          -0.058809            30               0 1.862645e-09 1.117587e-08
+    benign_flows_harmed_frac                  FL-DualGuard v2        30          -0.019008            28               2 3.539026e-08 7.078052e-08
+    benign_flows_harmed_frac      Centralized pooled (oracle)        30          -0.010860            27               3 5.592592e-05 5.592592e-05
+         avg_attack_occ_post                       No defense        30          -0.390251            30               0 1.862645e-09 1.117587e-08
+         avg_attack_occ_post                DMS-BTT (reimpl.)        30          -0.105047            30               0 1.862645e-09 1.117587e-08
+         avg_attack_occ_post            Local MLP + DG policy        30          -0.114637            30               0 1.862645e-09 1.117587e-08
+         avg_attack_occ_post Local MLP (no ctx) + v2.1 policy        30          -0.063164            30               0 1.862645e-09 1.117587e-08
+         avg_attack_occ_post                  FL-DualGuard v2        30          -0.005398            14              16 2.621223e-01 2.621223e-01
+         avg_attack_occ_post      Centralized pooled (oracle)        30           0.004945             4              26 3.147870e-07 6.295741e-07
+overflow_seconds_post_attack                       No defense        30        -142.490952            30               0 1.733307e-06 6.933227e-06
+overflow_seconds_post_attack                DMS-BTT (reimpl.)        30          -8.386667            20              10 1.094321e-01 1.312537e-01
+overflow_seconds_post_attack            Local MLP + DG policy        30           0.714286            10              20 6.562687e-02 1.312537e-01
+overflow_seconds_post_attack Local MLP (no ctx) + v2.1 policy        30         -19.794286            30               0 1.862645e-09 1.117587e-08
+overflow_seconds_post_attack                  FL-DualGuard v2        30           1.709048             0              30 1.862645e-09 1.117587e-08
+overflow_seconds_post_attack      Centralized pooled (oracle)        30           2.414762             0              30 1.733307e-06 6.933227e-06
+== table_flow_calibration.csv
+domain  tau_poll  tau_flow  val_flow_rate_tau_poll  val_flow_rate_tau_flow  test_flow_rate_tau_poll_attacked  test_flow_rate_tau_poll_benign_only  test_flow_rate_tau_flow_attacked  test_flow_rate_tau_flow_benign_only  test_acted_on_rate_benign_only
+    D1    0.0070    0.1324                  0.0467                    0.01                            0.0262                               0.0264                            0.0068                               0.0055                          0.0000
+    D2    0.0030    0.4729                  0.0503                    0.01                            0.0626                               0.0355                            0.0148                               0.0066                          0.0000
+    D3    0.0031    0.1359                  0.0504                    0.01                            0.0400                               0.0686                            0.0057                               0.0082                          0.0122
+== table_flowcal_validation.csv
+                  defense       scope  episodes            harmed          acted_on              mal_occ  overflow_mean  overflow_p90  flow_flag_rate
+        FL-DualGuard v2.1    attacked        63 1.45 [0.69, 2.32] 1.11 [0.45, 1.89] 14.47 [13.45, 15.38]           4.55          9.40          0.0571
+        FL-DualGuard v2.1 benign-only         9 0.04 [0.00, 0.10] 0.31 [0.00, 0.74]    0.00 [0.00, 0.00]           0.00          0.00          0.0528
+v2.1, per-flow calibrated    attacked        63 1.38 [0.70, 2.17] 0.25 [0.07, 0.45] 16.11 [15.37, 16.84]           6.81         12.38          0.0130
+v2.1, per-flow calibrated benign-only         9 0.00 [0.00, 0.00] 0.01 [0.00, 0.02]    0.00 [0.00, 0.00]           0.00          0.00          0.0091
+== table_harm_attack.csv
+                         defense Harmed: rejected or evicted while active (%) Refused an entry (%) Evicted while active (%) Stale entries removed (%) [no harm] Old metric: impacted (%) Extra benign Packet-In per 1k benign pkts Malicious occupancy (%)
+                      No defense                         42.77 [41.63, 43.90] 42.77 [41.63, 43.90]        0.00 [0.00, 0.00]                   0.00 [0.00, 0.00]     42.77 [41.63, 43.90]                   132.70 [125.97, 139.57]    53.45 [52.25, 54.62]
+               DMS-BTT (reimpl.)                            7.92 [6.57, 9.32]    4.73 [3.11, 6.45]        3.80 [3.03, 4.62]                   4.33 [3.80, 4.85]     12.09 [10.38, 13.77]                      21.14 [17.22, 24.98]    24.93 [23.16, 26.78]
+           Local MLP + DG policy                          11.19 [8.57, 13.96]    2.04 [1.65, 2.42]      10.29 [7.70, 13.03]                   8.50 [8.01, 8.94]     19.61 [16.90, 22.48]                      54.48 [38.56, 71.52]    25.89 [25.06, 26.72]
+Local MLP (no ctx) + v2.1 policy                            7.61 [6.59, 8.62]    7.13 [6.16, 8.10]        0.65 [0.51, 0.79]                   1.38 [1.32, 1.43]        8.95 [7.93, 9.96]                      23.30 [18.59, 28.29]    20.74 [20.28, 21.22]
+                 FL-DualGuard v2                            3.63 [2.60, 4.72]    0.94 [0.69, 1.19]        2.92 [2.00, 3.90]                   2.30 [1.85, 2.81]        5.91 [4.62, 7.25]                       10.59 [6.90, 14.47]    14.97 [14.76, 15.20]
+               FL-DualGuard v2.1                            1.73 [1.27, 2.18]    1.20 [0.88, 1.54]        0.61 [0.37, 0.87]                   0.52 [0.38, 0.65]        2.24 [1.67, 2.81]                         5.43 [3.52, 7.49]    14.43 [13.90, 14.94]
+     Centralized pooled (oracle)                            2.81 [1.98, 3.70]    0.75 [0.56, 0.95]        2.21 [1.43, 3.05]                   2.51 [2.00, 3.01]        5.30 [3.99, 6.66]                       10.92 [6.45, 15.62]    13.93 [13.50, 14.36]
+== table_harm_by_domain.csv
+                         defense        D1 harmed (%)        D2 harmed (%)        D3 harmed (%)
+                      No defense 40.12 [39.83, 40.42] 45.30 [45.01, 45.57] 42.90 [40.37, 45.48]
+               DMS-BTT (reimpl.)    3.60 [3.52, 3.67]    8.10 [8.01, 8.20] 12.05 [10.20, 14.00]
+           Local MLP + DG policy    7.37 [7.13, 7.61] 21.65 [21.35, 21.95]    4.56 [3.86, 5.32]
+Local MLP (no ctx) + v2.1 policy    4.08 [3.76, 4.40] 10.29 [10.09, 10.49]    8.45 [7.12, 9.90]
+                 FL-DualGuard v2    1.14 [1.09, 1.18]    7.70 [7.44, 7.96]    2.04 [1.60, 2.55]
+               FL-DualGuard v2.1    0.47 [0.44, 0.50]    3.09 [2.95, 3.25]    1.61 [0.87, 2.45]
+     Centralized pooled (oracle)    0.73 [0.70, 0.77]    6.06 [5.79, 6.35]    1.64 [1.06, 2.31]
+== table_overflow_tails.csv
+                         defense                    mean  median    p90    p99   max  share_gt_5s  share_gt_10s
+                      No defense 147.38 [143.25, 151.78]  165.55 186.01 196.74 198.3        1.000         1.000
+               DMS-BTT (reimpl.)     13.27 [8.93, 17.75]    5.80  33.06  72.23  77.2        0.557         0.357
+           Local MLP + DG policy       4.17 [3.57, 4.76]    3.85   8.10  10.29  11.0        0.376         0.019
+Local MLP (no ctx) + v2.1 policy    24.68 [21.97, 27.43]    3.30 104.34 179.59 181.6        0.333         0.267
+                 FL-DualGuard v2       3.18 [2.48, 3.90]    2.40   6.90  12.83  14.8        0.214         0.038
+               FL-DualGuard v2.1       4.89 [3.94, 5.85]    3.90   8.81  26.18  27.7        0.414         0.076
+     Centralized pooled (oracle)       2.47 [2.12, 2.83]    2.20   4.70  10.25  13.4        0.071         0.014
+== table_v21_by_variant.csv
+variant  harmed_pct  impacted_pct_old  mal_occ_pct  overflow_mean  overflow_p90  share_gt_5s
+     A1        1.66              2.03        14.21           4.90          8.33         0.50
+     A2        1.46              1.85        12.98           3.51          6.92         0.33
+     A3        1.66              2.08        13.42           4.82          8.44         0.43
+     A4        3.17              3.88        22.11          12.48         22.37         0.93
+     A5        1.58              1.97        13.65           4.52          7.93         0.50
+     A6        1.10              1.94        12.35           1.01          3.22         0.00
+     A7        1.44              1.90        12.28           2.95          5.81         0.20

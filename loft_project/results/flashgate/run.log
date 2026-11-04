@@ -1,0 +1,107 @@
+== select
+  [select] 200/1764 episodes, 174 s
+  [select] 400/1764 episodes, 342 s
+  [select] 600/1764 episodes, 509 s
+  [select] 800/1764 episodes, 676 s
+  [select] 1000/1764 episodes, 843 s
+  [select] 1200/1764 episodes, 1006 s
+  [select] 1400/1764 episodes, 1166 s
+  [select] 1600/1764 episodes, 1326 s
+                   defense  flash_pct  a1_a7_pct  e9_worst_pct  benign_pct  eligible
+                   v2.1+pg      7.611      1.368          4.57       0.039     False
+       v2.1+pg|gate0.35t60      6.361      1.380          3.89       0.039      True
+ v2.1+pg|gate0.35t60+evict      2.439      0.546          5.70       0.039     False
+      v2.1+pg|gate0.35t300      6.361      1.380          3.89       0.039      True
+v2.1+pg|gate0.35t300+evict      2.447      0.540          5.33       0.039     False
+        v2.1+pg|gate0.5t60      6.188      1.306         15.85       0.039     False
+  v2.1+pg|gate0.5t60+evict      2.231      0.483          8.72       0.039     False
+       v2.1+pg|gate0.5t300      6.189      1.302         16.82       0.039     False
+ v2.1+pg|gate0.5t300+evict      2.114      0.488          9.12       0.039     False
+       v2.1+pg|gate0.65t60      5.988      1.252         53.71       0.039     False
+ v2.1+pg|gate0.65t60+evict      2.082      0.472         20.48       0.039     False
+      v2.1+pg|gate0.65t300      5.789      1.229         53.71       0.039     False
+v2.1+pg|gate0.65t300+evict      1.825      0.461         20.48       0.039     False
+             v2.1+pg+evict      7.236      0.587          4.57       0.039      True
+selected v2.1+pg|gate0.35t300
+== select done, 1462 s
+== test
+  [test] 200/1680 episodes, 147 s
+  [test] 400/1680 episodes, 297 s
+  [test] 600/1680 episodes, 443 s
+  [test] 800/1680 episodes, 596 s
+  [test] 1000/1680 episodes, 753 s
+  [test] 1200/1680 episodes, 908 s
+  [test] 1400/1680 episodes, 1083 s
+  [test] 1600/1680 episodes, 1254 s
+== test done, 2784 s
+== report
+             defense  group               harmed  attack_share  overflow_s  flow_mods
+                v2.1  A1-A7    1.45 [1.03, 1.88]         14.58        4.39     107592
+                v2.1     E9 32.77 [30.66, 34.96]         52.29      121.16      74761
+                v2.1 benign    0.04 [0.01, 0.06]          0.00        0.00      22028
+                v2.1  flash    5.88 [4.44, 7.41]          4.09        6.49      64051
+          v2.1+evict  A1-A7    0.62 [0.37, 0.90]         14.82        7.08     110661
+          v2.1+evict     E9 14.74 [11.46, 18.15]         58.40      147.30     146120
+          v2.1+evict benign    0.04 [0.01, 0.06]          0.00        0.00      22028
+          v2.1+evict  flash    1.11 [0.72, 1.53]          4.19       11.96      66693
+             v2.1+pg  A1-A7    1.47 [1.16, 1.80]         20.79        4.24      81745
+             v2.1+pg     E9    2.43 [1.91, 2.97]         37.86        0.61      44016
+             v2.1+pg benign    0.04 [0.01, 0.06]          0.00        0.00      22028
+             v2.1+pg  flash    7.38 [5.58, 9.26]          7.56        1.91      46625
+v2.1+pg|gate0.35t300  A1-A7    1.46 [1.15, 1.79]         20.55        4.21      82531
+v2.1+pg|gate0.35t300     E9    3.28 [2.39, 4.25]         38.67        1.38      46646
+v2.1+pg|gate0.35t300 benign    0.04 [0.01, 0.06]          0.00        0.00      22028
+v2.1+pg|gate0.35t300  flash    6.36 [4.81, 8.01]          6.87        6.22      49675
+defense                               v2.1  v2.1+evict  v2.1+pg  v2.1+pg|gate0.35t300
+cell                                                                                 
+flash2/A2                             3.52        0.70     5.36                  4.98
+flash2/benign                         1.35        0.63     2.07                  1.35
+flash4/benign                        12.76        1.99    14.70                 12.76
+normal/A1                             1.37        0.54     1.61                  1.60
+normal/A2                             1.24        0.54     1.45                  1.43
+normal/A3                             1.38        0.56     1.61                  1.62
+normal/A4                             2.65        0.91     1.59                  1.56
+normal/A5                             1.42        0.54     1.76                  1.77
+normal/A6                             0.93        0.76     0.80                  0.77
+normal/A7                             1.14        0.52     1.49                  1.47
+normal/benign                         0.04        0.04     0.04                  0.04
+normal/t2-3_p1-1_benign_spoof_M1700  40.22       19.92     1.35                  2.21
+normal/t2-3_p1-3_benign_pool_M1700   53.88       20.19     1.21                  3.42
+normal/t2-3_p1-3_benign_pool_M600     4.21        4.11     4.73                  4.21
+defense                              v2.1+pg|gate0.35t300
+cell                                                     
+flash2/A2                                           0.574
+flash2/benign                                       0.289
+flash4/benign                                       0.270
+normal/A1                                           0.645
+normal/A2                                           0.652
+normal/A3                                           0.661
+normal/A4                                           0.578
+normal/A5                                           0.656
+normal/A6                                           0.563
+normal/A7                                           0.602
+normal/t2-3_p1-1_benign_spoof_M1700                 0.374
+normal/t2-3_p1-3_benign_pool_M1700                  0.381
+normal/t2-3_p1-3_benign_pool_M600                   0.220
+hyp                    a       b  mean_diff  a_lower  a_higher       p  p_holm
+FC1 v2.1+pg|gate0.35t300 v2.1+pg   -0.01015       27         0 0.00000 0.00000
+FC3 v2.1+pg|gate0.35t300 v2.1+pg   -0.00012        9         2 0.06645 0.06645
+{
+ "selected": "v2.1+pg|gate0.35t300",
+ "verdict": {
+  "FC1": true,
+  "FC2": true,
+  "FC3": true
+ },
+ "e9_worst_sel": 4.21,
+ "e9_worst_base": 4.73,
+ "a1_a7_diff": -0.012,
+ "a1_a7_upper95": 0.008,
+ "flash": {
+  "v2.1": 5.88,
+  "v2.1+evict": 1.11,
+  "v2.1+pg": 7.38,
+  "v2.1+pg|gate0.35t300": 6.36
+ }
+}
+== report done, 2784 s

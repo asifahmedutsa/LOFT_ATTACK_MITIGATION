@@ -1,0 +1,76 @@
+[data] 0 s
+[seed 0] mlp 0 s
+[seed 0] rf 157 s
+[seed 0] xgboost 36 s
+[seed 0] lightgbm 32 s
+[seed 0] catboost 77 s
+[seed 0] knn 9 s
+[seed 0] svm 2 s
+[seed 0] lr 18 s
+[seed 0] state task done, 336 s
+[seed 1] svm 46 s
+[seed 1] lr 61 s
+[seed 1] state task done, 448 s
+[seed 2] mlp 114 s
+[seed 2] rf 218 s
+[seed 2] xgboost 108 s
+[seed 2] lightgbm 131 s
+[seed 2] catboost 126 s
+[seed 2] svm 43 s
+[seed 2] lr 55 s
+[seed 2] state task done, 1247 s
+   model  training      op exposure  accuracy_mean  accuracy_std  precision_mean  precision_std  recall_mean  recall_std  f1_mean  f1_std  fpr_mean  fpr_std  fnr_mean  fnr_std  mcc_mean  mcc_std  auc_mean  auc_std
+catboost federated  budget    mixed          98.24          0.16           98.59           0.13        97.65        0.44    98.11    0.17      1.22     0.10      2.35     0.44     96.43     0.33     99.83     0.03
+catboost federated default    mixed          88.41          0.01           99.95           0.01        75.54        0.02    86.05    0.01      0.03     0.01     24.46     0.02     78.55     0.02     99.83     0.03
+catboost     local  budget    mixed          91.05          0.37           98.58           0.11        81.93        0.85    89.28    0.42      1.00     0.07     18.07     0.85     82.91     0.68     95.66     1.44
+catboost     local default    mixed          90.32          1.19           99.84           0.01        79.43        2.42    88.29    1.39      0.13     0.01     20.57     2.42     81.85     2.15     95.66     1.44
+catboost    pooled  budget    mixed          97.33          0.30           98.00           0.14        96.32        0.74    97.14    0.34      1.78     0.11      3.68     0.74     94.62     0.60     99.72     0.07
+catboost    pooled default    mixed          95.84          0.56           99.81           0.00        91.05        1.31    95.18    0.74      0.17     0.00      8.95     1.31     91.80     1.08     99.72     0.07
+     knn federated  budget    mixed          88.72           NaN           98.46            NaN        77.30         NaN    86.60     NaN      1.10      NaN     22.70      NaN     78.66      NaN     98.58      NaN
+     knn federated default    mixed          88.46           NaN           97.32            NaN        77.75         NaN    86.42     NaN      1.71      NaN     22.25      NaN     78.07      NaN     98.58      NaN
+     knn     local  budget    mixed          86.37           NaN           97.96            NaN        72.70         NaN    83.39     NaN      1.33      NaN     27.30      NaN     74.56      NaN     87.59      NaN
+     knn     local default    mixed          86.46           NaN           97.41            NaN        73.26         NaN    83.60     NaN      1.80      NaN     26.74      NaN     74.48      NaN     87.59      NaN
+     knn    pooled  budget    mixed          96.58           NaN           98.55            NaN        94.04         NaN    96.24     NaN      1.22      NaN      5.96      NaN     93.13      NaN     98.76      NaN
+     knn    pooled default    mixed          96.58           NaN           97.97            NaN        94.63         NaN    96.26     NaN      1.65      NaN      5.37      NaN     93.11      NaN     98.76      NaN
+lightgbm federated  budget    mixed          97.51          0.08           98.53           0.03        96.15        0.16    97.33    0.10      1.24     0.02      3.85     0.16     94.98     0.16     99.71     0.02
+lightgbm federated default    mixed          88.38          0.00           99.96           0.00        75.47        0.01    86.01    0.01      0.03     0.00     24.53     0.01     78.50     0.01     99.71     0.02
+lightgbm     local  budget    mixed          86.89          0.02           98.70           0.05        73.38        0.10    84.12    0.05      0.87     0.03     26.62     0.10     75.70     0.04     93.26     0.15
+lightgbm     local default    mixed          86.78          0.01           99.85           0.00        72.21        0.03    83.76    0.02      0.10     0.00     27.79     0.03     75.79     0.02     93.26     0.15
+lightgbm    pooled  budget    mixed          95.96          1.31           97.94           0.13        93.24        3.22    95.47    1.83      1.76     0.04      6.76     3.22     91.91     2.65     97.95     3.02
+lightgbm    pooled default    mixed          94.46          0.40           99.77           0.09        87.76        0.99    93.20    0.55      0.20     0.07     12.24     0.99     89.14     0.74     97.95     3.02
+      lr federated  budget    mixed          92.49          0.00           98.48           0.00        84.76        0.00    90.96    0.00      1.16     0.00     15.24     0.00     85.26     0.00     98.88     0.00
+      lr federated default    mixed          88.14          0.00           99.46           0.00        75.33        0.00    85.73    0.00      0.34     0.00     24.67     0.00     77.95     0.00     98.88     0.00
+      lr     local  budget    mixed          87.92          0.00           98.55           0.00        75.56        0.00    85.53    0.00      0.98     0.00     24.44     0.00     77.33     0.00     90.28     0.00
+      lr     local default    mixed          89.88          0.00           98.71           0.00        79.55        0.00    87.92    0.00      1.07     0.00     20.45     0.00     80.81     0.00     90.28     0.00
+      lr    pooled  budget    mixed          93.43          0.00           98.11           0.00        87.71        0.00    92.61    0.00      1.42     0.00     12.29     0.00     87.11     0.00     98.07     0.00
+      lr    pooled default    mixed          93.90          0.00           96.95           0.00        89.78        0.00    93.23    0.00      2.43     0.00     10.22     0.00     87.83     0.00     98.07     0.00
+     mlp federated  budget    mixed          97.40          0.82           98.62           0.04        95.75        1.73    97.16    0.92      1.19     0.03      4.25     1.73     94.75     1.62     99.68     0.17
+     mlp federated default    mixed          95.72          0.73           99.79           0.09        91.08        1.48    95.23    0.84      0.16     0.07      8.92     1.48     91.62     1.38     99.68     0.17
+     mlp     local  budget    mixed          87.85          0.49           98.59           0.03        75.38        1.03    85.42    0.66      0.96     0.02     24.62     1.03     77.23     0.81     90.90     1.01
+     mlp     local default    mixed          87.60          0.49           99.63           0.05        73.99        1.02    84.91    0.67      0.26     0.04     26.01     1.02     77.04     0.81     90.90     1.01
+     mlp    pooled  budget    mixed          97.68          0.25           97.19           0.03        97.80        0.50    97.48    0.27      2.34     0.02      2.20     0.50     95.33     0.50     99.85     0.03
+     mlp    pooled default    mixed          97.48          0.54           99.47           0.09        95.03        1.19    97.19    0.60      0.44     0.07      4.97     1.19     94.96     1.06     99.85     0.03
+      rf federated  budget    mixed          98.20          0.11           98.82           0.01        97.35        0.22    98.08    0.11      1.05     0.01      2.65     0.22     96.36     0.21     99.71     0.01
+      rf federated default    mixed          88.41          0.00           99.96           0.00        75.53        0.00    86.05    0.00      0.03     0.00     24.47     0.00     78.55     0.00     99.71     0.01
+      rf     local  budget    mixed          92.63          2.66           98.37           0.05        85.42        5.44    91.30    3.20      1.20     0.00     14.58     5.44     85.66     4.78     95.82     0.50
+      rf     local default    mixed          87.21          0.02           99.81           0.00        73.14        0.04    84.39    0.03      0.13     0.00     26.86     0.04     76.49     0.03     95.82     0.50
+      rf    pooled  budget    mixed          98.35          0.01           98.15           0.05        98.32        0.05    98.23    0.01      1.61     0.04      1.68     0.05     96.67     0.03     99.73     0.02
+      rf    pooled default    mixed          95.36          0.17           99.87           0.00        89.92        0.41    94.58    0.24      0.11     0.00     10.08     0.41     90.89     0.33     99.73     0.02
+     svm federated  budget    mixed          89.32          0.05           98.43           0.01        78.49        0.09    87.32    0.06      1.12     0.01     21.51     0.09     79.67     0.09     98.63     0.03
+     svm federated default    mixed          88.11          0.01           99.55           0.01        75.20        0.02    85.68    0.01      0.28     0.01     24.80     0.02     77.93     0.01     98.63     0.03
+     svm     local  budget    mixed          88.02          0.08           98.57           0.01        75.74        0.15    85.66    0.10      0.97     0.00     24.26     0.15     77.50     0.13     90.41     0.05
+     svm     local default    mixed          89.90          0.01           98.77           0.02        79.53        0.03    87.94    0.02      1.02     0.02     20.47     0.03     80.86     0.03     90.41     0.05
+     svm    pooled  budget    mixed          93.41          0.08           98.09           0.06        87.70        0.12    92.60    0.09      1.43     0.04     12.30     0.12     87.08     0.16     98.05     0.03
+     svm    pooled default    mixed          93.87          0.05           96.99           0.15        89.68        0.14    93.19    0.06      2.40     0.13     10.32     0.14     87.77     0.10     98.05     0.03
+ xgboost federated  budget    mixed          97.46          0.00           98.56           0.00        96.10        0.00    97.31    0.00      1.23     0.00      3.90     0.00     94.91     0.00     99.77     0.00
+ xgboost federated default    mixed          88.42          0.00           99.96           0.00        75.54        0.00    86.05    0.00      0.03     0.00     24.46     0.00     78.56     0.00     99.77     0.00
+ xgboost     local  budget    mixed          87.07          0.00           98.52           0.00        73.92        0.00    84.38    0.00      0.99     0.00     26.08     0.00     75.98     0.00     95.04     0.00
+ xgboost     local default    mixed          86.62          0.00           99.84           0.00        71.90        0.00    83.53    0.00      0.10     0.00     28.10     0.00     75.54     0.00     95.04     0.00
+ xgboost    pooled  budget    mixed          97.36          0.00           98.14           0.00        96.31        0.00    97.19    0.00      1.69     0.00      3.69     0.00     94.72     0.00     99.77     0.00
+ xgboost    pooled default    mixed          94.24          0.00           99.83           0.00        87.20        0.00    92.88    0.00      0.15     0.00     12.80     0.00     88.72     0.00     99.77     0.00
+   model  accuracy_mean  accuracy_std  attack_detection_rate_mean  attack_detection_rate_std  false_alarm_rate_mean  false_alarm_rate_std
+catboost          94.12          0.05                       94.97                       0.05                   3.34                  0.03
+lightgbm          93.28          0.00                       95.03                       0.00                   4.04                  0.00
+      rf          94.06          0.03                       94.79                       0.03                   3.27                  0.02
+ xgboost          93.23          0.00                       95.04                       0.00                   4.13                  0.00
+done in 1247 s

@@ -1,0 +1,8 @@
+defense,t2-3_p1-1_benign_spoof_M1700,t2-3_p1-3_benign_pool_M1700,t2-3_p1-3_benign_pool_M600
+dms-btt,70.1,78.3,33.3
+ftop,62.4,73.5,33.2
+ovs-evict,75.2,76.4,33.3
+rdefender,46.7,54.2,33.3
+v2.1,61.7,65.5,29.0
+v2.1+fg,53.3,55.3,27.9
+v2.1+portguard,42.0,41.9,28.9

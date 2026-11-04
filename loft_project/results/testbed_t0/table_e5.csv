@@ -1,0 +1,9 @@
+defense,n,variant,benign_harmed_pct_max,benign_harmed_pct_mean,benign_harmed_pct_min,decision_ms_max,decision_ms_mean,decision_ms_min,installs_max,installs_mean,installs_min,probe_post_connect_ms_median_max,probe_post_connect_ms_median_mean,probe_post_connect_ms_median_min,probe_post_success_pct_max,probe_post_success_pct_mean,probe_post_success_pct_min
+none,1,A2,7.87,7.87,7.87,28.0,28.0,28.0,69771.0,69771.0,69771.0,755.9,755.9,755.9,16.18,16.18,16.18
+evict,1,A2,2.56,2.56,2.56,41.0,41.0,41.0,65788.0,65788.0,65788.0,618.2,618.2,618.2,17.15,17.15,17.15
+dualguard,1,A2,2.52,2.52,2.52,25.0,25.0,25.0,109020.0,109020.0,109020.0,506.6,506.6,506.6,16.38,16.38,16.38
+dualguard+portguard+hostid,1,A2,1.57,1.57,1.57,28.0,28.0,28.0,82861.0,82861.0,82861.0,747.6,747.6,747.6,1.93,1.93,1.93
+none,1,benign,0.0,0.0,0.0,13.0,13.0,13.0,70941.0,70941.0,70941.0,117.0,117.0,117.0,100.0,100.0,100.0
+evict,1,benign,0.0,0.0,0.0,17.0,17.0,17.0,71006.0,71006.0,71006.0,153.1,153.1,153.1,100.0,100.0,100.0
+dualguard,1,benign,0.0,0.0,0.0,14.0,14.0,14.0,70738.0,70738.0,70738.0,167.9,167.9,167.9,100.0,100.0,100.0
+dualguard+portguard+hostid,1,benign,0.0,0.0,0.0,14.0,14.0,14.0,70978.0,70978.0,70978.0,132.9,132.9,132.9,100.0,100.0,100.0

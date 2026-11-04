@@ -1,0 +1,67 @@
+{
+  "selected": {
+    "flora": {
+      "block_after": 10,
+      "trigger": 0.5
+    },
+    "rdefender": {
+      "gamma": 0.1
+    },
+    "ftmaster": {},
+    "ftop": {}
+  },
+  "gate": {
+    "flora": {
+      "feasible": false,
+      "knobs": {
+        "block_after": 10,
+        "trigger": 0.5
+      },
+      "attack_occ": 0.3806,
+      "attack_occ_none": 0.5328,
+      "passes_G1": false,
+      "harmed": 0.2273,
+      "overflow_s": 86.98
+    },
+    "rdefender": {
+      "feasible": false,
+      "knobs": {
+        "gamma": 0.1
+      },
+      "attack_occ": 0.3506,
+      "attack_occ_none": 0.5328,
+      "passes_G1": false,
+      "harmed": 0.0767,
+      "overflow_s": 22.74
+    },
+    "ftmaster": {
+      "feasible": false,
+      "knobs": {},
+      "attack_occ": 0.2557,
+      "attack_occ_none": 0.5328,
+      "passes_G1": true,
+      "harmed": 0.1233,
+      "overflow_s": 43.07
+    },
+    "ftop": {
+      "feasible": false,
+      "knobs": {},
+      "attack_occ": 0.2264,
+      "attack_occ_none": 0.5328,
+      "passes_G1": true,
+      "harmed": 0.0766,
+      "overflow_s": 7.56
+    }
+  },
+  "rule": {
+    "objective": "minimize mean benign_flows_impacted_frac over attacked validation episodes",
+    "constraints": {
+      "avg_attack_occ_post_max": 0.15,
+      "overflow_seconds_post_attack_max": 5.0,
+      "benign_only_impacted_max": 0.01
+    },
+    "tie_break": "prefer hard=off, then *_noctx, then fedavg (simpler)",
+    "fallback": "if no candidate is feasible, minimize overflow_seconds_post_attack"
+  },
+  "note": "G1: the selected setting at least halves the attacker's table share against no defense on validation seeds"
+}

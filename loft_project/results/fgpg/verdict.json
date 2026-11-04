@@ -1,0 +1,34 @@
+{
+  "verdict": {
+    "FP1": false,
+    "FP2": true,
+    "FP3": true,
+    "FP4": true
+  },
+  "checks": {
+    "FP2_worst_dedicated": {
+      "pg_fg": 4.79,
+      "pg": 4.78
+    },
+    "FP3_dedicated": {
+      "diff": -1.127,
+      "upper95": -0.925
+    },
+    "FP4_dedicated": {
+      "pg_fg": 0.105,
+      "v21": 0.073
+    },
+    "FP2_worst_shared": {
+      "pg_fg": 24.25,
+      "pg": 24.22
+    },
+    "FP3_shared": {
+      "diff": -0.724,
+      "upper95": -0.415
+    },
+    "FP4_shared": {
+      "pg_fg": 0.119,
+      "v21": 0.073
+    }
+  }
+}
