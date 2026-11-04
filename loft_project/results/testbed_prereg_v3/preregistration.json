@@ -1,0 +1,88 @@
+{
+ "created_utc": "2026-11-04T11:36:11.780777+00:00",
+ "plan": "docs/testbed_plan.md, revised 2026-11-04 after the redesign (loftbench/evictblock.py)",
+ "topology": "tree3: core + two access switches, tables 3,500, idle 10 s, all monitored, one defense instance per switch; one controller; 300 s, attack at 50 s; new-connection probe on; OVS inactivity probe 30 s",
+ "benign_scale": {
+  "value": 0.5,
+  "rule": "preregistered: largest of 1.0 / 0.75 / 0.5 passing G0 (lost first packets <= 0.1 %, probes 100 %) on seed 4110, then G0 on every test seed",
+  "step1_seed4110": {
+   "1.0": "lost 8.16 %, probes 41 / 0.4 %",
+   "0.75": "lost 0.07 %, probes 100 / 100 %",
+   "0.5": "lost 0.18 %, probes 100 / 100 %"
+  },
+  "step2_0.75": {
+   "4120": "lost 0.17 %, probes 34 / 96 % (start-up burst: about 500 Packet-In/s and a 110-event controller backlog from 20 to 66 s)",
+   "4121": "0.07 %, 100 / 100",
+   "4122": "0.06 %, 100 / 100",
+   "4123": "0.12 %, 100 / 100",
+   "4124": "0.05 %, 100 / 100"
+  },
+  "decision": "the user chose (2026-11-04) scale 0.5 and a lost-first-packet bar at the measured noise floor (<= 0.25 %; light-load runs measured 0.05-0.18 %), probes still 100 %; decided before any defense ran on the test seeds",
+  "step2_0.5": {
+   "4120": "lost 0.07 %, probes 100 / 100 %",
+   "4121": "0.00 %, 100 / 100",
+   "4122": "0.13 %, 100 / 100",
+   "4123": "0.00 %, 100 / 100",
+   "4124": "0.21 %, 100 / 100"
+  },
+  "G0_result": "passed at 0.5 on every test seed (lost first packets <= 0.25 %, probes 100 %)"
+ },
+ "final_system": {
+  "name": "ensguard (FL-EnsGuard)",
+  "description": "federated RF (50 trees, depth 12) + CatBoost by model sharing from D1-D3, soft vote; evict entries scoring >= tau (0.1 % benign budget on T1's trace validation benign); block a host whose evictions in 10 s are >= 50 and >= 3x the median host's (60 s, doubling, at most 240 s); PortGuard (weighted fair share, mode full) as fallback; host identity with port security",
+  "selected_in": "results/evictblock/selected.json (development seeds 2000-2002)",
+  "simulator_test": "results/evictblock/test_summary.csv (fresh seeds 26000-26004, one shot)",
+  "sha256": {
+   "results/v21/exported/ens_config.json": "9ccd3c69639bc24ef9cfd3fd65c88034652abc7d11788c1a5211f7dcb412e4a9",
+   "results/evictblock/selected.json": "716d1487deb5740fc570bfc820126d8dcd0cf3ac6422ff35b6d6ad463100251b",
+   "testbed/campaign_v3.sh": "12ebc74bbd2ca9713cd75cc0751e939721e26e6a49f45d6a32a2f927014e61f4"
+  }
+ },
+ "seeds": [
+  4120,
+  4121,
+  4122,
+  4123,
+  4124
+ ],
+ "cells": {
+  "variants": [
+   "A2",
+   "A4",
+   "E9P",
+   "benign"
+  ],
+  "defenses": [
+   "none",
+   "evict",
+   "sift",
+   "tableguard",
+   "dms-btt",
+   "ftmaster",
+   "ftop",
+   "rdefender",
+   "dualguard+portguard+hostid",
+   "ensguard"
+  ],
+  "runs": 200,
+  "script": "testbed/campaign_v3.sh (seed-major)"
+ },
+ "outcome": "benign_harmed_pct from testbed/summarize_run.py (benign flow refused, blocked or evicted/deleted and back, at any switch on its path)",
+ "test": "one-sided exact sign test on paired runs (same variant, same seed); a tie counts against the hypothesis; Holm within each hypothesis family; alpha 0.05",
+ "hypotheses": {
+  "H1": "T1, A2 / A4 / E9P, 5 seeds: ensguard harms fewer benign flows than each of evict, SIFT, TableGuard, DMS-BTT, FTMaster, FTOP, rDefender and FL-DualGuard (dualguard+portguard+hostid) over the 15 paired runs (Holm over the 8)",
+  "H2": "T1, A2 / A4 / E9P, 5 seeds: ensguard's average attack share of the core table (attack_share_avg_pct_s11) is below each of the same 8 over the 15 paired runs (Holm over the 8)",
+  "H3": "T1, benign only, 5 seeds: ensguard's mean benign harm <= 0.5 % and mean lost first packets <= 1 % (descriptive thresholds)",
+  "H4": "no benign host is blocked in any of ensguard's 20 runs (descriptive; the count is reported)"
+ },
+ "also_reported": "the papers' columns per switch (avg/max attack share, table usage, earliest overflow, overflow seconds, Packet-In, Table-Full), lost first packets, probe success, flow-mods, decision time, controller and switch CPU, controller RSS, attackers blocked and time to first block; no defense as the reference",
+ "deviations": [
+  "preregistration v2 (results/testbed_prereg, hash c014b64a) is superseded: its T1 campaign was stopped after seed 4110 (44 runs) and 2 runs of 4111 because the tree testbed was overloaded even without attack (benign-only lost first packets 12.8 %, switches disconnecting); those runs are reported as an invalid-testbed deviation, not as results",
+  "the system changed after those runs: the redesign (evict, outlier block, PortGuard fallback, RF + CatBoost) was developed and selected on simulator development seeds only and tested once on fresh simulator seeds 26000-26004 before this preregistration; it was also shaped by the stopped v2 testbed results (for example, drop rules on benign hosts)",
+  "G0 changed after calibration: 0.75 failed on seeds 4120 (start-up burst) and 4123 (0.12 %), so the benign scale is 0.5 and the lost-first-packet bar 0.25 % (the measured noise floor) instead of 0.1 %; decided before any defense ran on these seeds",
+  "benign load on the testbed is 0.5 of the trace's replay rate (the simulator uses 1.0); attacks are unchanged",
+  "the controller scores the forests with scikit-learn 1.3.2 refits that are identical to the simulator's (max difference 0.0) and CatBoost with a NumPy evaluator (parity 6e-17)",
+  "each switch runs its own instance of every defense (the published defenses were described for one switch)",
+  "SIFT and TableGuard parameters as selected by gate G1 on validation seeds"
+ ]
+}
