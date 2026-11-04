@@ -77,7 +77,10 @@ def main():
 
     prof, didx = profile_of(a.domain)
     if a.benign_scale != 1.0:
-        prof = dataclasses.replace(prof, new_flow_rate=a.benign_scale * prof.new_flow_rate)
+        # Synthetic domains scale their new-flow rate; trace domains (T1-T3) their replay rate,
+        # which scales the trace's packets and new flows per second alike.
+        f = "new_flow_rate" if hasattr(prof, "new_flow_rate") else "rate_pps"
+        prof = dataclasses.replace(prof, **{f: a.benign_scale * getattr(prof, f)})
     if a.variant.startswith("F"):
         # F2 / F4: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
         # crowds per 300 s at 2x or 4x the domain's new-flow rate, from many external sources.

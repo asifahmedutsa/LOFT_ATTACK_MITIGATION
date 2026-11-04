@@ -232,6 +232,12 @@ def main():
                      "--out", os.path.join(a.out, f"probe_{dm['name']}.csv")]))
         for p in procs:
             p.wait()
+        # A traffic driver that crashed leaves a run that looks valid but carries no traffic
+        # (2026-11-04: a smoke run "passed" with none); fail it so the matrix discards it.
+        bad = [p.args for p in procs if isinstance(p.args, list) and drv in p.args
+               and p.returncode not in (0, None)]
+        if bad:
+            raise SystemExit(f"[testbed] {len(bad)} traffic process(es) failed, e.g. {bad[0]}")
         for p in servers:
             p.terminate()
         if diag is not None:
