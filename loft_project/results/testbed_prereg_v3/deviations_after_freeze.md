@@ -19,3 +19,23 @@ file logs what happened after it was frozen.
   from every analysis. The campaign restarts from the first run of seed 4120, unchanged
   (same script, hash 12ebc74b...), with no other application open.
 - From here on, the laptop runs nothing but the testbed during the campaign.
+
+### Correction to D1 (2026-11-05): Zoom was not the cause
+
+The 19 runs repeated after the restart (20:45, Zoom closed, load average about 1 at the start)
+reproduce the discarded runs closely: lost first packets after the attack start 12-30 % for
+every defense, none included (A2 none 21.6 % vs 18.1 % before; FTMaster 12.4 vs 12.2 %), probe
+success 21-30 % (before 19-32 %). So the load from Zoom did not drive these numbers; the attack
+itself does (G0 tested benign traffic only). The discarded runs stay discarded (the reruns
+replace them one for one and are the ones analysed); the attack-time loss of first packets is
+reported as preregistered under "also_reported".
+
+## D2. Power loss during seed 4120 (2026-11-04, 22:30)
+
+- Mains power failed during the evening; the laptop ran on battery (tracker reported low
+  battery at 22:22) and shut down at about 22:30 during run 20 of 40 (A4, ensguard). The
+  start of battery operation is not in the logs, so some of runs 1-19 may have run on battery.
+- The partial run was renamed `_invalid_poweroff_v3_T1_A4_ensguard_s4120` and is excluded.
+- The reboot (2026-11-05 00:10) brought a pending kernel update (7.0.0-38 to 7.0.0-42).
+  Runs from run 20 of seed 4120 on use the new kernel; the testbed snapshot in /opt/loft-testbed
+  and Open vSwitch are unchanged.
