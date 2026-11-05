@@ -39,3 +39,13 @@ reported as preregistered under "also_reported".
 - The reboot (2026-11-05 00:10) brought a pending kernel update (7.0.0-38 to 7.0.0-42).
   Runs from run 20 of seed 4120 on use the new kernel; the testbed snapshot in /opt/loft-testbed
   and Open vSwitch are unchanged.
+
+## D3. Laptop suspended during seed 4121 (2026-11-05, 03:53 to about 07:54)
+
+- The lid was closed at 03:53 and the laptop suspended, one minute into run 20 of 40 of
+  seed 4121 (A4, ensguard); it resumed at about 07:54 on battery. Runs 1-19 of 4121 had
+  finished before the suspend, with the charger connected (the power watcher checked every
+  30 s and fired only after the resume), and are kept.
+- The interrupted run spans a 4-hour suspend; it was renamed
+  `_invalid_suspend_v3_T1_A4_ensguard_s4121` and is excluded. The campaign was stopped so no run
+  starts on battery, and resumes from this run once the charger is back.
