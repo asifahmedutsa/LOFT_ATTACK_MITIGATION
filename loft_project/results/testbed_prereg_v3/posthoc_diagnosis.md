@@ -1,20 +1,23 @@
 # Post-hoc diagnosis of ensguard on the v3 T1 testbed runs
 
 **Status: exploratory, not preregistered.** Written on 2026-11-05 while seed 4124 was still
-running, from the finished runs of seeds 4120-4123 only (`testbed/diagnose_v3.py`, which only
-reads existing run directories). Nothing here changes the preregistered analysis, the frozen
+running, from the finished runs of seeds 4120-4123, and updated on 2026-11-06 with seed 4124
+after the campaign ended (`testbed/diagnose_v3.py`, which only reads existing run directories).
+The preregistered result is in `report.md` (`testbed/analyze_v3.py`). Nothing here changes the preregistered analysis, the frozen
 system or the campaign. Any fix proposed below needs a new preregistration and fresh seeds.
 
 ## What failed
 
-After 12 of 15 paired attack runs, H1 (lower benign harm than each comparator) can no longer pass
-against 7 of the 8 comparators, and H4 (no benign host blocked) failed in 3 runs:
+Final, all 15 paired attack runs (`report.md`): H1 (lower benign harm than each comparator) is
+supported against none of the 8 comparators; H2 (lower attack share at s11) against evict, SIFT
+and TableGuard only; H3 passes; H4 (no benign host blocked) failed in 4 of 20 runs:
 
 | Run | Benign host blocked | Harm |
 |---|---|---|
 | A4, seed 4122 | d1h4 at 270.6 s | 12.41 % |
 | A4, seed 4123 | d1h1 at 195.4 s | 8.11 % |
 | A2, seed 4123 | d1h2 at 226.0 s (after both attackers were blocked) | 9.69 % |
+| A4, seed 4124 | d1h4 at 222.6 s, d1h2 at 244.0 s | 10.83 % |
 
 ## Finding 1: on the testbed, the detector barely fires under the mimicry attacks (A4, E9P)
 
@@ -24,8 +27,10 @@ The s11 deletes split by regime: "PortGuard on" means the table reached 90 % in 
 | Attack | Attacker entries deleted while only the detector acts | Benign entries deleted then | Attacker entries deleted while PortGuard is on |
 |---|---|---|---|
 | A2 | 6,000-13,600 per run | 46-68 | 0-51,000 |
-| A4 | **4-10 per run** | 30-101 | 390-3,400 |
+| A4 | **4-10 per run** | 30-188 | 390-4,700 |
 | E9P | **0** | 4-74 | 5,600-8,200 |
+
+(Seed 4124: A2 11,539 / 43 / 5,028; A4 7 / 188 / 4,742; E9P 0 / 9 / 5,774. Same pattern.)
 
 - **A2** (fixed source, default packet sizes): the detector works. It evicts thousands of
   attacker entries, blocks both attackers within about 65-75 s of the attack start, and its
@@ -68,8 +73,8 @@ The s11 deletes split by regime: "PortGuard on" means the table reached 90 % in 
 - **The effect:** the detector's false positives (30-100 per run, see above) are not spread
   evenly. They cluster on the busiest benign hosts (d1h1 and d1h2 send 3,600-3,900 flows per run)
   and on bursts, so a single benign host can cross 50 in one window.
-  - All 3 benign blocks fit this: two under A4, where the attackers were never flagged, and one
-    under A2, 4-12 s after both attackers had been blocked.
+  - All 5 benign blocks fit this: four under A4 (seeds 4122, 4123, and two in 4124), where the
+    attackers were never flagged, and one under A2, 4-12 s after both attackers had been blocked.
   - In the simulator the attackers are always flagged heavily, so the median stays above 0 and
     the outlier test works as intended.
 

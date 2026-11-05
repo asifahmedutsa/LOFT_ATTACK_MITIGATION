@@ -59,7 +59,7 @@ def _detectors():
     from . import v21
     E2._load()
     base = pickle.load(open("results/e2_baselines/models.pkl", "rb"))
-    v2m = pickle.load(open("results/v2/models.pkl", "rb"))
+    v2m = pickle.load(open("results/v2/models.pkl", "rb"))[0]
     ens = pickle.load(open("results/e3_ens/models.pkl", "rb"))["ens"]
     det = {}
     # Ensguard's deployed tau is the 0.1 % benign budget on validation data (ens_config.json),
