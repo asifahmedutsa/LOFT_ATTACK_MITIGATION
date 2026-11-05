@@ -1,0 +1,96 @@
+start 01:44:45
+  D1 ensguard 13 s
+  D1 fl-dualguard 18 s
+  D1 ftmaster 26 s
+  D1 ftmaster@fed 42 s
+  D1 ftop 51 s
+  D1 ftop@fed 63 s
+  D1 flora 68 s
+  D1 flora@fed 74 s
+  D1 dms-btt 79 s
+  D1 dms-btt@fed 85 s
+  D2 ensguard 97 s
+  D2 fl-dualguard 102 s
+  D2 ftmaster 111 s
+  D2 ftmaster@fed 126 s
+  D2 ftop 131 s
+  D2 ftop@fed 143 s
+  D2 flora 148 s
+  D2 flora@fed 154 s
+  D2 dms-btt 159 s
+  D2 dms-btt@fed 165 s
+  D3 ensguard 174 s
+  D3 fl-dualguard 178 s
+  D3 ftmaster 184 s
+  D3 ftmaster@fed 198 s
+  D3 ftop 202 s
+  D3 ftop@fed 211 s
+  D3 flora 215 s
+  D3 flora@fed 221 s
+  D3 dms-btt 225 s
+  D3 dms-btt@fed 229 s
+/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/e11_detect.py:131: Pandas4Warning: The 'lsuffix' and 'rsuffix' keywords in DataFrame.join are deprecated and will be removed in a future version. Use the 'suffixes' keyword instead.
+  tab = (g.mean() * 100).round(2).join((g.std() * 100).round(2), rsuffix="_std")
+    detector     op    exposure  accuracy  precision  recall    f1  fpr   auc  pr_auc
+     dms-btt fpr0.1  seen-local     97.03      99.78   92.27 95.22 0.10 99.51   99.33
+     dms-btt fpr0.1 seen-remote     93.45      84.29   81.62 82.38 0.10 88.40   87.70
+     dms-btt fpr0.1  unseen-all     82.21      35.36   14.28 19.94 0.10 61.98   39.59
+     dms-btt  paper  seen-local     98.06      97.64   97.08 97.29 1.31 99.51   99.33
+     dms-btt  paper seen-remote     93.27      82.32   83.31 82.19 1.32 88.40   87.70
+     dms-btt  paper  unseen-all     82.27      29.91   18.82 22.20 1.29 61.98   39.59
+ dms-btt@fed fpr0.1  seen-local     93.50      84.20   82.96 83.07 0.10 99.49   99.10
+ dms-btt@fed fpr0.1 seen-remote     95.11      92.32   86.91 88.53 0.09 99.27   98.78
+ dms-btt@fed fpr0.1  unseen-all     81.32      35.91   12.57 18.21 0.10 86.99   73.39
+ dms-btt@fed  paper  seen-local     93.62      84.10   83.33 83.25 0.11 99.49   99.10
+ dms-btt@fed  paper seen-remote     94.04      84.40   83.32 83.24 0.11 99.27   98.78
+ dms-btt@fed  paper  unseen-all     79.11       4.86    0.02  0.05 0.12 86.99   73.39
+    ensguard fpr0.1  seen-local     99.60      99.75   99.17 99.45 0.13 99.98   99.89
+    ensguard fpr0.1 seen-remote     99.47      99.76   98.69 99.20 0.13 99.92   99.79
+    ensguard fpr0.1  unseen-all     88.94      98.93   48.47 64.50 0.13 97.56   92.68
+    ensguard  paper  seen-local     99.60      99.75   99.17 99.45 0.13 99.98   99.89
+    ensguard  paper seen-remote     99.47      99.76   98.69 99.20 0.13 99.92   99.79
+    ensguard  paper  unseen-all     88.94      98.93   48.47 64.50 0.13 97.56   92.68
+fl-dualguard fpr0.1  seen-local     98.98      99.82   97.37 98.53 0.10 99.97   99.95
+fl-dualguard fpr0.1 seen-remote     98.85      99.81   96.70 98.11 0.10 99.91   99.85
+fl-dualguard fpr0.1  unseen-all     86.44      98.62   34.41 50.56 0.12 97.96   93.29
+fl-dualguard  paper  seen-local     99.03      98.07   99.22 98.63 1.04 99.97   99.95
+fl-dualguard  paper seen-remote     98.99      97.94   99.07 98.49 1.08 99.91   99.85
+fl-dualguard  paper  unseen-all     92.78      94.23   69.26 79.82 1.11 97.96   93.29
+       flora fpr0.1  seen-local     99.01      99.82   97.50 98.62 0.09 99.88   99.84
+       flora fpr0.1 seen-remote     93.65      84.30   82.19 82.68 0.09 93.85   90.27
+       flora fpr0.1  unseen-all     84.51      35.48   24.90 28.46 0.10 81.74   55.05
+       flora  paper  seen-local     99.40      99.56   98.81 99.17 0.24 99.88   99.84
+       flora  paper seen-remote     93.96      84.10   83.31 83.12 0.24 93.85   90.27
+       flora  paper  unseen-all     84.85      35.52   27.02 29.55 0.25 81.74   55.05
+   flora@fed fpr0.1  seen-local     93.51      84.38   82.99 83.09 0.10 99.85   99.59
+   flora@fed fpr0.1 seen-remote     96.15      92.26   90.31 90.88 0.09 99.86   99.62
+   flora@fed fpr0.1  unseen-all     83.47      36.42   24.84 28.41 0.10 97.29   91.75
+   flora@fed  paper  seen-local     93.62      84.16   83.32 83.25 0.11 99.85   99.59
+   flora@fed  paper seen-remote     94.05      84.38   83.32 83.24 0.11 99.86   99.62
+   flora@fed  paper  unseen-all     79.12       5.01    0.02  0.05 0.12 97.29   91.75
+    ftmaster fpr0.1  seen-local     97.07      99.79   92.37 95.30 0.10 99.51   99.34
+    ftmaster fpr0.1 seen-remote     93.34      84.41   81.29 82.20 0.09 94.67   91.19
+    ftmaster fpr0.1  unseen-all     82.37      35.64   15.00 20.65 0.10 72.17   43.64
+    ftmaster  paper  seen-local     98.05      97.64   97.06 97.28 1.31 99.51   99.34
+    ftmaster  paper seen-remote     93.27      82.25   83.29 82.18 1.31 94.67   91.19
+    ftmaster  paper  unseen-all     82.37      29.96   19.37 22.61 1.30 72.17   43.64
+ftmaster@fed fpr0.1  seen-local     93.51      84.20   82.98 83.08 0.10 99.50   99.12
+ftmaster@fed fpr0.1 seen-remote     95.23      92.22   87.29 88.83 0.10 99.27   98.80
+ftmaster@fed fpr0.1  unseen-all     81.36      36.03   12.82 18.47 0.11 87.39   74.44
+ftmaster@fed  paper  seen-local     93.62      84.11   83.32 83.25 0.11 99.50   99.12
+ftmaster@fed  paper seen-remote     94.04      84.32   83.32 83.24 0.11 99.27   98.80
+ftmaster@fed  paper  unseen-all     79.12       5.03    0.02  0.05 0.12 87.39   74.44
+        ftop fpr0.1  seen-local     96.94      99.79   92.02 95.02 0.10 99.47   99.28
+        ftop fpr0.1 seen-remote     92.59      84.33   79.43 81.16 0.10 91.66   89.19
+        ftop fpr0.1  unseen-all     81.18      35.50    9.49 14.74 0.10 65.01   42.15
+        ftop  paper  seen-local     98.01      97.50   97.07 97.22 1.39 99.47   99.28
+        ftop  paper seen-remote     93.20      82.12   83.29 82.10 1.41 91.66   89.19
+        ftop  paper  unseen-all     82.24      29.59   18.98 22.21 1.37 65.01   42.15
+    ftop@fed fpr0.1  seen-local     93.48      84.16   82.89 83.04 0.09 99.45   99.19
+    ftop@fed fpr0.1 seen-remote     93.84      90.76   82.72 83.06 0.09 99.22   98.84
+    ftop@fed fpr0.1  unseen-all     79.39      33.19    1.52  2.89 0.10 87.42   73.26
+    ftop@fed  paper  seen-local     93.62      84.09   83.32 83.25 0.11 99.45   99.19
+    ftop@fed  paper seen-remote     94.04      84.41   83.32 83.24 0.11 99.22   98.84
+    ftop@fed  paper  unseen-all     79.11       4.81    0.02  0.05 0.12 87.42   73.26
+done in 230 s
+exit 0 01:48:35
