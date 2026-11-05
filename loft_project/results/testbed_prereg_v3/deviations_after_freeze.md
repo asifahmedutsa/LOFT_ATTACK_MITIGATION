@@ -54,6 +54,8 @@ reported as preregistered under "also_reported".
 
 - The campaign resumed at 10:00 (seed 4121 run 20 on). Mains power failed at 13:41 (power
   watcher, battery 98 %) during run 21 of seed 4122 (E9P, none), which started on mains at 13:39
-  and finished on battery. It is kept, and flagged as partly on battery; no new run was started.
+  continued on battery. Stopping the campaign unit at 13:42 left that run without a summary
+  (ended 13:44), so it was renamed `_invalid_pause_v3_T1_E9P_none_s4122`, is excluded, and is
+  rerun on resume; no new run was started.
 - The campaign was paused for the user's 14:00-16:30 class (planned: nothing else may run on
   the laptop during a run), and resumes after 16:30 with the charger on and Zoom closed.
