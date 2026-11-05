@@ -49,3 +49,11 @@ reported as preregistered under "also_reported".
 - The interrupted run spans a 4-hour suspend; it was renamed
   `_invalid_suspend_v3_T1_A4_ensguard_s4121` and is excluded. The campaign was stopped so no run
   starts on battery, and resumes from this run once the charger is back.
+
+## D4. Power loss during seed 4122 (2026-11-05, 13:41)
+
+- The campaign resumed at 10:00 (seed 4121 run 20 on). Mains power failed at 13:41 (power
+  watcher, battery 98 %) during run 21 of seed 4122 (E9P, none), which started on mains at 13:39
+  and finished on battery. It is kept, and flagged as partly on battery; no new run was started.
+- The campaign was paused for the user's 14:00-16:30 class (planned: nothing else may run on
+  the laptop during a run), and resumes after 16:30 with the charger on and Zoom closed.
