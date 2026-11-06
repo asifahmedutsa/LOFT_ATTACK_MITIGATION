@@ -156,3 +156,26 @@ attack rows after the attack start):
    port. This would help every defense.
 5. **Instrument first:** log per-entry scores and features on the testbed in one development
    run, to test hypotheses 1-2 of finding 1 before changing anything.
+
+## Update 2026-11-06 (later): E11 on recorded testbed entries confirms domain shift, not jitter
+
+`testbed/e11_testbed.py` scored every detector on the per-entry logs of 12 testbed runs
+(defense none; A2, A4, E9P and benign x seeds 4131-4133; s11-s13), next to the simulator's T1 with
+the same attacks and seeds (`results/e11_testbed/`).
+
+- **The testbed reproduces the simulator.** At the simulator-tuned 0.1 % threshold, every
+  detector catches A2 (sim 81-99 %, testbed 49-95 %) and misses A4 and E9P (all at or below
+  1.3 % recall) in both places. So hypothesis 1 of finding 1 (a simulator-to-testbed gap) is
+  rejected. The miss is T1's domain shift.
+- **The ranking survives, but the threshold does not.** On A4, the testbed PR-AUC is 89 for
+  ensguard, DMS-BTT@fed and FTOP@fed (sim 93-96). Attack entries rank high, but they score
+  below T1's benign tail.
+- **Poll jitter is not the cause** (hypothesis 2 rejected). Wall-clock and 1 s-warped features
+  give similar recall, and A2 recall does not fall for long poll gaps (it rises slightly).
+- **FL-DualGuard's threshold does not transfer:** its false-positive rate rises from 0.3 % in
+  the simulator to 4-10 % on the testbed.
+- **Benign behaviour shifts under attack.** For ensguard, a threshold set on the testbed's
+  benign-only runs gives a 0.6-1.0 % false-positive rate in the attack runs.
+- **Implication for fixes:** fix 2 (features robust to jitter) is not needed for detection. To
+  catch A4 and E9P, T1-like benign traffic must be in federated training, or a domain-specific
+  calibration must be set (new preregistration).
