@@ -1,0 +1,21 @@
+{
+ "parity_max_abs_diff": {
+  "dmsB_state": 2.220446049250313e-16,
+  "dmsB_flow": 0.0,
+  "ftmaster_state": 2.5666954792114005e-07,
+  "ftmaster_rule": 2.8466680623839835e-07
+ },
+ "taus": {
+  "ens_config.json": {
+   "T1": 0.6389166754510951,
+   "T1B": 0.63168091619024
+  },
+  "ens_config_v4lite.json": {
+   "T1": 0.6220059049255332,
+   "T1B": 0.6202520517933232
+  }
+ },
+ "train_rows": 365476,
+ "table_rows": 4800,
+ "val_benign_rows": 35502
+}

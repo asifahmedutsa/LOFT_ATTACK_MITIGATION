@@ -409,7 +409,8 @@ class EvictBlock(Defense):
 
     def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
                  target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=(),
-                 m0=1.0, frac_min=0.0, score_changed_only=False):
+                 m0=1.0, frac_min=0.0, score_changed_only=False, vol_x=None, vol_k=3.0,
+                 vol_rho=0.9):
         self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
         self.rho, self.h_crit, self.target = rho, h_crit, target
         self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
@@ -421,6 +422,10 @@ class EvictBlock(Defense):
         # their last scoring; the others keep their score (results/v4lite/cache.md: 99.965 % of
         # eviction decisions unchanged on the testbed recordings, 35 % less scoring time).
         self.score_changed_only = score_changed_only
+        # v5 volume block (docs/v5_plan.md, section 3): at a poll with the table >= vol_rho full,
+        # a host holding more than vol_x entries and >= vol_k x the median host's is blocked,
+        # whatever the detector says. vol_x is calibrated per switch on its own benign traffic.
+        self.vol_x, self.vol_k, self.vol_rho = vol_x, vol_k, vol_rho
         self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
 
@@ -478,6 +483,10 @@ class EvictBlock(Defense):
         new_block = (ev_w >= self.n_min) & (share >= self.f_min) & (self.blocked_until <= t)
         if self.frac_min > 0:
             new_block &= ev_w / np.maximum(held_w, 1.0) >= self.frac_min
+        if self.vol_x is not None and n / cap >= self.vol_rho:
+            hh = held[held > 0]
+            med_h = float(np.median(hh)) if len(hh) else 0.0
+            new_block |= (held > self.vol_x) & (held >= self.vol_k * max(med_h, 1.0)) & (self.blocked_until <= t)
         new_block[self.exempt] = False
         for q in np.flatnonzero(new_block):
             self.n_blocks[q] += 1

@@ -85,7 +85,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
-            "dualguard+fairevictq", "ensguard", "ensguard-v4lite")
+            "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5")
 
 
 def ip2int(s):
@@ -112,7 +112,7 @@ class ExportedMLP:
         return 1 / (1 + np.exp(-np.clip(z, -30, 30)))
 
 
-def build_defense(name, model_dir, domain, model_path=None):
+def build_defense(name, model_dir, domain, model_path=None, switch=None):
     """The simulator's defense objects, configured from exported files."""
     if name not in DEFENSES:
         raise ValueError(f"LOFT_DEFENSE must be one of {DEFENSES}")
@@ -151,19 +151,21 @@ def build_defense(name, model_dir, domain, model_path=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
-    if name in ("ensguard", "ensguard-v4lite"):
+    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
         # block rule, from ens_config_v4lite.json.
-        cfile = "ens_config.json" if name == "ensguard" else "ens_config_v4lite.json"
+        cfile = {"ensguard": "ens_config.json", "ensguard-v4lite": "ens_config_v4lite.json",
+                 "ensguard-v5": "ens_config_v5.json"}[name]
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         eb = EvictBlock(EnsembleJSON(model_dir, ec), ec["tau"][domain], name="evictblock",
                         rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
                         f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
                         m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
-                        score_changed_only=bool(ec.get("score_changed_only", False)))
+                        score_changed_only=bool(ec.get("score_changed_only", False)),
+                        vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch))
         return PortGuard(eb, name=name, mode="full", **{k: pg[k] for k in pg if k != "mode"})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
@@ -202,7 +204,8 @@ class Switch:
     def __init__(self, ctl, dpid, log_path):
         self.dpid, self.name, self.dp = dpid, f"s{dpid:x}", None
         self.defense = build_defense(ctl.defense_name, os.environ.get("LOFT_MODEL_DIR"),
-                                     os.environ.get("LOFT_DOMAIN", "D1"), os.environ.get("LOFT_MODEL"))
+                                     os.environ.get("LOFT_DOMAIN", "D1"), os.environ.get("LOFT_MODEL"),
+                                     switch=self.name)
         self.del_pending, self.idle_of, self.prev, self.prev_t = set(), {}, {}, 0.0
         self.fid_of, self.key_of, self.src_of = {}, [], np.zeros(MAX_FLOWS, np.int64)
         self.port_of = np.full(MAX_FLOWS, OTHER_PORT, np.int16)
