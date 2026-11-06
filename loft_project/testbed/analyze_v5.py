@@ -132,5 +132,16 @@ for v in ATTACKS + ["benign"]:
               "benign_dropped_by_rule_pct", "probe_post_success_pct", "decision_ms_mean", "hosts_blocked_attack",
               "hosts_blocked_benign")]
         L.append(f"| {v} | {d} | " + " | ".join(f"{x:.2f}" for x in m) + " |")
+L += ["", "## Every run, per seed", "",
+      "| Seed | Variant | Defense | harm % | attack share s11 % | lost first pkts % | probe success % | "
+      "attackers blocked | benign blocked | first attacker block (s after attack) | decision ms |",
+      "|---|---|---|---|---|---|---|---|---|---|---|"]
+for s in SEEDS:
+    for v in ATTACKS + ["benign"]:
+        for d in DEFS:
+            r = runs[(v, d, s)]
+            L.append(f"| {s} | {v} | {d} | {r['benign_harmed_pct']:.2f} | {float(r.get('attack_share_avg_pct_s11', 0)):.2f} | "
+                     f"{r['benign_packet_in_lost_pct']:.2f} | {r['probe_post_success_pct']:.1f} | {int(r['hosts_blocked_attack'])} | "
+                     f"{int(r['hosts_blocked_benign'])} | {r.get('first_attack_block_s', '-')} | {r['decision_ms_mean']:.0f} |")
 open(os.path.join(OUT, "report.md"), "w").write("\n".join(L) + "\n")
 print("\n".join(L))
