@@ -1,0 +1,40 @@
+{
+ "selected": "v4lite-cb-m010-f0.2",
+ "rf": [],
+ "cb": [
+  "ens_cb_D1.json",
+  "ens_cb_D2.json",
+  "ens_cb_D3.json"
+ ],
+ "budget": 0.001,
+ "tau": {
+  "D1": 0.2903323399656522,
+  "D2": 0.1822439012017622,
+  "D3": 0.3115112749951642,
+  "T1": 0.6220059049255332,
+  "T1B": 0.6202520517933232
+ },
+ "rho": {
+  "D1": 0.7,
+  "D2": 0.7,
+  "D3": 0.7,
+  "T1": 0.7,
+  "T2": 0.7,
+  "T1B": 0.7
+ },
+ "rf_params": {
+  "n_estimators": 50,
+  "max_depth": 12,
+  "min_samples_leaf": 5
+ },
+ "block": {
+  "n_min": 50,
+  "k": 3.0,
+  "block_s": 60.0,
+  "window_s": 10.0,
+  "m0": 10.0,
+  "frac_min": 0.2
+ },
+ "score_changed_only": true,
+ "fast_cb": true
+}
