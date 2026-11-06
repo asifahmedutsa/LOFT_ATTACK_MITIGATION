@@ -1,0 +1,12 @@
+# v5 detector candidates (docs/v5_plan.md, section 2)
+
+Simulator T1B at 600 pps, development seeds 2000-2002 (no candidate trained on T1B); unseen = E11 A6 recall on D1-D3 test_off.
+
+| Candidate | recall A2 | recall A4 | recall E9P | benign FPR | unseen recall | eligible |
+|---|---|---|---|---|---|---|
+| A | 99.28 | 0.01 | 0.00 | 0.000 | 50.98 | yes |
+| B | 99.75 | 0.02 | 0.00 | 0.011 | 50.98 | yes |
+| C | 99.73 | 0.01 | 0.00 | 0.023 | 8.55 | no |
+| D | 100.00 | 0.02 | 0.00 | 0.014 | 8.55 | no |
+
+**Chosen: A.**
