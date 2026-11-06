@@ -1,0 +1,12 @@
+{
+ "chosen_detector": "cb",
+ "chosen_rule": "m010-f0.2",
+ "rule": {
+  "n_min": 50,
+  "f_min": 3.0,
+  "block_s": 60.0,
+  "m0": 10.0,
+  "frac_min": 0.2
+ },
+ "v3_rule_replay_benign_blocked": 4
+}

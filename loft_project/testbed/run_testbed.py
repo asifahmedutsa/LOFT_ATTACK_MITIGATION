@@ -87,7 +87,8 @@ def main():
                              "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender",
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
                              "dualguard+portguard+hostid", "portguard+hostid",
-                             "dualguard+fairevict", "dualguard+fairevictq", "ensguard"])
+                             "dualguard+fairevict", "dualguard+fairevictq", "ensguard",
+                             "ensguard-v4lite"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "

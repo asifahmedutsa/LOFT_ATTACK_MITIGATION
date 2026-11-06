@@ -1,0 +1,22 @@
+# v4-lite step 2: detector (docs/v4lite_plan.md)
+
+Mean (sd) over model seeds 0-2.
+
+| Candidate | V: recall on attacks not trained on (%) | H: harm (%) | O: attack occupancy (%) | B: benign hosts blocked | ms per 10k entries |
+|---|---|---|---|---|---|
+| ens | 92.20 (0.90) | 0.66 (0.16) | 8.17 (0.17) | 0.00 (0.00) | 103.91 (7.54) |
+| cb | 92.46 (1.59) | 0.67 (0.12) | 6.16 (0.47) | 0.00 (0.00) | 19.73 (1.01) |
+
+Checks for cb: {'V': True, 'H': True, 'O': True, 'B': True}. **Chosen: cb.**
+
+Per seed:
+
+```
+cand  seed  val_remote_recall  ms_per_10k  val_recall_D1  val_recall_D2  val_recall_D3           key  harm_pct  attack_occ_pct  benign_host_blocks  a2_attack_hosts_blocked
+ ens     0             92.503     112.611         93.450         92.410         91.648 ens-m0-v3rule     0.598           8.363                   0                      2.0
+  cb     0             92.712      19.629         94.073         92.452         91.610  cb-m0-v3rule     0.633           6.348                   0                      2.0
+ ens     1             92.908      99.641         93.061         93.672         91.990 ens-m1-v3rule     0.544           8.109                   0                      2.0
+  cb     1             93.913      20.794         94.883         93.950         92.907  cb-m1-v3rule     0.565           5.628                   0                      2.0
+ ens     2             91.191      99.463         92.035         90.406         91.132 ens-m2-v3rule     0.850           8.040                   0                      2.0
+  cb     2             90.770      18.772         91.409         90.082         90.820  cb-m2-v3rule     0.801           6.503                   0                      2.0
+```

@@ -17,6 +17,8 @@ Drawn by `testbed/paper_figs.py`. Each PNG has a PDF next to it. The figure type
 | fig10_table_composition | attack / benign / free share 150 s into A4 | FTShield | v3 testbed |
 | fig11_score_distribution | EnsGuard score, benign vs attack entries | FTODefender | testbed entry logs, seeds 4131-4133 |
 | fig12_block_rule_sensitivity | block-rule and tau-budget grid | FTODefender (TH2), FTMaster (threshold) | simulator, development seeds |
+| fig13_metrics_by_paper | accuracy, precision, recall and F1, one panel each, all detectors at the same 0.1 % FPR | SFTO-Guard, FTMaster, FTOP, FloRa, DMS-BTT, FTShield | E11, simulator D1-D3 |
+| fig14_metrics_by_paper_own_threshold | the same at each paper's own threshold | same | E11 |
 
 `testbed_runs.csv` holds the per-run numbers behind figs 03, 05, 06 and 08.
 `scores_ensguard_testbed.npz` is a local cache and is not committed.

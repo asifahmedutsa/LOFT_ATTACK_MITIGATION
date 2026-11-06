@@ -85,7 +85,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
-            "dualguard+fairevictq", "ensguard")
+            "dualguard+fairevictq", "ensguard", "ensguard-v4lite")
 
 
 def ip2int(s):
@@ -151,14 +151,18 @@ def build_defense(name, model_dir, domain, model_path=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
-    if name == "ensguard":
+    if name in ("ensguard", "ensguard-v4lite"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
-        ec = json.load(open(os.path.join(model_dir, "ens_config.json")))
+        # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
+        # block rule, from ens_config_v4lite.json.
+        cfile = "ens_config.json" if name == "ensguard" else "ens_config_v4lite.json"
+        ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         eb = EvictBlock(EnsembleJSON(model_dir, ec), ec["tau"][domain], name="evictblock",
                         rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
-                        f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,))
+                        f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
+                        m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0))
         return PortGuard(eb, name=name, mode="full", **{k: pg[k] for k in pg if k != "mode"})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
@@ -265,7 +269,7 @@ class LoftController(app_manager.RyuApp):
         # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
         # and access switches pin each host port to the first MAC seen on it (port security),
         # so a host cannot rotate MACs to get more quotas.
-        self.hostid = self.defense_name.endswith("+hostid") or self.defense_name == "ensguard"
+        self.hostid = self.defense_name.endswith("+hostid") or self.defense_name.startswith("ensguard")
         self.host_of, self.port_mac = {}, {}
         self.t0 = time.time()
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")

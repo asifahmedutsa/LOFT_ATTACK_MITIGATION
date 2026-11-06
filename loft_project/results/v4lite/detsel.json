@@ -1,0 +1,9 @@
+{
+ "checks": {
+  "V": true,
+  "H": true,
+  "O": true,
+  "B": true
+ },
+ "chosen": "cb"
+}

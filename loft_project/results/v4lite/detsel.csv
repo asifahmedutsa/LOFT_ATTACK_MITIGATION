@@ -1,0 +1,7 @@
+cand,seed,val_remote_recall,ms_per_10k,val_recall_D1,val_recall_D2,val_recall_D3,key,harm_pct,attack_occ_pct,benign_host_blocks,a2_attack_hosts_blocked
+ens,0,92.503,112.611,93.45,92.41,91.648,ens-m0-v3rule,0.598,8.363,0,2.0
+cb,0,92.712,19.629,94.073,92.452,91.61,cb-m0-v3rule,0.633,6.348,0,2.0
+ens,1,92.908,99.641,93.061,93.672,91.99,ens-m1-v3rule,0.544,8.109,0,2.0
+cb,1,93.913,20.794,94.883,93.95,92.907,cb-m1-v3rule,0.565,5.628,0,2.0
+ens,2,91.191,99.463,92.035,90.406,91.132,ens-m2-v3rule,0.85,8.04,0,2.0
+cb,2,90.77,18.772,91.409,90.082,90.82,cb-m2-v3rule,0.801,6.503,0,2.0

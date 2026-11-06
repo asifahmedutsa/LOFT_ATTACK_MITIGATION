@@ -1,0 +1,11 @@
+key,harm_pct,attack_occ_pct,benign_host_blocks,a2_attack_hosts_blocked,rule,replay_benign_blocked,replay_attack_blocked,replay_attack_blocked_A2,eligible
+cb-m0-m010-f0.2,2.028,20.559,0,2.0,m010-f0.2,0,6,6,True
+cb-m0-m010-f0.3,2.384,23.381,0,2.0,m010-f0.3,0,6,6,True
+cb-m0-m010-f0.5,2.562,24.346,0,2.0,m010-f0.5,0,6,6,True
+cb-m0-m020-f0.2,2.028,20.563,0,2.0,m020-f0.2,0,6,6,True
+cb-m0-m020-f0.3,2.384,23.381,0,2.0,m020-f0.3,0,6,6,True
+cb-m0-m020-f0.5,2.562,24.346,0,2.0,m020-f0.5,0,6,6,True
+cb-m0-m040-f0.2,2.032,20.571,0,2.0,m040-f0.2,0,6,6,True
+cb-m0-m040-f0.3,2.389,23.421,0,2.0,m040-f0.3,0,6,6,True
+cb-m0-m040-f0.5,2.566,24.352,0,2.0,m040-f0.5,0,6,6,True
+cb-m0-v3rule,0.633,6.348,0,2.0,v3rule,4,6,6,False

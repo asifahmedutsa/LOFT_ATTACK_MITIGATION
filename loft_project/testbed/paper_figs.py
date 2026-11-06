@@ -20,6 +20,8 @@ Detection figures use E11 (simulator, results/e11_detect) and the testbed entry 
  10   table composition 150 s into the attack (FTShield shows it at 45 s; here no defense has acted yet at 45 s)
  11   detection-score distribution, benign vs attack (FTODefender)
  12   block-threshold sensitivity (FTODefender TH2, FTMaster threshold)
+ 13   accuracy / precision / recall / F1, one panel each, every paper's detector at the same 0.1 % FPR
+ 14   the same at each paper's own threshold
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py   # writes results/paper_figs/
 """
@@ -367,6 +369,44 @@ def fig09():
     save(fig, "fig09_classifier_comparison")
 
 
+def fig13(op="fpr0.1"):
+    """One panel per metric (accuracy, precision, recall, F1): each paper's detector against the
+    others, grouped by exposure. op fpr0.1: every detector at the same 0.1 % benign false-positive
+    rate; op paper: each at its own paper's threshold (0.5 for the baselines, the deployed tau
+    for EnsGuard and FL-DualGuard)."""
+    t = pd.read_csv("results/e11_detect/table_main.csv")
+    t = t[t.op == op]
+    dets = ["ftop", "ftmaster", "flora", "dms-btt", "fl-dualguard", "ensguard"]
+    lab = {"ftop": "FTOP", "ftmaster": "FTMaster", "flora": "FloRa", "dms-btt": "DMS-BTT",
+           "fl-dualguard": "FL-DualGuard", "ensguard": "EnsGuard"}
+    exps = [("seen-local", "seen by this\ncontroller"), ("seen-remote", "seen only by\nanother controller"),
+            ("unseen-all", "seen by no\ncontroller")]
+    fig, axs = plt.subplots(2, 2, figsize=(12, 7.2), sharey=True)
+    w = 0.13
+    x = np.arange(len(exps))
+    for ax, (k, kl) in zip(axs.flat, [("accuracy", "Accuracy"), ("precision", "Precision"),
+                                      ("recall", "Recall"), ("f1", "F1 score")]):
+        for j, d in enumerate(dets):
+            vals = [t[(t.detector == d) & (t.exposure == e)][k].mean() for e, _ in exps]
+            b = ax.bar(x + (j - 2.5) * w, vals, w * 0.92, color=C[j], label=lab[d], edgecolor="white", lw=0.5)
+            for xi, v in zip(x + (j - 2.5) * w, vals):
+                ax.text(xi, v + 1, f"{v:.0f}", ha="center", va="bottom", fontsize=6, color=INK, rotation=90)
+        ax.set_xticks(x, [e for _, e in exps])
+        ax.set_title(kl, fontsize=10, weight="bold")
+        ax.set_ylim(0, 118)
+        ax.set_yticks(range(0, 101, 20))
+        ax.grid(axis="x", visible=False)
+    for ax in axs[:, 0]:
+        ax.set_ylabel("%")
+    h, l_ = axs[0, 0].get_legend_handles_labels()
+    fig.legend(h, l_, ncol=6, loc="upper center", bbox_to_anchor=(0.5, 1.0), fontsize=8.5)
+    sub = ("every detector at the same 0.1 % benign false-positive rate" if op == "fpr0.1" else
+           "each detector at its own paper's threshold (baselines 0.5; EnsGuard and FL-DualGuard: deployed tau)")
+    fig.suptitle(f"Per-rule detection by metric (E11, simulator D1-D3): {sub}", y=1.04, fontsize=10)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    save(fig, "fig13_metrics_by_paper" if op == "fpr0.1" else "fig14_metrics_by_paper_own_threshold")
+
+
 def fig11():
     cache = f"{OUT}/scores_ensguard_testbed.npz"
     if not os.path.exists(cache):
@@ -455,6 +495,10 @@ def main():
         fig11()
     if want("12"):
         fig12()
+    if want("13"):
+        fig13("fpr0.1")
+    if want("14"):
+        fig13("paper")
 
 
 if __name__ == "__main__":

@@ -107,8 +107,10 @@ class EnsembleJSON:
         cfg = cfg or json.load(open(os.path.join(model_dir, "ens_config.json")))
         self.cb = [FastOblivious(CatBoostJSON(os.path.join(model_dir, f))) for f in cfg["cb"]]
         self.rf = [FastForest(TreeJSON(os.path.join(model_dir, f))) for f in cfg["rf"]]
-        self.rf_source = "json"
+        self.rf_source = "json" if self.rf else "none"
         try:
+            if not cfg["rf"]:
+                raise ValueError("CatBoost only")
             import pickle
             sk = [pickle.load(open(os.path.join(model_dir, f.replace(".json", ".pkl")), "rb"))
                   for f in cfg["rf"]]
@@ -122,8 +124,10 @@ class EnsembleJSON:
     def predict_proba(self, X):
         if len(X) == 0:
             return np.zeros(0)
-        rf = np.mean([m.predict_proba(X)[:, 1] for m in self.rf], axis=0)
         cb = np.mean([m.predict_proba(X)[:, 1] for m in self.cb], axis=0)
+        if not self.rf:                      # CatBoost only (ensguard-v4lite)
+            return cb
+        rf = np.mean([m.predict_proba(X)[:, 1] for m in self.rf], axis=0)
         return (rf + cb) / 2
 
 

@@ -408,10 +408,15 @@ class EvictBlock(Defense):
     MAX_BLOCK_S = 240.0
 
     def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
-                 target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=()):
+                 target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=(),
+                 m0=1.0, frac_min=0.0):
         self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
         self.rho, self.h_crit, self.target = rho, h_crit, target
         self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
+        # v4-lite (docs/v4lite_plan.md): floor m0 on the median host's evictions, and a minimum
+        # fraction of the host's own held entries that were evicted in the window. The defaults
+        # (1, 0) are the v3 rule.
+        self.m0, self.frac_min = m0, frac_min
         self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
 
@@ -436,7 +441,7 @@ class EvictBlock(Defense):
         released = (self.blocked_until <= t) & (self.blocked_until > t - obs.get("dt", 1.0) - 1e-9)
         self.probation_until[released] = t + 2 * self.window_s
         if n == 0 or (n / cap < self.rho and not (self.probation_until > t).any()):
-            self.hist.append((t, np.zeros(n_ports)))
+            self.hist.append((t, np.zeros(n_ports), np.zeros(n_ports)))
             return None, None
         X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
         s = self.model.predict_proba(X)
@@ -445,15 +450,19 @@ class EvictBlock(Defense):
             flag &= self.probation_until[self.port[fids]] > t
         p = self.port[fids]
         ev = np.bincount(p[flag], minlength=n_ports).astype(float)
-        self.seen |= np.bincount(p, minlength=n_ports) > 0
-        self.hist.append((t, ev))
+        held = np.bincount(p, minlength=n_ports).astype(float)
+        self.seen |= held > 0
+        self.hist.append((t, ev, held))
         self.hist = [h for h in self.hist if h[0] > t - self.window_s]
         ev_w = np.sum([h[1] for h in self.hist], axis=0)
+        held_w = np.sum([h[2] for h in self.hist], axis=0)
         med = float(np.median(ev_w[self.seen])) if self.seen.any() else 0.0
-        share = ev_w / max(med, 1.0)         # evictions relative to the median host
+        share = ev_w / max(med, self.m0)     # evictions relative to the median host (floored)
         self.share_max = np.maximum(self.share_max, np.where(ev_w >= self.n_min, share, 0.0))
         self.ev_max = np.maximum(self.ev_max, ev_w)
         new_block = (ev_w >= self.n_min) & (share >= self.f_min) & (self.blocked_until <= t)
+        if self.frac_min > 0:
+            new_block &= ev_w / np.maximum(held_w, 1.0) >= self.frac_min
         new_block[self.exempt] = False
         for q in np.flatnonzero(new_block):
             self.n_blocks[q] += 1
