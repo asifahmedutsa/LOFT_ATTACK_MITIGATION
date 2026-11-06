@@ -99,6 +99,8 @@ def main():
     ap.add_argument("--ryu", default=os.path.expanduser("~utsa/ryu-env/bin/ryu-manager"))
     ap.add_argument("--python", default=os.path.expanduser("~utsa/ryu-env/bin/python"))
     ap.add_argument("--out", required=True)
+    ap.add_argument("--entry-log", action="store_true",
+                    help="record every entry's counters at every poll (LOFT_ENTRYLOG=1)")
     ap.add_argument("--no-diag", action="store_true",
                     help="skip Open vSwitch counters and CPU sampling")
     ap.add_argument("--legacy-controller", action="store_true",
@@ -134,6 +136,7 @@ def main():
                    LOFT_LOG=os.path.join(a.out, f"controller_{dm['name']}.csv"),
                    LOFT_LEAN="0" if a.legacy_controller else "1",
                    LOFT_INSTALL_CLOCK=a.install_clock,
+                   LOFT_ENTRYLOG="1" if a.entry_log else "0",
                    PYTHONPATH=ROOT)
         if dm["access_dpid"] is not None:
             env["LOFT_ACCESS_DPID"] = str(dm["access_dpid"])

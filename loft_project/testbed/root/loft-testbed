@@ -26,7 +26,7 @@ name=""
 while [ $# -gt 0 ]; do
     opt="$1"
     case "$opt" in
-        --no-diag|--legacy-controller)
+        --no-diag|--legacy-controller|--entry-log)
             args+=("$opt"); shift; continue ;;
     esac
     [ $# -ge 2 ] || die "missing value for $opt"

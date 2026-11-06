@@ -61,6 +61,39 @@ The s11 deletes split by regime: "PortGuard on" means the table reached 90 % in 
 3. The testbed logs no per-entry scores or features, so these hypotheses cannot be checked from
    the existing runs. Checking them needs a feature and score log (next steps).
 
+### Update 2026-11-06: the simulator's T1 already predicts finding 1 (the comparison above was against D1-D3)
+
+The simulator episodes cited above are D1-D3. The testbed runs T1 (the bigFlows trace), with
+T1's own threshold. Scoring simulated T1 entries with the deployed ensemble (development check
+while building `testbed/e11_testbed.py`; validation seeds 2000-2002, 5 % of entries per poll,
+attack rows after the attack start):
+
+| Domain | Attack | tau | Per-entry recall | Benign flag rate | Attack median score | Benign 99.9th percentile |
+|---|---|---|---|---|---|---|
+| T1 | A2 | 0.639 | 99.4 % | 0.20 % | 0.83 | 0.71 |
+| T1 | A4 | 0.639 | **0.01 %** | 0.16 % | 0.34 | 0.67 |
+| T1 | E9P | 0.639 | **0.00 %** | 0.11 % | 0.006 | 0.63 |
+| D1 | A2 | 0.270 | 100 % | 0.05 % | 0.84 | 0.20 |
+| D1 | A4 | 0.270 | 96.6 % | 0.21 % | 0.34 | 0.30 |
+| D1 | E9P | 0.270 | 0.14 % | 0.10 % | 0.006 | 0.27 |
+
+- **A4:** the attack entries score the same in both domains (median 0.34), but T1's benign
+  traffic scores much higher (99.9th percentile 0.67 vs 0.30), so T1's threshold at the 0.1 %
+  budget sits above almost every A4 entry. Hypothesis 2 above (threshold) is confirmed in the
+  simulator. This is **domain shift** (models trained on synthetic D1-D3, deployed on the bigFlows
+  trace), not a simulator-to-testbed gap.
+- **E9P:** the detector scores E9P entries near 0 in every domain; even on D1 it flags 0.14 % of
+  them. In the D1-D3 simulator the block rule still caught the attackers from those few flags;
+  on T1 there are none.
+- So the testbed result under A4/E9P was predictable from the simulator had ensguard been tested
+  on T1 episodes. Poll jitter (hypothesis 1) is not needed to explain it; the testbed
+  recordings (`testbed/record_e11tb.sh`, scored by `testbed/e11_testbed.py`) will measure
+  whether it adds to it.
+- Implication for a fix: lowering T1's threshold cannot work (benign T1 entries outscore A4's),
+  and the fast fixes (block rule, scoring cost) do not touch this. Detection under A4 on T1
+  needs the testbed's traffic domain in training, e.g. a T1-like domain as a federated
+  participant.
+
 ## Finding 2: the block rule degenerates when few hosts are flagged, and blocks busy benign hosts
 
 - **The rule** (`loftbench/defenses.py`, `EvictBlock.on_poll`): block a host if its evictions in

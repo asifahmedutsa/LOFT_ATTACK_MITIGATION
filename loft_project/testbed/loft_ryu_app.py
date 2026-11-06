@@ -38,6 +38,12 @@ Environment variables:
                     are per flow (a drop rule would take the entry it frees, and a per-host
                     rule would block the host's other flows), so they always refuse in the
                     controller.
+  LOFT_ENTRYLOG     1 = per monitored switch, record every entry's counters at every poll for
+                    offline scoring (testbed/entrylog.py): <switch log>_entries.bin holds one
+                    record per poll (float64 t, n, installs since the last poll; then n int32
+                    flow ids, int64 packets, int64 bytes, float64 install times), and
+                    <switch log>_keys.csv maps each flow id to its 5-tuple, source MAC and port.
+                    Default 0 (off).
   LOFT_INSTALL_CLOCK controller (default) = each entry's install time is when the controller
                     sent its flow-mod; switch = poll time minus the entry's duration (the
                     matrix of results_v2.md 18). The poll time is when Ryu processes the
@@ -222,6 +228,13 @@ class Switch:
         self.maclog = open(log_path.replace(".csv", "_macs.csv"), "w", newline="")
         self.mw = csv.writer(self.maclog)
         self.mw.writerow(["t", "mac", "entries"])
+        self.elog = self.klog = None
+        if os.environ.get("LOFT_ENTRYLOG", "0") == "1":
+            self.elog = open(log_path.replace(".csv", "_entries.bin"), "wb")
+            self.klog = open(log_path.replace(".csv", "_keys.csv"), "w", newline="")
+            self.kw = csv.writer(self.klog)
+            self.kw.writerow(["fid", "src", "dst", "proto", "sport", "dport", "mac", "port"])
+            self._keys_logged = 0
 
 
 LOG_COLS = ["t", "entries", "packet_in", "table_full", "installs", "deletes", "demotes",
@@ -577,6 +590,8 @@ class LoftController(app_manager.RyuApp):
             inst = S.install_t[fids]
         # Entries the tracker treats as new this poll (history restarted).
         fresh = int((S.tracker.seen_install[fids] != inst).sum())
+        if S.elog is not None:
+            self._log_entries(S, t, fids, pk, by, inst, S.cnt["installs"] - S._installs_seen)
         X, dms, state = S.tracker.observe(t, fids, pk, by, inst,
                                           S.cnt["installs"] - S._installs_seen)
         S._installs_seen = S.cnt["installs"]
@@ -664,6 +679,20 @@ class LoftController(app_manager.RyuApp):
                              tot["drop_rules"], fresh])
             self.log.flush()
         self.flowlog.flush()
+
+    def _log_entries(self, S, t, fids, pk, by, inst, installs):
+        """LOFT_ENTRYLOG: this poll's raw counters, exactly as the feature tracker gets them."""
+        for f in range(S._keys_logged, len(S.key_of)):
+            k = S.key_of[f]
+            S.kw.writerow([f, *k, self.mac_of.get(k, ""), int(S.port_of[f])])
+        S._keys_logged = len(S.key_of)
+        np.array([t, len(fids), installs], np.float64).tofile(S.elog)
+        fids.astype(np.int32).tofile(S.elog)
+        pk.astype(np.int64).tofile(S.elog)
+        by.astype(np.int64).tofile(S.elog)
+        np.asarray(inst, np.float64).tofile(S.elog)
+        S.elog.flush()
+        S.klog.flush()
 
     def _delete_host(self, S, mac):
         """One delete for all of a host's per-flow entries (and its drop rule, re-added next)."""

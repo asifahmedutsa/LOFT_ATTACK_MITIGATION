@@ -32,7 +32,7 @@ def _stats(v):
 def summarize(d, attack_start, capacity=3500):
     out = {}
     for log in sorted(glob.glob(os.path.join(d, "controller_*.csv"))):
-        if log.endswith("_flows.csv") or log.endswith("_macs.csv"):
+        if log.endswith(("_flows.csv", "_macs.csv", "_keys.csv")):
             continue
         dom = os.path.basename(log)[len("controller_"):-4]
         r = _rows(log)
