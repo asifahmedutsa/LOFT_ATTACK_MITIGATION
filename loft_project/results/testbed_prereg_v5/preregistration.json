@@ -1,0 +1,147 @@
+{
+ "created_utc": "2026-11-06T09:35:57.576550+00:00",
+ "supersedes": "results/testbed_prereg_v4lite/preregistration.json (never run; v4-lite is an arm here, on T1B)",
+ "plan": "docs/v5_plan.md, docs/v4lite_plan.md; selection in results/v5 and results/v4lite (development data only)",
+ "setup": "domain T1B: the last 60 % of bigFlows, which no model or threshold was trained or calibrated on (every T1 model and tau, ours and the baselines', from T1A); tree3 (core s11 + access s12/s13, tables 3,500, idle 10 s, all monitored), benign scale 0.5, one controller, 300 s, attack at 50 s, new-connection probe every 0.5 s",
+ "defenses": {
+  "none": "no defense",
+  "ensguard": "v3 as preregistered in v3 (RF + CatBoost, v3 block rule), tau T1B from T1A",
+  "ensguard-v4lite": "CatBoost only, floored block rule (m0 10, f 0.2), changed-entry scoring, tau T1B from T1A (= v5 without the volume block)",
+  "ensguard-v5": "v4-lite + volume block (host > X entries and >= 3 x median host at >= 90 % occupancy; X per switch 800 / 785 / 797 from T1A benign recordings)",
+  "dms-btt": "DMS-BTT with blocklist (revision 2 knobs), state and flow models trained on T1A (A1-A3 + benign)",
+  "ftmaster": "FTMaster (E2 knobs), state and rule models trained on T1A (A1-A3 + benign)"
+ },
+ "development_check": {
+  "seeds": [
+   4134,
+   4135,
+   4136
+  ],
+  "results": {
+   "A4/4134": {
+    "benign_harmed_pct": "0.04",
+    "benign_packet_in_lost_pct": "26.92",
+    "attack_share_avg_pct_s11": "32.65",
+    "probe_post_success_pct": "28.1",
+    "hosts_blocked_attack": "2",
+    "hosts_blocked_benign": "0",
+    "first_attack_block_s": "171.8",
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 46, max 1783"
+   },
+   "A4/4135": {
+    "benign_harmed_pct": "0.01",
+    "benign_packet_in_lost_pct": "32.47",
+    "attack_share_avg_pct_s11": "27.79",
+    "probe_post_success_pct": "26.06",
+    "hosts_blocked_attack": "2",
+    "hosts_blocked_benign": "0",
+    "first_attack_block_s": "175.9",
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 87, max 2062"
+   },
+   "A4/4136": {
+    "benign_harmed_pct": "0.01",
+    "benign_packet_in_lost_pct": "30.86",
+    "attack_share_avg_pct_s11": "34.15",
+    "probe_post_success_pct": "26.01",
+    "hosts_blocked_attack": "2",
+    "hosts_blocked_benign": "0",
+    "first_attack_block_s": "178.7",
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 73, max 2034"
+   },
+   "benign/4134": {
+    "benign_harmed_pct": "0.0",
+    "benign_packet_in_lost_pct": "0.09",
+    "attack_share_avg_pct_s11": "0.0",
+    "probe_post_success_pct": "100.0",
+    "hosts_blocked_attack": null,
+    "hosts_blocked_benign": null,
+    "first_attack_block_s": null,
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 8, max 66"
+   },
+   "benign/4135": {
+    "benign_harmed_pct": "0.0",
+    "benign_packet_in_lost_pct": "0.09",
+    "attack_share_avg_pct_s11": "0.0",
+    "probe_post_success_pct": "100.0",
+    "hosts_blocked_attack": null,
+    "hosts_blocked_benign": null,
+    "first_attack_block_s": null,
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 8, max 15"
+   },
+   "benign/4136": {
+    "benign_harmed_pct": "0.0",
+    "benign_packet_in_lost_pct": "0.03",
+    "attack_share_avg_pct_s11": "0.0",
+    "probe_post_success_pct": "100.0",
+    "hosts_blocked_attack": null,
+    "hosts_blocked_benign": null,
+    "first_attack_block_s": null,
+    "benign_dropped_by_rule_pct": "0.0",
+    "decision_ms": "mean 8, max 16"
+   }
+  },
+  "note": "no setting changed after it"
+ },
+ "seeds": [
+  4140,
+  4141,
+  4142,
+  4143,
+  4144
+ ],
+ "cells": {
+  "variants": [
+   "A2",
+   "A4",
+   "E9P",
+   "benign"
+  ],
+  "defenses": [
+   "none",
+   "ensguard",
+   "ensguard-v4lite",
+   "ensguard-v5",
+   "dms-btt",
+   "ftmaster"
+  ]
+ },
+ "test": "one-sided exact sign test on the 15 paired attack runs (A2, A4, E9P x 5 seeds; same variant, same seed); a tie counts against the hypothesis; Holm within each hypothesis over its comparators; alpha 0.05",
+ "hypotheses": {
+  "H1": "ensguard-v5 harms fewer benign flows (benign_harmed_pct) than each of dms-btt and ftmaster (Holm over the 2)",
+  "H2": "ensguard-v5 has a lower average attack share of the core table (attack_share_avg_pct_s11) than each of dms-btt and ftmaster (Holm over the 2)",
+  "H3": "ensguard-v5 harms fewer benign flows than ensguard v3",
+  "H4": "ensguard-v5 has a shorter mean decision time per poll (decision_ms mean) than ensguard v3",
+  "H5": "no benign host is blocked in any of ensguard-v5's 20 runs (descriptive)",
+  "H6": "benign-only runs of ensguard-v5: mean harm <= 0.5 % and mean lost first packets <= 1 % (descriptive)",
+  "H7": "guard: ensguard-v5's new-connection success (probe_post_success_pct) is not worse than v3's: a pair fails when v5 is more than 5 points below v3; H7 fails at 8 or more failed pairs of 15",
+  "H8": "ensguard-v5 has a lower average attack share at s11 than ensguard-v4lite (the volume block's effect)"
+ },
+ "reported_without_test": "per variant: lost first packets, benign flows dropped by rules, attack share avg / max at s11-s13, seconds at the limit, Packet-In, Table-Full, probe success and connect time, hosts blocked (attack, benign) and first block time, decision time, CPU and memory; all comparisons with none and ensguard-v4lite not listed above",
+ "validity": "a run is valid if the controller logs to >= 90 % of the duration and the wall time is <= 1.5 x + 60 s (matrix_e5.sh); an invalid run is rerun once with the same seed and reported",
+ "known_limitations": [
+  "one laptop, one saturated controller",
+  "one trace (bigFlows), split in time",
+  "reimplemented baselines",
+  "5 seeds: a hypothesis needs 12 of 15 wins (Holm over 2: 12 or 13)"
+ ],
+ "sha256": {
+  "results/v21/exported/ens_config_v5.json": "d09bda3ef2ac8f86c88019a0a9c7c82616cab75b777e9b479e5e16de8b5b15af",
+  "results/v21/exported/ens_config_v4lite.json": "0ba1f3cbb0dbbabbd35738d418b18b80dea8864f901909cd8835a5d51cd75a7c",
+  "results/v21/exported/ens_config.json": "df3194ed4ecdc4082a3687be50016f6dcef12d04b961b9f2582b6c94ad0ea7e9",
+  "results/v21/exported/dmsB_state_T1B.json": "a9e335265a0bc1c1dc3dcda9b60c87c5429bbcd110ba531fe96c2b915b99df84",
+  "results/v21/exported/dmsB_flow_T1B.json": "06ee85b5bd105257604e905d5af29ba9b62166deafd89c808b9002b8da7f5aaa",
+  "results/v21/exported/ftmaster_state_T1B.json": "761ee332a17641b53279d3d941fd4128569b9b2f68e270c29fc30b889f348bbf",
+  "results/v21/exported/ftmaster_rule_T1B.json": "b127109500484b26bd50327957e7276cba5327c1d7bb324c5402e8c5f833dea8",
+  "loftbench/defenses.py": "db12102f41b31947efbdd35d3bba9e982555c6184f2697dc4c9428eaa0332340",
+  "loftbench/ensjson.py": "b0c8214294c69339f17ba1ea793b718edb5edaeaeee0a08b0aa816bc180ef603",
+  "loftbench/trace.py": "c1be5ce6ea0d01e29128ab226524033614dec804f1bf1826ccaae0e5adb8ed70",
+  "testbed/loft_ryu_app.py": "cad767cfcb2feb3336a3a4589a66cd3f9d693bed939f5ad2fd15ee4a7c9f290f",
+  "testbed/campaign_v5.sh": "e8ab03f5e80e67cac8adb853a1a94db70176d677185f225441cd204d07b3114a",
+  "docs/v5_plan.md": "624b74751c2100bc1bb4c9aa4ce9bdd69f81c089778dfb3667985992642fad66"
+ }
+}
