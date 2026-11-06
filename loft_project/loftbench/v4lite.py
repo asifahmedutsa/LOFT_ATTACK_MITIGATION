@@ -334,6 +334,8 @@ def stage_blocksel():
 def stage_cache():
     sel = json.load(open(f"{OUT}/blocksel.json"))
     c = sel["chosen_detector"]
+    if os.path.exists(f"{OUT}/cache.csv"):
+        return _cache_report(pd.read_csv(f"{OUT}/cache.csv"), c)
     M_ = _models()
     model, tau = M_["cands"][(c, 0)], M_["taus"][(c, 0)]["T1"]
     rows = []
@@ -359,9 +361,13 @@ def stage_cache():
             print(rows[-1], flush=True)
     df = pd.DataFrame(rows)
     df.round(4).to_csv(f"{OUT}/cache.csv", index=False)
+    _cache_report(df, c)
+
+
+def _cache_report(df, c):
     agree = 100 * float((df.agree_pct / 100 * df.n).sum() / df.n.sum())
     saving = 100 * (1 - df.t_cached_s.sum() / df.t_full_s.sum())
-    adopt = agree >= 99.9 and saving >= 30
+    adopt = bool(agree >= 99.9 and saving >= 30)
     json.dump(dict(agree_pct=agree, time_saving_pct=saving, adopt=adopt), open(f"{OUT}/cache.json", "w"), indent=1)
     L = ["# v4-lite step 4: score only changed entries (docs/v4lite_plan.md)", "",
          f"Detector {c}, testbed replay (12 recordings x 3 switches, polls with the table >= rho).", "",

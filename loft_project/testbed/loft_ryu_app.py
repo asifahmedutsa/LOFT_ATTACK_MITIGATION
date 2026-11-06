@@ -162,7 +162,8 @@ def build_defense(name, model_dir, domain, model_path=None):
         eb = EvictBlock(EnsembleJSON(model_dir, ec), ec["tau"][domain], name="evictblock",
                         rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
                         f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
-                        m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0))
+                        m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
+                        score_changed_only=bool(ec.get("score_changed_only", False)))
         return PortGuard(eb, name=name, mode="full", **{k: pg[k] for k in pg if k != "mode"})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})

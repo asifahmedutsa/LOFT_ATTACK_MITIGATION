@@ -1,0 +1,55 @@
+{'variant': 'A2', 'seed': 4131, 'switch': 's11', 'n': 372529, 'agree_pct': 99.95919780741902, 't_full_s': 1.5841280159947928, 't_cached_s': 0.9794132109091152}
+{'variant': 'A2', 'seed': 4131, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.4747241817676695, 't_cached_s': 0.8651202838082099}
+{'variant': 'A2', 'seed': 4131, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5979197399137774, 't_cached_s': 0.9298402590939077}
+{'variant': 'A2', 'seed': 4132, 'switch': 's11', 'n': 361856, 'agree_pct': 99.96517951892466, 't_full_s': 1.6327911720436532, 't_cached_s': 1.1501796921656933}
+{'variant': 'A2', 'seed': 4132, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5439861230261158, 't_cached_s': 0.9526455470768269}
+{'variant': 'A2', 'seed': 4132, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5565102860564366, 't_cached_s': 0.9791097999404883}
+{'variant': 'A2', 'seed': 4133, 'switch': 's11', 'n': 355741, 'agree_pct': 99.91285795002544, 't_full_s': 1.6050235919246916, 't_cached_s': 1.0119391901243944}
+{'variant': 'A2', 'seed': 4133, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.4331923458812525, 't_cached_s': 0.9056061668961775}
+{'variant': 'A2', 'seed': 4133, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.6620327919226838, 't_cached_s': 1.059847089854884}
+{'variant': 'A4', 'seed': 4131, 'switch': 's11', 'n': 394496, 'agree_pct': 99.95082332900715, 't_full_s': 1.856394272952457, 't_cached_s': 1.190949429932516}
+{'variant': 'A4', 'seed': 4131, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.3788907910056878, 't_cached_s': 0.9186611140175955}
+{'variant': 'A4', 'seed': 4131, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.4021362570783822, 't_cached_s': 0.9269667659827974}
+{'variant': 'A4', 'seed': 4132, 'switch': 's11', 'n': 486867, 'agree_pct': 99.96097496852323, 't_full_s': 2.2906975409714505, 't_cached_s': 1.429244907820248}
+{'variant': 'A4', 'seed': 4132, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5872536370443413, 't_cached_s': 1.0425118818529882}
+{'variant': 'A4', 'seed': 4132, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5027355471102055, 't_cached_s': 1.0038181382260518}
+{'variant': 'A4', 'seed': 4133, 'switch': 's11', 'n': 375679, 'agree_pct': 99.94995727735648, 't_full_s': 2.1223698369285557, 't_cached_s': 1.1651315549970604}
+{'variant': 'A4', 'seed': 4133, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 2.1046326189825777, 't_cached_s': 0.8976275140448706}
+{'variant': 'A4', 'seed': 4133, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.8644669309724122, 't_cached_s': 1.0321776632918045}
+{'variant': 'E9P', 'seed': 4131, 'switch': 's11', 'n': 384804, 'agree_pct': 99.9896050976601, 't_full_s': 1.4035638709610794, 't_cached_s': 1.2050429039954906}
+{'variant': 'E9P', 'seed': 4131, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.4219805238535628, 't_cached_s': 0.9627059649646981}
+{'variant': 'E9P', 'seed': 4131, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.3526387878810056, 't_cached_s': 1.0824057410354726}
+{'variant': 'E9P', 'seed': 4132, 'switch': 's11', 'n': 384998, 'agree_pct': 99.9955843926462, 't_full_s': 1.9434386910434114, 't_cached_s': 1.4963835551025113}
+{'variant': 'E9P', 'seed': 4132, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 2.0416221530467737, 't_cached_s': 1.0284828570729587}
+{'variant': 'E9P', 'seed': 4132, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.5862918719649315, 't_cached_s': 1.0819722029409604}
+{'variant': 'E9P', 'seed': 4133, 'switch': 's11', 'n': 427619, 'agree_pct': 99.99485523328009, 't_full_s': 2.4820898109610425, 't_cached_s': 1.5290563907765318}
+{'variant': 'E9P', 'seed': 4133, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.3870282949064858, 't_cached_s': 1.1612693629576825}
+{'variant': 'E9P', 'seed': 4133, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 0.9758473329566186, 't_cached_s': 0.6842210620525293}
+{'variant': 'benign', 'seed': 4131, 'switch': 's11', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.771908308044658, 't_cached_s': 1.1763963628764031}
+{'variant': 'benign', 'seed': 4131, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.309897236089455, 't_cached_s': 0.9821226521307835}
+{'variant': 'benign', 'seed': 4131, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.2250453329615993, 't_cached_s': 0.852026203967398}
+{'variant': 'benign', 'seed': 4132, 'switch': 's11', 'n': 0, 'agree_pct': 100.0, 't_full_s': 2.370830266168923, 't_cached_s': 1.2821004028228344}
+{'variant': 'benign', 'seed': 4132, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.1361164761619875, 't_cached_s': 0.8522993549704552}
+{'variant': 'benign', 'seed': 4132, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 0.9562519311584765, 't_cached_s': 0.7703334540274227}
+{'variant': 'benign', 'seed': 4133, 'switch': 's11', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.3398443220648915, 't_cached_s': 0.9852930810739053}
+{'variant': 'benign', 'seed': 4133, 'switch': 's12', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.154474012888386, 't_cached_s': 0.8326205680641579}
+{'variant': 'benign', 'seed': 4133, 'switch': 's13', 'n': 0, 'agree_pct': 100.0, 't_full_s': 1.0114600719680311, 't_cached_s': 0.7915896500198869}
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/v4lite.py", line 403, in <module>
+    {"models": stage_models, "detsel": stage_detsel, "blocksel": stage_blocksel,
+  File "/home/utsa/LOFT_ATTACK_MITIGATION/loft_project/loftbench/v4lite.py", line 365, in stage_cache
+    json.dump(dict(agree_pct=agree, time_saving_pct=saving, adopt=adopt), open(f"{OUT}/cache.json", "w"), indent=1)
+  File "/usr/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+  File "/usr/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type bool is not JSON serializable

@@ -409,7 +409,7 @@ class EvictBlock(Defense):
 
     def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
                  target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=(),
-                 m0=1.0, frac_min=0.0):
+                 m0=1.0, frac_min=0.0, score_changed_only=False):
         self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
         self.rho, self.h_crit, self.target = rho, h_crit, target
         self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
@@ -417,6 +417,10 @@ class EvictBlock(Defense):
         # fraction of the host's own held entries that were evicted in the window. The defaults
         # (1, 0) are the v3 rule.
         self.m0, self.frac_min = m0, frac_min
+        # v4-lite step 4: re-score only entries whose counters (or install time) changed since
+        # their last scoring; the others keep their score (results/v4lite/cache.md: 99.965 % of
+        # eviction decisions unchanged on the testbed recordings, 35 % less scoring time).
+        self.score_changed_only = score_changed_only
         self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
 
@@ -431,6 +435,9 @@ class EvictBlock(Defense):
         self.share_max = np.zeros(n_ports)   # diagnostics: highest windowed share per host
         self.ev_max = np.zeros(n_ports)      # diagnostics: most evictions in a window per host
         self.seen = np.zeros(n_ports, bool)  # hosts that have held an entry
+        nf = len(self.port)
+        self._pk, self._by = np.full(nf, -1, np.int64), np.full(nf, -1, np.int64)
+        self._it, self._sc = np.full(nf, np.nan), np.zeros(nf)
 
     def _admit(self, fids, now):
         return self.blocked_until[self.port[fids]] <= now
@@ -444,7 +451,15 @@ class EvictBlock(Defense):
             self.hist.append((t, np.zeros(n_ports), np.zeros(n_ports)))
             return None, None
         X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
-        s = self.model.predict_proba(X)
+        if self.score_changed_only and "pkts" in obs:
+            pk, by, it = (np.asarray(obs[k]) for k in ("pkts", "bytes", "install_t"))
+            ch = (self._pk[fids] != pk) | (self._by[fids] != by) | ~(self._it[fids] == it)
+            if ch.any():
+                self._sc[fids[ch]] = self.model.predict_proba(X[ch])
+                self._pk[fids[ch]], self._by[fids[ch]], self._it[fids[ch]] = pk[ch], by[ch], it[ch]
+            s = self._sc[fids]
+        else:
+            s = self.model.predict_proba(X)
         flag = s >= self.tau
         if n / cap < self.rho:               # below pressure: act on probation hosts only
             flag &= self.probation_until[self.port[fids]] > t
