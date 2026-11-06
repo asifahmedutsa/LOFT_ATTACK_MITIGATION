@@ -117,7 +117,7 @@ def summarize(d, attack_start, capacity=3500):
         k_dom = len(out) + 1
         att = {f"00:00:00:00:{k_dom:02x}:05", f"00:00:00:00:{k_dom:02x}:06"}
         sw_logs = sorted(glob.glob(os.path.join(d, f"switch_{dom}_s*.csv")))
-        sw_logs = [x for x in sw_logs if not x.endswith("_macs.csv")] or [log]
+        sw_logs = [x for x in sw_logs if not x.endswith(("_macs.csv", "_keys.csv"))] or [log]
         for sl in sw_logs:
             tag = "" if sl == log else "_" + os.path.basename(sl)[:-4].rsplit("_", 1)[1]
             rr = _rows(sl)
