@@ -1,0 +1,13 @@
+{
+ "vol_x": {
+  "T1B": {
+   "s11": 799.5,
+   "s12": 784.5,
+   "s13": 796.5
+  }
+ },
+ "adopt": true,
+ "calibration_ok": true,
+ "check_ok": true,
+ "benign_blocked_in_attack_recordings": 0
+}

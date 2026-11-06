@@ -240,5 +240,84 @@ def stage_cands():
     print("\n".join(L))
 
 
+# ---------------------------------------------------------------- volume block (section 3)
+ATT_MACS = {"00:00:00:00:01:05", "00:00:00:00:01:06"}
+SWITCHES = ("s11", "s12", "s13")
+
+
+def _hosts_per_poll(run, sw):
+    """Per poll: table entries and per-host entries at one switch of a recorded run."""
+    import glob as _g
+    d = _g.glob(os.path.expanduser(f"~/loft-runs/{run}"))[0]
+    s = pd.read_csv(f"{d}/switch_T1A_{sw}.csv")
+    m = pd.read_csv(f"{d}/switch_T1A_{sw}_macs.csv")
+    return s[["t", "entries"]], m
+
+
+def _would_block(s, m, x, k=3.0, rho=0.9, cap=3500):
+    """Hosts the volume rule would block (open loop): at a poll with the table >= rho full, a
+    host holding more than x entries and >= k x the median host's."""
+    full = set(s[s.entries >= rho * cap].t)
+    out = set()
+    for t, g in m[m.t.isin(full)].groupby("t"):
+        e = g[g.entries > 0]
+        med = float(e.entries.median()) if len(e) else 0.0
+        out |= set(e[(e.entries > x) & (e.entries >= k * max(med, 1.0))].mac)
+    return out
+
+
+def stage_volume():
+    cal = [f"v5vol_T1A_benign_none_s{s}" for s in (4150, 4151, 4152)]
+    chk = [f"v5vol_T1A_{v}_none_s4153" for v in ("A2", "A4", "E9P")]
+    X, rows = {}, []
+    for sw in SWITCHES:
+        mx = max(int(_hosts_per_poll(r, sw)[1].entries.max()) for r in cal)
+        X[sw] = 1.5 * mx
+        rows.append(dict(switch=sw, busiest_benign_host=mx, vol_x=X[sw]))
+    res = []
+    for r in cal + chk:
+        blocked = set()
+        for sw in SWITCHES:
+            s, m = _hosts_per_poll(r, sw)
+            blocked |= _would_block(s, m, X[sw])
+        res.append(dict(run=r, benign_blocked=len(blocked - ATT_MACS), attackers_blocked=len(blocked & ATT_MACS)))
+    t = pd.DataFrame(res)
+    ok_cal = int(t[t.run.isin(cal)].benign_blocked.sum()) == 0
+    ok_chk = int((t[t.run.isin(chk)].attackers_blocked == 2).sum()) >= 2
+    adopt = bool(ok_cal and ok_chk)
+    json.dump(dict(vol_x={"T1B": X}, adopt=adopt, calibration_ok=ok_cal, check_ok=ok_chk,
+                   benign_blocked_in_attack_recordings=int(t[t.run.isin(chk)].benign_blocked.sum())),
+              open(f"{OUT}/volume.json", "w"), indent=1)
+    L = ["# v5 volume block (docs/v5_plan.md, section 3)", "",
+         "X = 1.5 x the busiest benign host per switch in the T1A benign recordings (seeds 4150-4152); "
+         "open-loop replay of the recordings (defense none).", "",
+         "```", pd.DataFrame(rows).to_string(index=False), "", t.to_string(index=False), "```", "",
+         f"- calibration recordings: no benign host blocked: **{ok_cal}**",
+         f"- check recordings: both attackers blocked in at least 2 of 3: **{ok_chk}**",
+         f"- **adopt: {'yes' if adopt else 'no'}**"]
+    open(f"{OUT}/volume.md", "w").write("\n".join(L) + "\n")
+    print("\n".join(L))
+
+
+def stage_export():
+    """ens_config_v5.json: v4-lite's detector (candidate A) and block rule, changed-entry scoring,
+    tau for T1B from T1A, and the volume block if adopted."""
+    from .ensjson import EnsembleJSON
+    v4 = json.load(open(f"{EXP}/ens_config_v4lite.json"))
+    ch = json.load(open(f"{OUT}/cands.json"))["choice"]
+    assert ch == "A", ch
+    vol = json.load(open(f"{OUT}/volume.json"))
+    cfg = dict(v4, selected="v5-A" + ("+volume" if vol["adopt"] else ""))
+    cfg["block"] = dict(v4["block"])
+    if vol["adopt"]:
+        cfg["block"]["vol_x"] = vol["vol_x"]
+    tr, va = _t1a()
+    tau = float(threshold_at_fpr(EnsembleJSON(EXP, cfg).predict_proba(va.X[va.y == 0]), cfg["budget"]))
+    assert abs(tau - v4["tau"]["T1B"]) < 1e-12, (tau, v4["tau"]["T1B"])
+    json.dump(cfg, open(f"{EXP}/ens_config_v5.json", "w"), indent=1)
+    print(json.dumps(cfg, indent=1))
+
+
 if __name__ == "__main__":
-    {"collect": stage_collect, "baselines": stage_baselines, "cands": stage_cands}[sys.argv[1]]()
+    {"collect": stage_collect, "baselines": stage_baselines, "cands": stage_cands,
+     "volume": stage_volume, "export": stage_export}[sys.argv[1]]()

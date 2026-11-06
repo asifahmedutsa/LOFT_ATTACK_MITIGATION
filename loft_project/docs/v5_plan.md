@@ -119,3 +119,26 @@ Otherwise it is left out.
 **univ2 is dropped from v5 by the user's decision.** It is not a client of any deployed model and
 not part of the campaign. Its only remaining use is a possible later, separate test on univ2
 traffic.
+
+## Result of section 3 (2026-11-06): the volume block is adopted
+
+Source: results/v5/volume.md.
+
+**X per switch** (1.5 x the busiest benign host in the T1A benign recordings):
+
+| Switch | Busiest benign host | X |
+|---|---|---|
+| s11 | 533 | 800 |
+| s12 | 523 | 785 |
+| s13 | 531 | 797 |
+
+**Open-loop replay:**
+- No benign host would be blocked in any of the 6 recordings. This includes the 3 attack
+  recordings.
+- Both attackers would be blocked under A2, A4 and E9P.
+
+**ensguard-v5** is exported as results/v21/exported/ens_config_v5.json. It contains:
+- candidate A's detector, with tau T1B = 0.620;
+- the v4-lite block rule;
+- changed-entry scoring;
+- the volume block.
