@@ -29,6 +29,7 @@ class TraceProfile:
     rate_pps: float            # total benign replay rate
     anchor: str = "src"        # which address ties a flow to a user host (ingress port):
                                # "private" = the RFC 1918 endpoint, else the source
+    window: tuple = (0.0, 1.0)  # fraction of the capture's span replayed (docs/v5_plan.md)
 
 
 TRACE_DOMAINS = {
@@ -38,8 +39,18 @@ TRACE_DOMAINS = {
     "T2": TraceProfile("T2-univ2", "univ2.npz", 1000.0),
     # The same univ2 window at its native rate (about 9,000 pps, 52 new flows/s).
     "T3": TraceProfile("T3-univ2-native", "univ2.npz", 9000.0),
+    # The clean split of bigFlows (docs/v5_plan.md): every T1 model and threshold is trained or
+    # calibrated on the first 40 % of the span (T1A); the testbed test replays only the rest
+    # (T1B). 40 %: the split that leaves both parts one full replay pass (T1A 339k packets, 283 s
+    # at 1,200 pps for the 240 s training runs; T1B 206k packets, 343 s at the testbed's 600 pps).
+    "T1A": TraceProfile("T1A-bigflows-first-40pct", "bigflows.npz", 1200.0, anchor="private",
+                        window=(0.0, 0.4)),
+    "T1B": TraceProfile("T1B-bigflows-last-60pct", "bigflows.npz", 1200.0, anchor="private",
+                        window=(0.4, 1.0)),
 }
-TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5}  # after D1-D3, for attacker address ranges
+# After D1-D3, for attacker address ranges; T1A and T1B are T1's network (same hosts, same
+# attacker addresses), only the replayed part of the capture differs.
+TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5, "T1A": 3, "T1B": 3}
 
 
 @lru_cache(maxsize=4)
@@ -88,6 +99,25 @@ def anchors(tr, mode):
     return src
 
 
+def window(tr, lo, hi):
+    """The part of a converted trace between fractions lo and hi of its span. A flow belongs to
+    the part holding its first packet; its packets outside that part are dropped, so no flow
+    appears in two parts. Times restart at 0; flow ids are kept."""
+    if (lo, hi) == (0.0, 1.0):
+        return tr
+    t = tr["pkt_t"]
+    span = float(t[-1]) + 1e-3
+    a, b = lo * span, hi * span
+    first = np.full(len(tr["flow_src"]), np.inf)
+    np.minimum.at(first, tr["pkt_fid"], t)
+    f_in = (first >= a) & (first < b)
+    keep = (t >= a) & (t < b) & f_in[tr["pkt_fid"]]
+    out = dict(tr)
+    out["pkt_t"] = t[keep] - a
+    out["pkt_fid"], out["pkt_size"] = tr["pkt_fid"][keep], tr["pkt_size"][keep]
+    return out
+
+
 def replay(tr, duration, rate_pps, rng, anchor="src"):
     """Window of a converted trace: benign packets (t, fid, size) and per flow
     (source address, anchor address)."""
@@ -117,7 +147,7 @@ def replay(tr, duration, rate_pps, rng, anchor="src"):
 def generate_trace_benign(profile: TraceProfile, duration, rng):
     """Like traffic.generate_benign, (t, fid, size, srcs, kind_code), plus anchors."""
     from .traffic import TRACE_KIND
-    t, fid, size, src, anc = replay(load(profile.file), duration, profile.rate_pps, rng,
-                                    profile.anchor)
+    t, fid, size, src, anc = replay(window(load(profile.file), *profile.window), duration,
+                                    profile.rate_pps, rng, profile.anchor)
     order = np.argsort(t, kind="stable")
     return (t[order], fid[order], size[order], src, np.full(len(src), TRACE_KIND, np.int8), anc)
