@@ -125,3 +125,24 @@ shows a high flagged fraction.
 
 The rule above had no guard against getting worse than v3 on harm or occupancy. That is a gap in
 the rule as written, and it is recorded here instead of being silently corrected.
+
+### Decision on step 3 (user, 2026-11-06): adopt m0 10, f 0.2
+
+This is the setting the fixed rule selects. It is adopted with the known simulator trade-off on
+E9P and A4 recorded above.
+
+On the v3 testbed runs, EnsGuard never blocked an E9P attacker (no host-block events in any E9P
+run). The simulator's main loss from the floor (E9P attackers no longer blocked) may therefore not
+apply on the testbed. The test campaign measures this.
+
+### Controller scoring speed (Python 3.8, 3,500 entries)
+
+| Scorer | Time | Note |
+|---|---|---|
+| v3 RF + CatBoost | 200 ms | |
+| CatBoost only, original NumPy scorer | 147 ms | |
+| CatBoost only, FastOblivious8 | 97 ms | exact: max difference 0; used only by ensguard-v4lite (fast_cb) |
+
+The simulator's 5x gain does not carry over to the controller, which has no catboost library: its
+RF already runs through scikit-learn, and CatBoost through NumPy. With changed-entry scoring
+(about 35 % fewer entries scored), v4-lite should score about 3x faster than v3 on the testbed.

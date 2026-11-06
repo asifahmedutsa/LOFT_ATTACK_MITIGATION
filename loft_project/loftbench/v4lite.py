@@ -396,7 +396,7 @@ def stage_export():
                rho=v3["rho"], rf_params=v3["rf_params"],
                block=dict(n_min=r["n_min"], k=r["f_min"], block_s=r["block_s"], window_s=10.0,
                           m0=r["m0"], frac_min=r["frac_min"]),
-               score_changed_only=bool(cache["adopt"]))
+               score_changed_only=bool(cache["adopt"]), fast_cb=True)
     json.dump(cfg, open(f"{exp}/ens_config_v4lite.json", "w"), indent=1)
     chk = np.load(f"{exp}/ens_check.npz")
     err = float(np.abs(EnsembleJSON(exp, cfg).predict_proba(chk["X"]) - M_["cands"][(c, 0)].predict_proba(chk["X"])).max())

@@ -98,6 +98,32 @@ class FastOblivious:
         return np.column_stack([1 - p, p])
 
 
+class FastOblivious8(FastOblivious):
+    """FastOblivious with 8-bit leaf indices built in place (depth <= 8): the same leaves and
+    scores (max difference 0 on ens_check.npz), about 1.1-2x faster in the testbed's Python.
+    Used only when the config sets fast_cb (ensguard-v4lite), so v3's scorer is unchanged."""
+
+    def __init__(self, cj, chunk=1000):
+        super().__init__(cj, chunk)
+        assert self.Fc.shape[1] <= 8
+        self.off = (self.ar * self.L.shape[1]).astype(np.int32)
+
+    def predict_proba(self, X):
+        X = np.asarray(X, float)
+        cnt = np.empty((len(X), len(self.feats)), np.int16)
+        for i, f in enumerate(self.feats):
+            cnt[:, i] = np.searchsorted(self.borders[f], X[:, f], side="left")
+        idx = np.zeros((len(X), len(self.ar)), np.uint8)
+        tmp = np.empty((len(X), len(self.ar)), bool)
+        for j in range(self.Fc.shape[1]):
+            np.greater(cnt[:, self.Fc[:, j]], self.R[:, j], out=tmp)
+            idx |= tmp.view(np.uint8) << np.uint8(j)
+        raw = self.Lflat[idx + self.off].sum(1)
+        r = self.c.scale * raw + self.c.bias[0]
+        p = 1.0 / (1.0 + np.exp(-r))
+        return np.column_stack([1 - p, p])
+
+
 class EnsembleJSON:
     """The forests come from scikit-learn pickles (ens_rf_<D>.pkl, built by
     build_sklearn_forests in the testbed's own Python, 3-8x faster than NumPy) when they load
@@ -105,7 +131,8 @@ class EnsembleJSON:
 
     def __init__(self, model_dir, cfg=None):
         cfg = cfg or json.load(open(os.path.join(model_dir, "ens_config.json")))
-        self.cb = [FastOblivious(CatBoostJSON(os.path.join(model_dir, f))) for f in cfg["cb"]]
+        fast = FastOblivious8 if cfg.get("fast_cb") else FastOblivious
+        self.cb = [fast(CatBoostJSON(os.path.join(model_dir, f))) for f in cfg["cb"]]
         self.rf = [FastForest(TreeJSON(os.path.join(model_dir, f))) for f in cfg["rf"]]
         self.rf_source = "json" if self.rf else "none"
         try:
