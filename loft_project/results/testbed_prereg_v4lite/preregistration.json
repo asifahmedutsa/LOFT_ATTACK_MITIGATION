@@ -42,7 +42,8 @@
   "H3": "ensguard-v4lite loses fewer benign first packets (benign_packet_in_lost_pct) than ensguard v3",
   "H4": "ensguard-v4lite harms fewer benign flows than each of dms-btt and ftmaster (Holm over the 2)",
   "H5": "no benign host is blocked in any of ensguard-v4lite's 20 runs (descriptive)",
-  "H6": "benign-only runs of ensguard-v4lite: mean harm <= 0.5 % and mean lost first packets <= 1 % (descriptive)"
+  "H6": "benign-only runs of ensguard-v4lite: mean harm <= 0.5 % and mean lost first packets <= 1 % (descriptive)",
+  "H7": "guard: ensguard-v4lite's new-connection success after the attack starts (probe_post_success_pct) is not worse than ensguard v3's: a paired attack run counts as a failure when v4-lite is more than 5 points below v3; H7 fails if v4-lite fails in 8 or more of the 15 pairs (a majority)"
  },
  "families": {
   "F1": [
@@ -52,6 +53,9 @@
   ],
   "F2": [
    "H4"
+  ],
+  "F3": [
+   "H7"
   ]
  },
  "reported_without_test": "attack share (avg, max) at s11-s13, seconds at the limit, Packet-In, Table-Full, probe success and connect time, hosts blocked, CPU and memory, per variant",
@@ -64,5 +68,7 @@
   "testbed/loft_ryu_app.py": "343205aa821779b0a1b6040f45301402ebc8e28f0467e1804adff53c222cc4c1",
   "testbed/campaign_v4lite.sh": "e1814181fc6f25ed4b254131f0b7c894ceb282a83439c9e33cf1a7fc81625001",
   "docs/v4lite_plan.md": "2306af98f2c595985cbeed3c1fc0d6131642ab16b17ba9bd3901a1a939c374d0"
- }
+ },
+ "amended_utc": "2026-11-06T07:16:41.627606+00:00",
+ "amendment": "H7 added before any test run (the development check showed probe success 19.6 % against v3's 27.5 % on other seeds)"
 }
