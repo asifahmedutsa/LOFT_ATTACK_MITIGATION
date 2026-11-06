@@ -108,3 +108,14 @@ Otherwise it is left out.
    - fresh seeds 4140-4144: 120 runs, about 11 h;
    - hypotheses as in v4-lite, H1-H7, for v5 against v3 and against DMS-BTT and FTMaster.
 4. No test seed runs before the user approves the preregistration.
+
+## Result of section 2, and univ2 dropped (2026-11-06)
+
+**Candidate A is kept** (results/v5/cands.md). This is v4-lite's detector: CatBoost, D1-D3.
+- No candidate detects A4 or E9P on simulator T1B.
+- The univ2 client (C, D) cuts recall on the unseen attack from 51.0 % to 8.6 %.
+- The local T1A model adds 0.5 points of A2 recall, within the tie margin.
+
+**univ2 is dropped from v5 by the user's decision.** It is not a client of any deployed model and
+not part of the campaign. Its only remaining use is a possible later, separate test on univ2
+traffic.
