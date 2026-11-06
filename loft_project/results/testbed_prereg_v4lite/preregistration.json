@@ -1,0 +1,68 @@
+{
+ "created_utc": "2026-11-06T07:06:03.148140+00:00",
+ "plan": "docs/v4lite_plan.md; selection results in results/v4lite (development data only)",
+ "setup": "as preregistration v3: T1 (bigFlows), tree3 (core s11 + access s12/s13, tables 3,500, idle 10 s, all monitored), benign scale 0.5, one controller, 300 s, attack at 50 s, new-connection probe every 0.5 s",
+ "system": {
+  "name": "ensguard-v4lite",
+  "changes_vs_v3": [
+   "detector: federated CatBoost only (D1-D3, model seed 0, the v3 CatBoost members), tau at 0.1 % on own validation benign (T1 0.622)",
+   "block rule: evictions >= 50 and >= 3 x max(median host, 10) and evicted / held entries in 10 s >= 0.2",
+   "score only entries whose counters or install time changed",
+   "exact 8-bit CatBoost scorer"
+  ],
+  "unchanged": "evict >= tau, block 60 s doubling to 240 s, PortGuard full mode, host identity"
+ },
+ "development_check": "seeds 4134-4136, A4 + benign (results/testbed_prereg_v4lite/dev_check.md); no setting changed after it",
+ "seeds": [
+  4140,
+  4141,
+  4142,
+  4143,
+  4144
+ ],
+ "cells": {
+  "variants": [
+   "A2",
+   "A4",
+   "E9P",
+   "benign"
+  ],
+  "defenses": [
+   "none",
+   "ensguard",
+   "ensguard-v4lite",
+   "dms-btt",
+   "ftmaster"
+  ]
+ },
+ "test": "one-sided exact sign test on the 15 paired attack runs (same variant, same seed); a tie counts against the hypothesis; Holm within each family; alpha 0.05",
+ "hypotheses": {
+  "H1": "ensguard-v4lite harms fewer benign flows (benign_harmed_pct) than ensguard v3",
+  "H2": "ensguard-v4lite has a shorter mean decision time per poll (decision_ms mean) than ensguard v3",
+  "H3": "ensguard-v4lite loses fewer benign first packets (benign_packet_in_lost_pct) than ensguard v3",
+  "H4": "ensguard-v4lite harms fewer benign flows than each of dms-btt and ftmaster (Holm over the 2)",
+  "H5": "no benign host is blocked in any of ensguard-v4lite's 20 runs (descriptive)",
+  "H6": "benign-only runs of ensguard-v4lite: mean harm <= 0.5 % and mean lost first packets <= 1 % (descriptive)"
+ },
+ "families": {
+  "F1": [
+   "H1",
+   "H2",
+   "H3"
+  ],
+  "F2": [
+   "H4"
+  ]
+ },
+ "reported_without_test": "attack share (avg, max) at s11-s13, seconds at the limit, Packet-In, Table-Full, probe success and connect time, hosts blocked, CPU and memory, per variant",
+ "validity": "a run is valid if the controller logs to >= 90 % of the duration and the wall time is <= 1.5 x + 60 s (matrix_e5.sh); an invalid run is rerun once with the same seed and reported",
+ "sha256": {
+  "results/v21/exported/ens_config_v4lite.json": "b20af19d029c6e074b3d854ed2144655e44d303fd4b9b3ac02d15bf0695820c9",
+  "results/v21/exported/ens_config.json": "9ccd3c69639bc24ef9cfd3fd65c88034652abc7d11788c1a5211f7dcb412e4a9",
+  "loftbench/defenses.py": "aa9335673b436176a5a6e5a2acde06724935d0dbd7f64ab637ba0d48cb561f21",
+  "loftbench/ensjson.py": "b0c8214294c69339f17ba1ea793b718edb5edaeaeee0a08b0aa816bc180ef603",
+  "testbed/loft_ryu_app.py": "343205aa821779b0a1b6040f45301402ebc8e28f0467e1804adff53c222cc4c1",
+  "testbed/campaign_v4lite.sh": "e1814181fc6f25ed4b254131f0b7c894ceb282a83439c9e33cf1a7fc81625001",
+  "docs/v4lite_plan.md": "2306af98f2c595985cbeed3c1fc0d6131642ab16b17ba9bd3901a1a939c374d0"
+ }
+}
