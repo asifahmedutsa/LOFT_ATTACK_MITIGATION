@@ -15,7 +15,9 @@ import time
 
 import numpy as np
 
-OUT = "results/realfl"
+OUT = os.environ.get("FL_OUT", "results/realfl")
+DATA = os.environ.get("FL_DATA", f"{OUT}/fl_data")
+SEED = int(os.environ.get("FL_SEED", "0"))
 ADDR = "127.0.0.1:8098"
 ROUNDS, MU, HIDDEN = 30, 0.01, 32
 CLIENTS = ("C1", "C2", "C3")
@@ -26,7 +28,7 @@ def scaler():
     from loftbench.models import Standardizer
     st = []
     for c in CLIENTS:
-        X = np.load(f"{OUT}/fl_data/{c}.npz")["X"]
+        X = np.load(f"{DATA}/{c}.npz")["X"]
         st.append(Standardizer.stats(X))            # (n, sum, sum of squares) only
     return Standardizer.from_stats(st)
 
@@ -37,8 +39,8 @@ def server():
     from flwr.server.strategy import FedProx
 
     from loftbench.models import MLP
-    d = int(np.load(f"{OUT}/fl_data/C1.npz")["X"].shape[1])
-    init = MLP(d, HIDDEN, seed=0).get_weights()
+    d = int(np.load(f"{DATA}/C1.npz")["X"].shape[1])
+    init = MLP(d, HIDDEN, seed=SEED).get_weights()
     sc = scaler()
     log, t0 = [], time.time()
 
@@ -62,7 +64,7 @@ def client(name):
     import flwr as fl
 
     from loftbench.models import MLP
-    z = np.load(f"{OUT}/fl_data/{name}.npz")
+    z = np.load(f"{DATA}/{name}.npz")
     X, y = z["X"], z["y"]
     sc = scaler()
     k = CLIENTS.index(name)
@@ -76,7 +78,7 @@ def client(name):
             m.scaler = sc
             m.set_weights(parameters)
             rnd = int(config.get("server_round", 0))
-            m.fit(X, y, epochs=1, seed=rnd * 10 + k, prox_ref=[p.copy() for p in parameters],
+            m.fit(X, y, epochs=1, seed=SEED * 1000 + rnd * 10 + k, prox_ref=[p.copy() for p in parameters],
                   mu=float(config.get("proximal_mu", MU)))
             return m.get_weights(), len(y), {}
 

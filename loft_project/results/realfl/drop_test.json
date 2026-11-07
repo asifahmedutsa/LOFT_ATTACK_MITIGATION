@@ -1,0 +1,20 @@
+{
+ "uninterrupted_exit": [
+  0,
+  0,
+  0
+ ],
+ "interrupted_exit": [
+  1,
+  1,
+  1
+ ],
+ "checkpoint_trees": 150,
+ "resumed_exit": [
+  0,
+  0,
+  0
+ ],
+ "resumed_trees": 300,
+ "max_abs_diff_training_rows": 0.0
+}

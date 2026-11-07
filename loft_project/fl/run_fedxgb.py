@@ -15,7 +15,9 @@ import subprocess
 import sys
 import time
 
-OUT = "results/realfl"
+OUT = os.environ.get("FL_OUT", "results/realfl")
+DATA = os.environ.get("FL_DATA", f"{OUT}/fl_data")
+SEED = int(os.environ.get("FL_SEED", "0"))
 ADDR = "127.0.0.1:8099"
 ROUNDS, LOCAL_ROUNDS = 100, 1        # FedXgbBagging keeps one new tree per client per round
 # --cyclic (exploratory, not in docs/realfl_plan.md's choice rule): FedXgbCyclic passes one model
@@ -25,7 +27,7 @@ CYCLIC = "--cyclic" in sys.argv
 CYC_LOCAL = 3
 NAME = "fedxgb_cyclic" if CYCLIC else "fedxgb"
 PARAMS = dict(objective="binary:logistic", eta=0.1, max_depth=6, tree_method="hist", nthread=2,
-              eval_metric="logloss", seed=0)
+              eval_metric="logloss", seed=SEED)
 
 
 def server():
@@ -63,7 +65,7 @@ def client(name):
     import xgboost as xgb
     from flwr.common import Code, FitIns, FitRes, Parameters, Status
 
-    z = np.load(f"{OUT}/fl_data/{name}.npz")
+    z = np.load(f"{DATA}/{name}.npz")
     dtrain = xgb.DMatrix(z["X"], label=z["y"])
 
     class C(fl.client.Client):
