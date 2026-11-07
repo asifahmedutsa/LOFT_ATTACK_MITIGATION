@@ -4,6 +4,8 @@ figures are the published-methods versions (results/paper_figs/v5pub, testbed/pa
 
     ~/.venvs/loft/bin/python docs/build_figures_pdf.py
 """
+import sys
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
@@ -82,7 +84,12 @@ def image(path, maxw=W, maxh=H * 0.78):
     return Image(path, width=iw * sc, height=ih * sc)
 
 
-story = [Paragraph("FEVER: figures", TITLE)]
+# --results: the experiment results only (no system-design figures), into docs/fever_results.pdf
+RESULTS = "--results" in sys.argv
+if RESULTS:
+    SECTIONS = [x for x in SECTIONS if x[0] != "System design"]
+OUT = "docs/fever_results.pdf" if RESULTS else "docs/fever_figures.pdf"
+story = [Paragraph("FEVER: experimental results" if RESULTS else "FEVER: figures", TITLE)]
 n = 0
 for sec, items in SECTIONS:
     story.append(Paragraph(sec, SEC))
@@ -94,6 +101,6 @@ for sec, items in SECTIONS:
         story.append(KeepTogether([image(path), Paragraph(f"<b>Fig. {n}.</b> {cap}", CAP)]))
     if sec != SECTIONS[-1][0]:
         story.append(PageBreak())
-SimpleDocTemplate("docs/fever_figures.pdf", pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=20 * mm,
+SimpleDocTemplate(OUT, pagesize=A4, leftMargin=20 * mm, rightMargin=20 * mm, topMargin=20 * mm,
                   bottomMargin=20 * mm, title="FEVER figures", author="asifahmedutsa").build(story)
-print("wrote docs/fever_figures.pdf with", n, "figures")
+print("wrote", OUT, "with", n, "figures")
