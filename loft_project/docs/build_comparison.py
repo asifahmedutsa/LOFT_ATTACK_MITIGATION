@@ -63,10 +63,12 @@ def run(v, dfn, s):
                 dec=float(np.median(dec)) if dec else np.nan, mem=max(mem) if mem else np.nan)
 
 
-DEFS = ["none", "ftmaster", "dms-btt", "rdefender", "ensguard-v4lite", "ensguard-v5-noml", "ensguard-v5"]
+# FEVER is v6 (permanent blocking, results/v6); the ablation ran on v5 (60 s block), so its rows
+# say so.
+DEFS = ["none", "ftmaster", "dms-btt", "rdefender", "ensguard-v4lite", "ensguard-v5-noml", "ensguard-v5", "ensguard-v6"]
 NAME = {"none": "No defense", "ftmaster": "FTMaster", "dms-btt": "DMS-BTT", "rdefender": "rDefender",
-        "ensguard-v4lite": "FEVER without volume block", "ensguard-v5-noml": "FEVER without ML",
-        "ensguard-v5": "FEVER"}
+        "ensguard-v4lite": "60 s block, without volume block", "ensguard-v5-noml": "60 s block, without ML",
+        "ensguard-v5": "FEVER with a 60 s block", "ensguard-v6": "FEVER"}
 SEEDS = [s for s in range(4140, 4145)
          if all(os.path.exists(f"{R}/v5_T1B_{v}_{d}_s{s}/summary.txt") for v in ATT + ["benign"] for d in DEFS)]
 df = pd.DataFrame([run(v, d, s) for v in ATT + ["benign"] for d in DEFS for s in SEEDS])
@@ -114,7 +116,7 @@ def make(caption, head, rows, widths, best=None, head2=None, spans=()):
 
 tables = {}
 # ---- Table 1: overall
-pub = ["none", "ftmaster", "dms-btt", "rdefender", "ensguard-v5"]
+pub = ["none", "ftmaster", "dms-btt", "rdefender", "ensguard-v6"]
 rows = []
 for d in pub:
     a, b = A[A.defense == d], B[B.defense == d]
@@ -165,7 +167,7 @@ tables["detection"] = make(
     head2=[""] + ["Acc.", "Prec.", "Rec.", "F1"] * 3, spans=[(1, 4), (5, 8), (9, 12)])
 
 # ---- Table 4: ablation
-abl = ["ensguard-v5", "ensguard-v4lite", "ensguard-v5-noml"]
+abl = ["ensguard-v6", "ensguard-v5", "ensguard-v4lite", "ensguard-v5-noml"]
 rows = []
 for d in abl:
     a = A[A.defense == d]

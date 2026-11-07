@@ -2,7 +2,7 @@
 Fig. 8: (a) no attack, (b) attack without defense, (c) attack with FEVER. v5 campaign, T1B,
 seed 4140 (controller_T1B.csv holds the cumulative counters per poll).
 
-    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_msgs.py [A2|A4|E9P]   # results/paper_figs/v5/fig19_messages_<attack>.*
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_msgs.py [A2|A4|E9P]   # results/paper_figs/v6/fig19_messages_<attack>.*
 """
 import os
 import sys
@@ -32,7 +32,7 @@ fig = plt.figure(figsize=(11, 8.2))
 gs = fig.add_gridspec(2, 4, hspace=0.62, wspace=0.55)
 panels = [(gs[0, 0:2], "benign", "none", "(a) No LFTO attack in the network."),
           (gs[0, 2:4], V, "none", "(b) LFTO attack launched and FEVER not deployed."),
-          (gs[1, 1:3], V, "ensguard-v5", "(c) LFTO attack launched and FEVER deployed.")]
+          (gs[1, 1:3], V, "ensguard-v6", "(c) LFTO attack launched and FEVER deployed.")]
 data = []
 for spec, v, d, cap in panels:
     t, pin, tf = rates(v, d)
@@ -49,5 +49,5 @@ for spec, t, pin, tf, cap in data:
     ax.legend(loc="upper left", fontsize=8.5)
     ax.text(0.5, -0.24, cap, transform=ax.transAxes, ha="center", va="top", fontsize=13, wrap=True)
 for ext in ("png", "pdf"):
-    fig.savefig(f"results/paper_figs/v5/fig19_messages_{V}.{ext}", dpi=200, bbox_inches="tight")
+    fig.savefig(f"results/paper_figs/v6/fig19_messages_{V}.{ext}", dpi=200, bbox_inches="tight")
 print("wrote", f"fig19_messages_{V}")

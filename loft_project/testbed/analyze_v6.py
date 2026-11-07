@@ -14,11 +14,17 @@ def summary(path):
     d = {}
     for line in open(path):
         m = re.match(r"\s+(\S+)\s+(.+?)\s*$", line)
-        if m and m[1] != "decision_ms":
-            try:
-                d[m[1]] = float(m[2])
-            except ValueError:
-                d[m[1]] = m[2]
+        if not m:
+            continue
+        if m[1] == "decision_ms":
+            d["decision_ms_mean"] = float(re.match(r"mean (\S+),", m[2])[1])
+            continue
+        try:
+            d[m[1]] = float(m[2])
+        except ValueError:
+            d[m[1]] = m[2]
+    for k in ("hosts_blocked_attack", "hosts_blocked_benign"):
+        d.setdefault(k, 0.0)            # written only when a host was blocked
     return d
 
 
@@ -31,12 +37,18 @@ KEYS = [("benign_harmed_pct", "Harm %"), ("attack_share_avg_pct_s11", "Avg attac
         ("attack_share_max_pct_s11", "Max attack share %"), ("benign_packet_in_lost_pct", "First packets lost %"),
         ("probe_post_success_pct", "New connections ok %"), ("hosts_blocked_benign", "Benign hosts blocked")]
 
-runs = {(v, d, s): summary(f"{R}/v5_T1B_{v}_{d}_s{s}/summary.txt") for v in VARS for d, _ in DEFS for s in SEEDS}
+# runs.csv: the columns of results/testbed_prereg_v5/runs.csv, for the figure and table builders
+ALL = ["benign_harmed_pct", "attack_share_avg_pct_s11", "attack_share_max_pct_s11", "benign_packet_in_lost_pct",
+       "benign_dropped_by_rule_pct", "probe_post_success_pct", "probe_post_connect_ms_median",
+       "hosts_blocked_attack", "hosts_blocked_benign", "first_attack_block_s", "decision_ms_mean",
+       "packet_in", "table_full_s11", "overflow_s_post_s11"]
+runs = {(v, d, s): summary(f"{R}/v5_T1B_{v}_{d}_s{s}/summary.txt")
+        for v in VARS for d in [x for x, _ in DEFS] + ["none"] for s in SEEDS}
 with open(f"{OUT}/runs.csv", "w", newline="") as f:
     w = csv.writer(f)
-    w.writerow(["variant", "defense", "seed"] + [k for k, _ in KEYS])
+    w.writerow(["variant", "defense", "seed"] + ALL)
     for (v, d, s), r in sorted(runs.items()):
-        w.writerow([v, d, s] + [r.get(k, "") for k, _ in KEYS])
+        w.writerow([v, d, s] + [r.get(k, "") for k in ALL])
 
 
 def vals(vs, d, k):

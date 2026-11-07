@@ -2,12 +2,12 @@
 Tables 2-6) reproduced for FEVER from our own data. Every number is computed here from committed
 or recorded results:
   Table 1  attack parameters and time to overflow   <- loftbench/config.py; v5 campaign, defense none
-  Table 2  attack detection, run level               <- results/testbed_prereg_v5/runs.csv (FEVER)
+  Table 2  attack detection, run level               <- results/v6/runs.csv (FEVER)
   Table 3  malicious-entry identification per attack <- results/v5/t1b_rows.pkl (simulator T1B,
            development seeds 2000-2002, no model trained on T1B), FEVER's detector at its
            deployed tau; and host identification on the testbed (v5 campaign)
   Table 4  classifier comparison                     <- results/e11_detect/table_main.csv (E11)
-  Table 5  comparative experiment                    <- results/paper_figs/v5/testbed_runs.csv
+  Table 5  comparative experiment                    <- results/paper_figs/v6/testbed_runs.csv
   Table 6  harm to users (not in DMS-BTT)            <- same
 
     PYTHONPATH=. ~/.venvs/loft/bin/python docs/build_dmsbtt_tables.py
@@ -65,11 +65,11 @@ def pct(x, d=2):
     return "NA" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:.{d}f} %"
 
 
-runs = pd.read_csv("results/paper_figs/v5/testbed_runs.csv")
-pre = pd.read_csv("results/testbed_prereg_v5/runs.csv")
+runs = pd.read_csv("results/paper_figs/v6/testbed_runs.csv")
+pre = pd.read_csv("results/v6/runs.csv")
 ATT = ["A2", "A4", "E9P"]
-NAME = {"none": "None", "dms-btt": "DMS-BTT", "ftmaster": "FTMaster", "rdefender": "rDefender", "ensguard-v5": "FEVER"}
-DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
+NAME = {"none": "None", "dms-btt": "DMS-BTT", "ftmaster": "FTMaster", "rdefender": "rDefender", "ensguard-v6": "FEVER"}
+DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v6"]
 T_ATT = 50.0
 # rDefender (no ML, per-port occupancy) ran later on seeds 4140-4142 only (docs/fever_ablation_plan.md);
 # it is listed once those runs exist, with a note on its seeds.
@@ -115,7 +115,7 @@ s.append(table("<b>Table 1</b><br/>LFTO attack parameter setting.",
                "T2 is the average time from the start of the attack until the flow table overflows without defense."))
 
 # ---- Table 2
-f = pre[pre.defense == "ensguard-v5"]
+f = pre[pre.defense == "ensguard-v6"]
 rows = []
 for v in ATT:
     g = f[f.variant == v]
@@ -123,7 +123,7 @@ for v in ATT:
     rows.append([v, f"{100 * (g.hosts_blocked_attack >= 2).mean():.0f} %",
                  f"{100 * g.hosts_blocked_attack.sum() / (2 * len(g)):.0f} %", f"{fb.mean():.1f}",
                  f"{100 * g.hosts_blocked_benign.sum() / (4 * len(g)):.0f} %"])
-nb = pre[(pre.defense == "ensguard-v5") & (pre.variant == "benign")]
+nb = pre[(pre.defense == "ensguard-v6") & (pre.variant == "benign")]
 rows.append(["No attack", "-", "-", "-", f"{100 * nb.hosts_blocked_benign.sum() / (4 * len(nb)):.0f} %"])
 s.append(table("<b>Table 2</b><br/>Attack detection results of FEVER.",
                ["Attack", "Attack detection rate", "Attacker identification rate", "Detection time(s)",
@@ -131,7 +131,7 @@ s.append(table("<b>Table 2</b><br/>Attack detection results of FEVER.",
                rows, [0.16, 0.2, 0.24, 0.18, 0.22]))
 
 # ---- Table 3
-ec = json.load(open("results/v21/exported/ens_config_v5.json"))
+ec = json.load(open("results/v21/exported/ens_config_v6.json"))
 tau = ec["tau"]["T1B"]
 model = EnsembleJSON("results/v21/exported", ec)
 rows_pk = pickle.load(open("results/v5/t1b_rows.pkl", "rb"))

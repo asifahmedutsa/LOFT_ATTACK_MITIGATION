@@ -5,7 +5,7 @@ attack run, shaded by network state (before the attack / attack filling the tabl
       limit X (results/v21/exported/ens_config_v5.json).
 Data: the v5 campaign's no-defense run (defense none), T1B, seed 4140.
 
-    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_states.py [A4|A2|E9P]   # results/paper_figs/v5/fig17_states_<attack>.*
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_states.py [A4|A2|E9P]   # results/paper_figs/v6/fig17_states_<attack>.*
 """
 import json
 import os
@@ -67,8 +67,8 @@ for ax, cap in zip(axs, ("(a) Distribution of FN before and after the attack.",
                          "(b) Entries per host before and after the attack.")):
     ax.text(0.5, -0.27, cap, transform=ax.transAxes, ha="center", va="top", fontsize=12)
 fig.tight_layout(w_pad=3)
-os.makedirs("results/paper_figs/v5", exist_ok=True)
+os.makedirs("results/paper_figs/v6", exist_ok=True)
 for ext in ("png", "pdf"):
-    fig.savefig(f"results/paper_figs/v5/fig17_states_{V}.{ext}", dpi=200, bbox_inches="tight")
+    fig.savefig(f"results/paper_figs/v6/fig17_states_{V}.{ext}", dpi=200, bbox_inches="tight")
 print(f"fig17_states_{V}: attack at {T_ATT:.0f} s, table full at {t_full:.0f} s; "
       f"attackers max {per[ATT].max().round().to_dict()}, busiest normal {normal.max():.0f}, X {X:.0f}")

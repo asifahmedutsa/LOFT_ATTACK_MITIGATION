@@ -30,6 +30,7 @@ With --v5 the testbed figures (01-08, 10) are drawn from the preregistered v5 ca
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py         # writes results/paper_figs/
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py --v5    # writes results/paper_figs/v5/
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py --v6 --pub  # FEVER = v6, results/paper_figs/v6pub/
 """
 import csv
 import glob
@@ -69,13 +70,24 @@ def use_v5():
     NAME.update({"ensguard": "EnsGuard v3", "ensguard-v4lite": "EnsGuard v4-lite", "ensguard-v5": "FEVER"})
 
 
+def use_v6():
+    """--v6: the v5-campaign seeds with FEVER v6 (permanent blocking, results/v6) as FEVER, into
+    results/paper_figs/v6/."""
+    global HL, DEFS, SHOW, OUT
+    use_v5()
+    HL, OUT = "ensguard-v6", "results/paper_figs/v6"
+    DEFS = ["none", "ensguard-v5", "ensguard-v6", "dms-btt", "ftmaster"]
+    SHOW = ["none", "ftmaster", "dms-btt", "ensguard-v5", "ensguard-v6"]
+    NAME.update({"ensguard-v5": "FEVER v5", "ensguard-v6": "FEVER"})
+
+
 def published_only():
-    """With --v5 --pub: FEVER against the published methods only (no defense, FTMaster, DMS-BTT), into
-    results/paper_figs/v5pub/."""
+    """With --v5 --pub (or --v6 --pub): FEVER against the published methods only (no defense,
+    FTMaster, DMS-BTT), into results/paper_figs/v5pub/ (v6pub/)."""
     global DEFS, SHOW, OUT
-    DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
-    SHOW = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
-    OUT = "results/paper_figs/v5pub"
+    DEFS = ["none", "ftmaster", "dms-btt", HL]
+    SHOW = ["none", "ftmaster", "dms-btt", HL]
+    OUT = OUT + "pub"
     # Journal style: the explanation goes in the caption, so long in-figure titles are dropped.
     import matplotlib.axes
     import matplotlib.figure
@@ -562,16 +574,17 @@ def fig16(seed=4141):
 
 def main():
     only = set(sys.argv[1:])
-    if "--v5" in only:
-        only.discard("--v5")
-        use_v5()
+    if "--v5" in only or "--v6" in only:
+        v6 = "--v6" in only
+        only -= {"--v5", "--v6"}
+        use_v6() if v6 else use_v5()
         if "--pub" in only:
             only.discard("--pub")
             published_only()
         os.makedirs(OUT, exist_ok=True)
         want = lambda n: not only or n in only  # noqa: E731
         for n, f in (("01", fig01), ("02", fig02), ("04", fig04), ("10", fig10), ("07", fig07), ("16", fig16)):
-            if want(n):
+            if want(n) and not (v6 and n == "16"):      # 16 shows v5's block expiring; v6 never releases
                 f()
         df = per_run()
         for n, f in (("03", fig03), ("05", fig05), ("06", fig06), ("08", fig08), ("15", fig15)):

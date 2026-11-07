@@ -2,7 +2,7 @@
 layout of DMS-BTT's Fig. 10: attack without FEVER, attack with FEVER, and no attack with FEVER.
 v5 campaign, T1B, seed 4140.
 
-    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_cpu.py [A2|A4|E9P]   # results/paper_figs/v5/fig21_cpu_<attack>.*
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_cpu.py [A2|A4|E9P]   # results/paper_figs/v6/fig21_cpu_<attack>.*
 """
 import os
 import sys
@@ -34,8 +34,8 @@ def cpu(variant, defense):
 
 fig, ax = plt.subplots(figsize=(6.6, 3.6))
 for (v, d, lab, col, mk) in ((V, "none", "LFTO attack without FEVER", "#f0505a", "o"),
-                            (V, "ensguard-v5", "LFTO attack with FEVER", "#4da6e8", "^"),
-                            ("benign", "ensguard-v5", "No LFTO attack, FEVER deployed", "#f2c200", "D")):
+                            (V, "ensguard-v6", "LFTO attack with FEVER", "#4da6e8", "^"),
+                            ("benign", "ensguard-v6", "No LFTO attack, FEVER deployed", "#f2c200", "D")):
     t, c = cpu(v, d)
     ax.plot(t, c, "-" + mk, color=col, ms=3, lw=0.8, alpha=0.85, label=lab)
 ax.set_xlim(0, 310)
@@ -49,7 +49,7 @@ ax.text(0.5, -0.24, f"CPU usage of the controller with and without FEVER ({V} at
         ha="center", va="top", fontsize=10)
 fig.tight_layout()
 for ext in ("png", "pdf"):
-    fig.savefig(f"results/paper_figs/v5/fig21_cpu_{V}.{ext}", dpi=200, bbox_inches="tight")
-for v, d in ((V, "none"), (V, "ensguard-v5"), ("benign", "ensguard-v5")):
+    fig.savefig(f"results/paper_figs/v6/fig21_cpu_{V}.{ext}", dpi=200, bbox_inches="tight")
+for v, d in ((V, "none"), (V, "ensguard-v6"), ("benign", "ensguard-v6")):
     t, c = cpu(v, d)
     print(v, d, "mean CPU before 50 s %.1f, after %.1f" % (c[t < 50].mean(), c[t >= 50].mean()))

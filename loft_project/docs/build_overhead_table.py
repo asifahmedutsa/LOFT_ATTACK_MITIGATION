@@ -1,5 +1,5 @@
 """Builds docs/fever_overhead_table.pdf: CPU and memory overhead of FEVER against the published
-methods. Table 1 is measured on our testbed (results/paper_figs/v5/testbed_runs.csv, v5 campaign);
+methods. Table 1 is measured on our testbed (results/paper_figs/v6/testbed_runs.csv, v5 campaign);
 Table 2 lists the overhead each paper reports on its own setup (Other Paper/experiments_summary.md).
 
     ~/.venvs/loft/bin/python docs/build_overhead_table.py
@@ -41,9 +41,9 @@ def table(caption, head, rows, widths, note=None):
     return KeepTogether(parts + [Spacer(1, 10)])
 
 
-r = pd.read_csv("results/paper_figs/v5/testbed_runs.csv")
+r = pd.read_csv("results/paper_figs/v6/testbed_runs.csv")
 att, ben = r[r.variant != "benign"], r[r.variant == "benign"]
-NAME = [("none", "None"), ("ftmaster", "FTMaster"), ("dms-btt", "DMS-BTT"), ("ensguard-v5", "FEVER")]
+NAME = [("none", "None"), ("ftmaster", "FTMaster"), ("dms-btt", "DMS-BTT"), ("ensguard-v6", "FEVER")]
 base_mem = att[att.defense == "none"].mem_mb.mean()
 base_idle = ben[ben.defense == "none"].cpu_pct.mean()
 rows = []
@@ -77,8 +77,8 @@ pub = [["SFTO-Guard", "+1.64 %", "-", "Mininet + Ryu"],
        ["FloRa", "1.86 %", "217", "Mininet + Raspberry Pi"],
        ["ALFO-Guard", "+5.19 %", "+206", "Mininet + Ryu"],
        ["DMS-BTT", "+10 to 15 %", "-", "Mininet + Ryu"],
-       ["FEVER", f"{ben[ben.defense == 'ensguard-v5'].cpu_pct.mean() - base_idle:+.1f} %",
-        f"{att[att.defense == 'ensguard-v5'].mem_mb.mean():.0f} ({att[att.defense == 'ensguard-v5'].mem_mb.mean() - base_mem:+.0f})",
+       ["FEVER", f"{ben[ben.defense == 'ensguard-v6'].cpu_pct.mean() - base_idle:+.1f} %",
+        f"{att[att.defense == 'ensguard-v6'].mem_mb.mean():.0f} ({att[att.defense == 'ensguard-v6'].mem_mb.mean() - base_mem:+.0f})",
         "Mininet + Ryu"]]
 s.append(table("<b>Table 2</b><br/>System overhead reported by each method.",
                ["Method", "CPU", "Memory (MB)", "Platform"], pub, [0.25, 0.22, 0.25, 0.28],

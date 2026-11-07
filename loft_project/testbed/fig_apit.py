@@ -7,7 +7,7 @@ The v5 campaign runs carry no per-entry counters, so the data are the no-defense
 with the entry log for the volume-block calibration (~/loft-runs/v5vol_T1A_<attack>_none_s4153:
 same testbed and settings, the T1A part of the trace).
 
-    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_apit.py   # results/paper_figs/v5/fig18_apit_no_defense.*
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_apit.py   # results/paper_figs/v6/fig18_apit_no_defense.*
 """
 import os
 import sys
@@ -58,4 +58,4 @@ for ax, v, letter in zip(axs, ("A2", "A4", "E9P"), "abc"):
 axs[0].set_ylabel("APIT(s)")
 fig.tight_layout(w_pad=2)
 for ext in ("png", "pdf"):
-    fig.savefig(f"results/paper_figs/v5/fig18_apit_no_defense.{ext}", dpi=200, bbox_inches="tight")
+    fig.savefig(f"results/paper_figs/v6/fig18_apit_no_defense.{ext}", dpi=200, bbox_inches="tight")

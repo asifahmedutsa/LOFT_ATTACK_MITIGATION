@@ -1,6 +1,6 @@
 """Builds docs/fever_figures.pdf: every FEVER figure and result table in one document, one figure
 per caption, in the order of a paper (system design, attack behaviour, results, tables). Campaign
-figures are the published-methods versions (results/paper_figs/v5pub, testbed/paper_figs.py --v5 --pub).
+figures are the published-methods versions (results/paper_figs/v6pub, testbed/paper_figs.py --v6 --pub).
 
     ~/.venvs/loft/bin/python docs/build_figures_pdf.py
 """
@@ -23,7 +23,7 @@ TITLE = ParagraphStyle("t", fontName="LS-B", fontSize=15, leading=19, spaceAfter
 SEC = ParagraphStyle("s", fontName="LS-B", fontSize=12, leading=15, spaceBefore=6, spaceAfter=8)
 CAP = ParagraphStyle("c", fontName="LS", fontSize=9.5, leading=12, alignment=1, spaceBefore=4, spaceAfter=16)
 W, H = A4[0] - 40 * mm, A4[1] - 50 * mm
-V, P = "results/paper_figs/v5", "results/paper_figs/v5pub"
+V, P = "results/paper_figs/v6", "results/paper_figs/v6pub"
 
 SECTIONS = [
     ("System design", [
@@ -50,7 +50,6 @@ SECTIONS = [
         (f"{P}/fig01_rules_over_time_E9P.png", "Benign and attack rules in the flow table over time under E9P."),
         (f"{P}/fig02_attack_share_over_time.png", "Attack-rule share of the flow table over time."),
         (f"{V}/fig20_malicious_share_A2.png", "Percentage of malicious flows in the flow table with FEVER under A2."),
-        (f"{P}/fig16_a2_block_expiry.png", "Flow-table entries over time under A2."),
         (f"{P}/fig10_table_composition.png", "Composition of the flow table 150 s into the A4 attack."),
         (f"{V}/fig19_messages_A2.png", "The quantity of Packet-In and Table-Full messages under A2."),
         (f"{V}/fig19_messages_A4.png", "The quantity of Packet-In and Table-Full messages under A4."),
@@ -66,7 +65,7 @@ SECTIONS = [
         (f"{V}/fig22_overhead_A2.png", "System overhead of deploying FEVER."),
     ]),
     ("Ablation", [
-        (f"{V}/fig23_ablation.png", "Ablation of FEVER: benign flows harmed and attack share under each attack."),
+        (f"{V}/fig23_ablation.png", "Ablation of FEVER with the 60 s block: benign flows harmed and attack share under each attack."),
     ]),
     ("Tables", [
         ("docs/fever_table_overall.png", None),

@@ -1,6 +1,6 @@
 """Builds docs/fever_results_A2.pdf: the testbed results under the standard LFTO attack A2 only,
 FEVER against no defense, FTMaster and DMS-BTT (v5 campaign, T1B, seeds 4140-4144). Draws two A2
-figures of its own (results/paper_figs/v5pub/fig24_a2_comparison, fig25_a2_share_over_time) and
+figures of its own (results/paper_figs/v6pub/fig24_a2_comparison, fig25_a2_share_over_time) and
 reuses the A2 versions of the other figures.
 
     PYTHONPATH=. ~/.venvs/loft/bin/python docs/build_a2_pdf.py
@@ -27,10 +27,10 @@ from reportlab.platypus import (Image, KeepTogether, Paragraph, SimpleDocTemplat
 
 sys.path.insert(0, "testbed")
 R = os.path.expanduser("~/loft-runs")
-V, P = "results/paper_figs/v5", "results/paper_figs/v5pub"
-DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
-NAME = {"none": "None", "ftmaster": "FTMaster", "dms-btt": "DMS-BTT", "ensguard-v5": "FEVER"}
-COL = {"none": "#9a9993", "ftmaster": "#2a78d6", "dms-btt": "#1baf7a", "ensguard-v5": "#eb6834"}
+V, P = "results/paper_figs/v6", "results/paper_figs/v6pub"
+DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v6"]
+NAME = {"none": "None", "ftmaster": "FTMaster", "dms-btt": "DMS-BTT", "ensguard-v6": "FEVER"}
+COL = {"none": "#9a9993", "ftmaster": "#2a78d6", "dms-btt": "#1baf7a", "ensguard-v6": "#eb6834"}
 SEEDS = [4140, 4141, 4142, 4143, 4144]
 CAP, T_ATT = 3500, 50.0
 plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
@@ -38,7 +38,7 @@ plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.righ
 
 runs = pd.read_csv(f"{P}/testbed_runs.csv")
 a2 = runs[runs.variant == "A2"]
-pre = pd.read_csv("results/testbed_prereg_v5/runs.csv")
+pre = pd.read_csv("results/v6/runs.csv")
 pre2 = pre[pre.variant == "A2"]
 
 # ---- fig24: A2 comparison panels
@@ -144,7 +144,6 @@ figs = [(f"{P}/fig24_a2_comparison.png", "Comparison of the defenses under A2 (f
         (f"{P}/fig01_rules_over_time_A2.png", "Benign and attack rules in the flow table over time under A2."),
         (f"{P}/fig25_a2_share_over_time.png", "Attack-rule share of the flow table over time under A2 (median of five runs)."),
         (f"{V}/fig20_malicious_share_A2.png", "Percentage of malicious flows in the flow table with FEVER under A2."),
-        (f"{P}/fig16_a2_block_expiry.png", "Flow-table entries over time under A2."),
         (f"{V}/fig17_states_A2.png", "Distribution of FN and of the entries held per host before and after the A2 attack."),
         (f"{V}/fig19_messages_A2.png", "The quantity of Packet-In and Table-Full messages under A2."),
         (f"{V}/fig21_cpu_A2.png", "CPU usage of the controller under A2."),
