@@ -73,8 +73,31 @@ DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
 T_ATT = 50.0
 # rDefender (no ML, per-port occupancy) ran later on seeds 4140-4142 only (docs/fever_ablation_plan.md);
 # it is listed once those runs exist, with a note on its seeds.
-abl = "results/fever_ablation/runs.csv"
-RD = pd.read_csv(abl) if os.path.exists(abl) else None
+def _summ(path):
+    d = {}
+    for line in open(path):
+        f = line.split()
+        if len(f) == 2:
+            try:
+                d[f[0]] = float(f[1])
+            except ValueError:
+                d[f[0]] = f[1]
+    return d
+
+
+_rd = []
+for v in ATT:
+    for sd in range(4140, 4145):
+        pth = os.path.expanduser(f"~/loft-runs/v5_T1B_{v}_rdefender_s{sd}/summary.txt")
+        if os.path.exists(pth):
+            q = _summ(pth)
+            _rd.append(dict(variant=v, seed=sd, pa_avg=q["attack_share_avg_pct_s11"], pa_max=q["attack_share_max_pct_s11"],
+                            usage_avg=q["table_usage_avg_pct_s11"], first_overflow_s=q.get("first_overflow_s_s11"),
+                            packet_in=q["packet_in"], table_full=q["table_full_s11"], harm=q["benign_harmed_pct"],
+                            pin_lost=q["benign_packet_in_lost_pct"], probe_ok=q["probe_post_success_pct"],
+                            att_blocked=q.get("hosts_blocked_attack", 0.0)))
+RD = pd.DataFrame(_rd) if _rd else None
+RD_NAME = "rDefender*"
 
 s = [Paragraph("FEVER: experimental results", S["title"]), Spacer(1, 4)]
 
@@ -160,10 +183,12 @@ s.append(table("<b>Table 4</b><br/>Comparing the outcomes of various classifiers
 # ---- Table 5
 def t5rows(sel):
     out = []
-    for d in DEFS + (["rdefender"] if RD is not None else []):
+    for d in (DEFS[:-1] + ["rdefender"] + DEFS[-1:]) if RD is not None else DEFS:
         if d == "rdefender":
-            g = RD[(RD.defense == d) & RD.variant.isin(sel)]
-            out.append([NAME[d], "Control", pct(g.attack_share_avg_pct_s11.mean()), "-", "-", "-", "-", "-"])
+            g = RD[RD.variant.isin(sel)]
+            fo = pd.to_numeric(g.first_overflow_s, errors="coerce").dropna() - T_ATT
+            out.append([RD_NAME, "Control", pct(g.pa_avg.mean()), pct(g.pa_max.mean()), pct(g.usage_avg.mean()),
+                        f"{fo.min():.0f}" if len(fo) else "-", f"{g.packet_in.mean():,.0f}", f"{g.table_full.mean():,.0f}"])
             continue
         g = runs[(runs.defense == d) & runs.variant.isin(sel)]
         fo = pd.to_numeric(g.first_overflow_s, errors="coerce").dropna() - T_ATT
@@ -178,7 +203,7 @@ H5 = ["Method", "Deploy plane", "Average Pa", "Max Pa", "Average flow table usag
 W5 = [0.13, 0.11, 0.11, 0.11, 0.14, 0.14, 0.13, 0.13]
 s.append(table("<b>Table 5</b><br/>Comparative experiment results.", H5, t5rows(ATT), W5,
                "Mean per run over attacks A2, A4 and E9P; earliest overflow time is counted from the start of the "
-               "attack (-: the table never overflowed)."))
+               "attack (-: the table never overflowed). *3 runs per attack; other methods 5."))
 for i, v in enumerate(ATT):
     s.append(table(f"<b>Table {5}{'abc'[i]}</b><br/>Comparative experiment results under {v}.", H5, t5rows([v]), W5))
 
@@ -189,10 +214,15 @@ for d in DEFS:
     p = pre[(pre.defense == d) & pre.variant.isin(ATT)]
     rows.append([NAME[d], pct(g.harm.mean()), pct(g.pin_lost.mean(), 1), pct(g.probe_ok.mean(), 1),
                  f"{g.decision_ms_median.mean():.0f}", f"{int(p.hosts_blocked_attack.sum())}/30"])
+    if d == "dms-btt" and RD is not None:
+        cmp_ = pd.read_csv("results/fever_comparison/runs.csv")
+        rd_dec = cmp_[(cmp_.defense == "rdefender") & cmp_.variant.isin(ATT)].dec.mean()
+        rows.append([RD_NAME, pct(RD.harm.mean()), pct(RD.pin_lost.mean(), 1), pct(RD.probe_ok.mean(), 1), f"{rd_dec:.0f}",
+                     f"{int(RD.att_blocked.sum())}/{2 * len(RD)}"])
 s.append(table("<b>Table 6</b><br/>Impact on benign users.",
                ["Method", "Benign flows harmed", "Lost first packets", "New connections succeeding",
                 "Decision time(ms)", "Attackers blocked"],
-               rows, [0.16, 0.17, 0.16, 0.19, 0.16, 0.16]))
+               rows, [0.16, 0.17, 0.16, 0.19, 0.16, 0.16], "*3 runs per attack; other methods 5."))
 
 doc = SimpleDocTemplate(OUT, pagesize=A4, leftMargin=22 * mm, rightMargin=22 * mm, topMargin=20 * mm,
                         bottomMargin=20 * mm, title="FEVER results", author="asifahmedutsa")

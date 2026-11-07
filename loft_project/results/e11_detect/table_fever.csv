@@ -1,0 +1,4 @@
+detector,op,exposure,accuracy,precision,recall,f1,fpr,auc,pr_auc
+fever,fpr0.1,seen-local,99.61,99.75,99.19,99.46,0.13,99.99,99.9
+fever,fpr0.1,seen-remote,99.43,99.75,98.6,99.15,0.13,99.96,99.85
+fever,fpr0.1,unseen-all,89.48,98.99,50.98,66.81,0.13,98.53,94.26
