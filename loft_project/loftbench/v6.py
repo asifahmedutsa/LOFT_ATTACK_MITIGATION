@@ -32,7 +32,7 @@ OUT = "results/v6"
 EXP = "results/v21/exported"
 SEEDS = (2000, 2001, 2002)
 VARS = ("A2", "A4", "E9P", "benign")
-CFGS = {"v5": "ens_config_v5.json", "v6": "ens_config_v6.json"}
+CFGS = {"v5": "ens_config_v5.json", "v6": "ens_config_v6.json", "fever": "ens_config_v6.json"}
 N_BENIGN = 4
 SW = "s11"
 
@@ -46,6 +46,8 @@ def make(key):
                     f_min=b["k"], block_s=b["block_s"], m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
                     score_changed_only=bool(ec.get("score_changed_only", False)),
                     vol_x=b["vol_x"]["T1B"][SW], permanent=bool(b.get("permanent", False)))
+    if key == "fever":                       # v6 without PortGuard
+        return eb
     return PortGuard(eb, name=key, mode="full", **{k: pg[k] for k in pg if k != "mode"})
 
 
@@ -56,7 +58,7 @@ def _task(args):
                                     s, 300.0, 50.0), "dedicated")
     d = make(key)
     sm = run_episode(tr, SimConfig(duration=300.0), defense=d, record_ts=False).summary
-    blocks = d.inner.blocks
+    blocks = getattr(d, "inner", d).blocks
     att = [t for t, q in blocks if q >= N_BENIGN]
     return dict(defense=key, variant=v, seed=s, harm_pct=100 * sm["benign_flows_harmed_frac"],
                 attack_occ_pct=100 * sm.get("avg_attack_occ_post", 0.0),
