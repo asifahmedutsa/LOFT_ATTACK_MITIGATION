@@ -259,6 +259,111 @@ class FloRa(_SourceBlock, Defense):
         return dels, None
 
 
+# ------------------------------------------------------------------ FTODefender
+def ftod_rule_features(X):
+    """FTODefender's mitigation features: pkt, byte, AvgPI (duration / pkt) and Avgsize (byte / pkt)."""
+    NP, NB, DT, _, _ = rule_raw(X)
+    pk = np.maximum(NP, 1.0)
+    return np.column_stack([NP, NB, DT / pk, NB / pk]).astype(np.float32)
+
+
+def edr(x, y, eps):
+    """Edit distance on real sequences (Chen et al. 2005): elements match when |a - b| <= eps."""
+    n, m = len(x), len(y)
+    D = np.zeros((n + 1, m + 1))
+    D[:, 0], D[0, :] = np.arange(n + 1), np.arange(m + 1)
+    for i in range(1, n + 1):
+        sub = (np.abs(x[i - 1] - y) > eps).astype(float)
+        for j in range(1, m + 1):
+            D[i, j] = min(D[i - 1, j - 1] + sub[j - 1], D[i - 1, j] + 1, D[i, j - 1] + 1)
+    return float(D[n, m])
+
+
+class FTODDetector:
+    """FTODefender's detection features per poll: SFT (EDR between the window of flow counts and
+    a benign benchmark window), ESIPs (entropy of the entries' source addresses) and the variation
+    of the growth of new sources (VGNS, standing in for VGFSP and VGFDP, see FTODefender)."""
+
+    def __init__(self, benchmark, eps, window=10):
+        self.benchmark, self.eps, self.window = np.asarray(benchmark, float), eps, window
+
+    def reset(self):
+        self.counts = deque(maxlen=self.window)
+        self.growth = deque(maxlen=self.window)
+        self.seen = set()
+
+    def features(self, obs, src):
+        s = src[obs["fids"]]
+        self.counts.append(obs["count"])
+        u = np.unique(s)
+        new = int(len(set(u.tolist()) - self.seen))
+        self.seen.update(u.tolist())
+        self.growth.append(new)
+        sft = edr(np.asarray(self.counts, float), self.benchmark, self.eps)
+        esip = _entropy(s) if len(s) else 0.0
+        g = np.asarray(self.growth, float)
+        vg = float(g.std(ddof=1)) if len(g) > 1 else 0.0
+        return np.array([sft, esip, vg])
+
+
+def critic_weights(F):
+    """CRITIC weights (Diakoulaki et al. 1995) on the normalized feature matrix, as FTODefender
+    Eq. 7-11: F* = (Fmax - F) / (Fmax - Fmin), C_j = S_j sum_i (1 - r_ij), w_j = C_j / sum C."""
+    fmax, fmin = F.max(0), F.min(0)
+    Z = (fmax - F) / np.maximum(fmax - fmin, 1e-12)
+    S = Z.std(0, ddof=1)
+    r = np.nan_to_num(np.corrcoef(Z, rowvar=False))
+    C = S * (1 - r).sum(0)
+    return C / C.sum(), fmax, fmin
+
+
+class FTODefender(_SourceBlock, Defense):
+    """FTODefender: Detector (detection score DS from CRITIC-weighted, max-min normalized table
+    features; an attack when DS < TH1) -> Mitigator (LightGBM-LR per-rule classifier; evict every
+    rule it flags; block a source whose share of the eviction list reaches TH2).
+
+    Paper values kept: TH1 = 0.65, TH2 = 0.5, 1 s polling, the rule features (pkt, byte, AvgPI,
+    Avgsize), LightGBM-LR, CRITIC weights trained offline, permanent source block.
+    Deviations: the simulator has no L4 ports, so VGFSP and VGFDP are replaced by one feature of
+    the same form on new source addresses (VGNS); the EDR match tolerance (eps, 5 % of the table)
+    and the benchmark window (10 polls of benign training traffic) are ours (not stated); a source
+    is blocked only if the eviction list holds at least min_evict rules (ours, so one or two
+    evictions cannot block a host); the models are trained on the controller's own training runs."""
+    name = "ftodefender"
+    needs_features = True
+
+    def __init__(self, rule_model, detector, weights, fmax, fmin, th1=0.65, th2=0.5, min_evict=20):
+        self.rule_model, self.detector = rule_model, detector
+        self.w, self.fmax, self.fmin = np.asarray(weights), np.asarray(fmax), np.asarray(fmin)
+        self.th1, self.th2, self.min_evict = th1, th2, min_evict
+        self.admit_filter = self._admit
+
+    def reset(self, ctx):
+        self._block_reset(ctx)
+        self.detector.reset()
+        self.last_ds = 1.0
+
+    def score(self, f):
+        z = (self.fmax - f) / np.maximum(self.fmax - self.fmin, 1e-12)
+        return float(np.dot(self.w, np.clip(z, 0.0, 1.0)))
+
+    def on_poll(self, t, obs):
+        if obs["count"] == 0:
+            return None, None
+        self.last_ds = self.score(self.detector.features(obs, self.src))
+        if self.last_ds >= self.th1:
+            return None, None
+        p = _p1(self.rule_model, ftod_rule_features(obs["X"]))
+        dels = obs["fids"][p >= 0.5]
+        if len(dels) >= self.min_evict:
+            s, c = np.unique(self.src[dels], return_counts=True)
+            for a in s[c / len(dels) >= self.th2].tolist():
+                if a not in self.blocked:
+                    self.blocked.add(a)
+                    self._blocked_arr = np.array(sorted(self.blocked), np.int64)
+        return dels, None
+
+
 # ------------------------------------------------------------------ rDefender
 class RDefender(Defense):
     """rDefender: attacked-ports detection from abnormal table-occupancy squeezing (ATOS),

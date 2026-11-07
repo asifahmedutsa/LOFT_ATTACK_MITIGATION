@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
     case "$opt" in
         --domains)   [[ "$val" =~ ^(D[1-3]|T[1-3]|T1[AB])(,(D[1-3]|T[1-3]|T1[AB])){0,2}$ ]] || die "bad --domains" ;;
         --variant)   [[ "$val" =~ ^(A[1-7]M?|X(0\.25|0\.5|0\.8|1|2|5|9)|E9P|F[24]|LA|HA|ALA|benign)$ ]] || die "bad --variant" ;;
-        --defense)   [[ "$val" =~ ^(none|evict|sift|tableguard|dualguard|dms-btt|portguard|dualguard\+portguard|dualguard\+floodguard|ftmaster|ftop|flora|rdefender|dualguard\+hold|dualguard\+portguard\+hold|dualguard\+evict|dualguard\+fairevict|dualguard\+fairevictq|dualguard\+portguard\+hostid|portguard\+hostid|ensguard|ensguard-v4lite|ensguard-v5|ensguard-v5-noml)$ ]] || die "bad --defense" ;;
+        --defense)   [[ "$val" =~ ^(none|evict|sift|tableguard|dualguard|dms-btt|portguard|dualguard\+portguard|dualguard\+floodguard|ftmaster|ftop|flora|rdefender|dualguard\+hold|dualguard\+portguard\+hold|dualguard\+evict|dualguard\+fairevict|dualguard\+fairevictq|dualguard\+portguard\+hostid|portguard\+hostid|ensguard|ensguard-v4lite|ensguard-v5|ensguard-v5-noml|ftodefender)$ ]] || die "bad --defense" ;;
         --probe)     [[ "$val" =~ ^(none|newflow)$ ]] || die "bad --probe" ;;
         --topo)      [[ "$val" =~ ^(dumbbell|tree3)$ ]] || die "bad --topo" ;;
         --idle)      [[ "$val" =~ ^[0-9]{1,3}$ ]] || die "bad --idle" ;;

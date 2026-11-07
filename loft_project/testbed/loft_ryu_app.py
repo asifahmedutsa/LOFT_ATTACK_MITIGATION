@@ -66,11 +66,12 @@ from ryu.lib.packet import ethernet, ipv4, packet, tcp, udp
 from ryu.ofproto import ofproto_v1_3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from loftbench.baselines import FloRa, FTMaster, FTOP, RDefender, SIFT, TableGuard  # noqa: E402
+from loftbench.baselines import FloRa, FTMaster, FTODDetector, FTODefender, FTOP, RDefender, SIFT, TableGuard  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
 from loftbench.defenses import DMSBTT, DualGuard, EvictBlock, FloodGuard, PortGuard  # noqa: E402
 from loftbench.ensjson import EnsembleJSON  # noqa: E402
 from loftbench.fairevictq import QuarantineFairEvict, _parse as feq_parse  # noqa: E402
+from loftbench.lgbjson import LGBMLRJSON  # noqa: E402
 from loftbench.features import FeatureTracker  # noqa: E402
 from loftbench.sim import Defense  # noqa: E402
 from loftbench.treejson import TreeJSON  # noqa: E402
@@ -85,7 +86,8 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
-            "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml")
+            "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
+            "ftodefender")
 
 
 def ip2int(s):
@@ -137,6 +139,13 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                       CatBoostJSON(os.path.join(model_dir, f"dmsB_flow_{domain}.json")),
                       h1=b["h1"], h2=b["h2"], p_thresh=b["p_thresh"], numb_mode=b["numb_mode"],
                       blocklist_s=b["blocklist_s"])
+    if name == "ftodefender":
+        # FTODefender (loftbench.ftodefender): CRITIC detector and LightGBM-LR mitigator trained on
+        # T1A, ftod_config_<D>.json and ftod_rule_<D>.json.
+        c = json.load(open(os.path.join(model_dir, f"ftod_config_{domain}.json")))
+        return FTODefender(LGBMLRJSON(os.path.join(model_dir, f"ftod_rule_{domain}.json")),
+                           FTODDetector(c["benchmark"], c["eps"], c["window"]), c["weights"], c["fmax"],
+                           c["fmin"], th1=c["th1"], th2=c["th2"], min_evict=c["min_evict"])
     if name in ("ftmaster", "ftop", "flora", "rdefender"):
         # Published baselines (E4/E5), with the knobs and models of the simulator's E2.
         b = json.load(open(os.path.join(model_dir, "baselines.json")))
