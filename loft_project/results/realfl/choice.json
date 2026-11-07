@@ -1,0 +1,14 @@
+{
+ "choice": "Federated XGBoost (Flower)",
+ "rule": "rule 1",
+ "scores_T1B": {
+  "Local only (C3)": 37.35,
+  "One-shot sharing (CatBoost)": 37.09,
+  "One-shot sharing (XGBoost)": 37.12,
+  "Pooled (CatBoost)": 58.59,
+  "Pooled (XGBoost)": 58.88,
+  "Federated XGBoost (Flower)": 37.31,
+  "Cyclic federated XGBoost (exploratory)": 38.22,
+  "FedProx (Flower)": 39.34
+ }
+}

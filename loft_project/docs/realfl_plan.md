@@ -26,7 +26,8 @@ at its own captured rate (pt0 11,178 pps, pt3 10,226 pps, pt6 9,246 pps), holdin
 - Training rows: each controller's own network, its attacks and benign only, seeds 1000-1004
   (labelled rule rows as in loftbench.data.collect_run).
 - Thresholds: benign rows of the network where the detector is used, seeds 2000-2002.
-- Test rows: T1B and UH, all eight attacks (A1-A7, E9P) and benign, seeds 3000-3002.
+- Test rows: T1B and UH, all eight attacks (A1-A7, E9P) and benign, seeds 3000-3002. T1B is
+  replayed at the testbed's 600 pps, as in every earlier T1B test (at 1,200 pps one pass is 172 s).
 
 ## Detectors compared
 
@@ -34,7 +35,7 @@ at its own captured rate (pt0 11,178 pps, pt3 10,226 pps, pt6 9,246 pps), holdin
 |---|---|---|
 | Local only | C3's own model (the no-sharing ablation) | no (ablation) |
 | One-shot sharing | C1-C3 CatBoost models, mean probability (current FEVER design) | yes |
-| Federated XGBoost | Flower, bagging, 20 rounds, server plus 3 client processes | yes |
+| Federated XGBoost | Flower, bagging, 100 rounds of one tree per client (300 trees, as the central XGBoost), server plus 3 client processes | yes |
 | FedProx | Flower, neural network (our FL-DualGuard MLP), 30 rounds | yes |
 | Pooled | One CatBoost on all controllers' rows (no privacy; upper bound) | no (reference) |
 
@@ -55,3 +56,8 @@ Score = mean of (recall seen only by another controller, recall seen by no one) 
 3. Otherwise one-shot sharing stays FEVER's detector, and the federated results are reported as
    the comparison.
 UH results are reported but do not enter the choice.
+
+**Amended 8 November, before any evaluation.** The first federated XGBoost run used 20 rounds of
+5 trees per client; Flower's FedXgbBagging keeps only one new tree per client per round, so that
+model held 64 trees instead of 300. It is rerun as 100 rounds of one tree per client. No result of
+either run was looked at before this change.

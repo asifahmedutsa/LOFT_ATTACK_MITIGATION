@@ -1,0 +1,802 @@
+[
+ {
+  "round": 1,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 9612,
+  "sent_bytes": 10067,
+  "time": 6.4
+ },
+ {
+  "round": 2,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 21189,
+  "sent_bytes": 12466,
+  "time": 6.54
+ },
+ {
+  "round": 3,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 32513,
+  "sent_bytes": 12223,
+  "time": 6.69
+ },
+ {
+  "round": 4,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 44483,
+  "sent_bytes": 12818,
+  "time": 6.88
+ },
+ {
+  "round": 5,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 55468,
+  "sent_bytes": 11885,
+  "time": 7.09
+ },
+ {
+  "round": 6,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 66604,
+  "sent_bytes": 12028,
+  "time": 7.33
+ },
+ {
+  "round": 7,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 78126,
+  "sent_bytes": 12394,
+  "time": 7.59
+ },
+ {
+  "round": 8,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 88985,
+  "sent_bytes": 11768,
+  "time": 7.85
+ },
+ {
+  "round": 9,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 99333,
+  "sent_bytes": 11272,
+  "time": 8.14
+ },
+ {
+  "round": 10,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 110332,
+  "sent_bytes": 11880,
+  "time": 8.45
+ },
+ {
+  "round": 11,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 121201,
+  "sent_bytes": 11754,
+  "time": 8.82
+ },
+ {
+  "round": 12,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 131697,
+  "sent_bytes": 11394,
+  "time": 9.2
+ },
+ {
+  "round": 13,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 141793,
+  "sent_bytes": 11009,
+  "time": 9.67
+ },
+ {
+  "round": 14,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 150268,
+  "sent_bytes": 9490,
+  "time": 10.13
+ },
+ {
+  "round": 15,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 158996,
+  "sent_bytes": 9718,
+  "time": 10.6
+ },
+ {
+  "round": 16,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 167816,
+  "sent_bytes": 9800,
+  "time": 11.04
+ },
+ {
+  "round": 17,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 176754,
+  "sent_bytes": 9920,
+  "time": 11.52
+ },
+ {
+  "round": 18,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 186224,
+  "sent_bytes": 10423,
+  "time": 12.06
+ },
+ {
+  "round": 19,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 194308,
+  "sent_bytes": 9116,
+  "time": 12.64
+ },
+ {
+  "round": 20,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 201603,
+  "sent_bytes": 8374,
+  "time": 13.21
+ },
+ {
+  "round": 21,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 209301,
+  "sent_bytes": 8751,
+  "time": 13.79
+ },
+ {
+  "round": 22,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 217110,
+  "sent_bytes": 8859,
+  "time": 14.39
+ },
+ {
+  "round": 23,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 225266,
+  "sent_bytes": 9181,
+  "time": 15.05
+ },
+ {
+  "round": 24,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 233071,
+  "sent_bytes": 8858,
+  "time": 15.79
+ },
+ {
+  "round": 25,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 241027,
+  "sent_bytes": 9000,
+  "time": 16.56
+ },
+ {
+  "round": 26,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 248685,
+  "sent_bytes": 8721,
+  "time": 17.25
+ },
+ {
+  "round": 27,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 256864,
+  "sent_bytes": 9206,
+  "time": 18.0
+ },
+ {
+  "round": 28,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 264902,
+  "sent_bytes": 9067,
+  "time": 18.81
+ },
+ {
+  "round": 29,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 272830,
+  "sent_bytes": 8970,
+  "time": 19.63
+ },
+ {
+  "round": 30,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 280393,
+  "sent_bytes": 8617,
+  "time": 20.42
+ },
+ {
+  "round": 31,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 288698,
+  "sent_bytes": 9325,
+  "time": 21.28
+ },
+ {
+  "round": 32,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 295852,
+  "sent_bytes": 8235,
+  "time": 22.16
+ },
+ {
+  "round": 33,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 303531,
+  "sent_bytes": 8722,
+  "time": 23.03
+ },
+ {
+  "round": 34,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 310461,
+  "sent_bytes": 8016,
+  "time": 23.93
+ },
+ {
+  "round": 35,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 317516,
+  "sent_bytes": 8133,
+  "time": 24.9
+ },
+ {
+  "round": 36,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 324323,
+  "sent_bytes": 7909,
+  "time": 25.85
+ },
+ {
+  "round": 37,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 330615,
+  "sent_bytes": 7410,
+  "time": 26.8
+ },
+ {
+  "round": 38,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 337415,
+  "sent_bytes": 7895,
+  "time": 27.85
+ },
+ {
+  "round": 39,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 343459,
+  "sent_bytes": 7182,
+  "time": 28.94
+ },
+ {
+  "round": 40,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 349388,
+  "sent_bytes": 7084,
+  "time": 30.05
+ },
+ {
+  "round": 41,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 355293,
+  "sent_bytes": 7050,
+  "time": 31.19
+ },
+ {
+  "round": 42,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 361209,
+  "sent_bytes": 7067,
+  "time": 32.34
+ },
+ {
+  "round": 43,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 367513,
+  "sent_bytes": 7426,
+  "time": 33.65
+ },
+ {
+  "round": 44,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 373169,
+  "sent_bytes": 6822,
+  "time": 34.87
+ },
+ {
+  "round": 45,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 378821,
+  "sent_bytes": 6811,
+  "time": 36.04
+ },
+ {
+  "round": 46,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 385240,
+  "sent_bytes": 7540,
+  "time": 37.29
+ },
+ {
+  "round": 47,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 391011,
+  "sent_bytes": 6936,
+  "time": 38.52
+ },
+ {
+  "round": 48,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 397277,
+  "sent_bytes": 7394,
+  "time": 39.88
+ },
+ {
+  "round": 49,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 402818,
+  "sent_bytes": 6713,
+  "time": 41.18
+ },
+ {
+  "round": 50,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 409357,
+  "sent_bytes": 7652,
+  "time": 42.72
+ },
+ {
+  "round": 51,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 415267,
+  "sent_bytes": 7061,
+  "time": 44.09
+ },
+ {
+  "round": 52,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 420782,
+  "sent_bytes": 6685,
+  "time": 45.61
+ },
+ {
+  "round": 53,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 426445,
+  "sent_bytes": 6829,
+  "time": 47.13
+ },
+ {
+  "round": 54,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 432218,
+  "sent_bytes": 6934,
+  "time": 48.95
+ },
+ {
+  "round": 55,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 437884,
+  "sent_bytes": 6836,
+  "time": 50.47
+ },
+ {
+  "round": 56,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 443402,
+  "sent_bytes": 6686,
+  "time": 51.93
+ },
+ {
+  "round": 57,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 448925,
+  "sent_bytes": 6694,
+  "time": 53.46
+ },
+ {
+  "round": 58,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 454202,
+  "sent_bytes": 6468,
+  "time": 55.03
+ },
+ {
+  "round": 59,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 459595,
+  "sent_bytes": 6575,
+  "time": 56.69
+ },
+ {
+  "round": 60,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 464862,
+  "sent_bytes": 6457,
+  "time": 58.77
+ },
+ {
+  "round": 61,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 470779,
+  "sent_bytes": 7070,
+  "time": 60.94
+ },
+ {
+  "round": 62,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 475930,
+  "sent_bytes": 6347,
+  "time": 62.63
+ },
+ {
+  "round": 63,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 482209,
+  "sent_bytes": 7412,
+  "time": 64.38
+ },
+ {
+  "round": 64,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 488129,
+  "sent_bytes": 7069,
+  "time": 67.91
+ },
+ {
+  "round": 65,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 493796,
+  "sent_bytes": 6832,
+  "time": 69.61
+ },
+ {
+  "round": 66,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 500206,
+  "sent_bytes": 7529,
+  "time": 71.26
+ },
+ {
+  "round": 67,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 506643,
+  "sent_bytes": 7547,
+  "time": 72.97
+ },
+ {
+  "round": 68,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 512167,
+  "sent_bytes": 6693,
+  "time": 74.66
+ },
+ {
+  "round": 69,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 517837,
+  "sent_bytes": 6833,
+  "time": 76.54
+ },
+ {
+  "round": 70,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 525303,
+  "sent_bytes": 8514,
+  "time": 78.25
+ },
+ {
+  "round": 71,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 530970,
+  "sent_bytes": 6829,
+  "time": 80.07
+ },
+ {
+  "round": 72,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 536500,
+  "sent_bytes": 6696,
+  "time": 81.89
+ },
+ {
+  "round": 73,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 541919,
+  "sent_bytes": 6599,
+  "time": 83.72
+ },
+ {
+  "round": 74,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 549182,
+  "sent_bytes": 8321,
+  "time": 85.68
+ },
+ {
+  "round": 75,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 554628,
+  "sent_bytes": 6619,
+  "time": 87.64
+ },
+ {
+  "round": 76,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 561179,
+  "sent_bytes": 7661,
+  "time": 89.49
+ },
+ {
+  "round": 77,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 568020,
+  "sent_bytes": 7939,
+  "time": 91.45
+ },
+ {
+  "round": 78,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 574318,
+  "sent_bytes": 7426,
+  "time": 93.35
+ },
+ {
+  "round": 79,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 580598,
+  "sent_bytes": 7412,
+  "time": 95.31
+ },
+ {
+  "round": 80,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 585880,
+  "sent_bytes": 6471,
+  "time": 97.41
+ },
+ {
+  "round": 81,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 591327,
+  "sent_bytes": 6629,
+  "time": 99.52
+ },
+ {
+  "round": 82,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 596513,
+  "sent_bytes": 6384,
+  "time": 101.7
+ },
+ {
+  "round": 83,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 602176,
+  "sent_bytes": 6830,
+  "time": 103.87
+ },
+ {
+  "round": 84,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 606961,
+  "sent_bytes": 6005,
+  "time": 106.96
+ },
+ {
+  "round": 85,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 611753,
+  "sent_bytes": 6019,
+  "time": 109.86
+ },
+ {
+  "round": 86,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 616141,
+  "sent_bytes": 5634,
+  "time": 112.47
+ },
+ {
+  "round": 87,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 621037,
+  "sent_bytes": 6110,
+  "time": 115.12
+ },
+ {
+  "round": 88,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 625823,
+  "sent_bytes": 6011,
+  "time": 118.05
+ },
+ {
+  "round": 89,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 630734,
+  "sent_bytes": 6123,
+  "time": 121.15
+ },
+ {
+  "round": 90,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 635777,
+  "sent_bytes": 6252,
+  "time": 123.64
+ },
+ {
+  "round": 91,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 641456,
+  "sent_bytes": 6850,
+  "time": 125.98
+ },
+ {
+  "round": 92,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 647398,
+  "sent_bytes": 7094,
+  "time": 128.36
+ },
+ {
+  "round": 93,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 652428,
+  "sent_bytes": 6234,
+  "time": 130.77
+ },
+ {
+  "round": 94,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 657086,
+  "sent_bytes": 5889,
+  "time": 133.14
+ },
+ {
+  "round": 95,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 662760,
+  "sent_bytes": 6846,
+  "time": 135.55
+ },
+ {
+  "round": 96,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 669061,
+  "sent_bytes": 7434,
+  "time": 138.11
+ },
+ {
+  "round": 97,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 673961,
+  "sent_bytes": 6119,
+  "time": 140.62
+ },
+ {
+  "round": 98,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 678610,
+  "sent_bytes": 5883,
+  "time": 143.18
+ },
+ {
+  "round": 99,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 683882,
+  "sent_bytes": 6472,
+  "time": 145.74
+ },
+ {
+  "round": 100,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 689161,
+  "sent_bytes": 6478,
+  "time": 148.57
+ }
+]
