@@ -1,0 +1,51 @@
+## v6 T1B seed 4140 14:33:56
+=== [1/4] v5_T1B_A2_ensguard-v6_s4140 14:33:56
+ decision_ms mean 15, max 954  probe_post_success_pct 20.31  probe_post_connect_ms_median 400.2  benign_harmed_pct 0.03
+=== [2/4] v5_T1B_A4_ensguard-v6_s4140 14:40:01
+ decision_ms mean 23, max 1343  probe_post_success_pct 24.47  probe_post_connect_ms_median 50.6  benign_harmed_pct 0.03
+=== [3/4] v5_T1B_E9P_ensguard-v6_s4140 14:46:03
+ decision_ms mean 27, max 1488  probe_post_success_pct 13.1  probe_post_connect_ms_median 50.6  benign_harmed_pct 0.01
+=== [4/4] v5_T1B_benign_ensguard-v6_s4140 14:52:15
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.3  benign_harmed_pct 0.0
+matrix done 14:57:30
+## v6 T1B seed 4141 14:57:31
+=== [1/4] v5_T1B_A2_ensguard-v6_s4141 14:57:31
+ decision_ms mean 14, max 1309  probe_post_success_pct 62.62  probe_post_connect_ms_median 364.8  benign_harmed_pct 0.03
+=== [2/4] v5_T1B_A4_ensguard-v6_s4141 15:02:47
+ decision_ms mean 20, max 1375  probe_post_success_pct 29.67  probe_post_connect_ms_median 377.6  benign_harmed_pct 0.03
+=== [3/4] v5_T1B_E9P_ensguard-v6_s4141 15:09:23
+ decision_ms mean 35, max 1448  probe_post_success_pct 11.75  probe_post_connect_ms_median 102.0  benign_harmed_pct 0.0
+=== [4/4] v5_T1B_benign_ensguard-v6_s4141 15:14:41
+ decision_ms mean 8, max 19  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.7  benign_harmed_pct 0.0
+matrix done 15:19:57
+## v6 T1B seed 4142 15:19:57
+=== [1/4] v5_T1B_A2_ensguard-v6_s4142 15:19:57
+ decision_ms mean 13, max 878  probe_post_success_pct 84.01  probe_post_connect_ms_median 598.9  benign_harmed_pct 0.0
+=== [2/4] v5_T1B_A4_ensguard-v6_s4142 15:25:15
+ decision_ms mean 20, max 1458  probe_post_success_pct 37.19  probe_post_connect_ms_median 187.7  benign_harmed_pct 0.01
+=== [3/4] v5_T1B_E9P_ensguard-v6_s4142 15:31:11
+ decision_ms mean 23, max 1589  probe_post_success_pct 13.87  probe_post_connect_ms_median 193.5  benign_harmed_pct 0.0
+=== [4/4] v5_T1B_benign_ensguard-v6_s4142 15:37:15
+ decision_ms mean 7, max 14  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.0
+matrix done 15:42:31
+## v6 T1B seed 4143 15:42:31
+=== [1/4] v5_T1B_A2_ensguard-v6_s4143 15:42:31
+ decision_ms mean 13, max 808  probe_post_success_pct 82.66  probe_post_connect_ms_median 536.5  benign_harmed_pct 0.0
+=== [2/4] v5_T1B_A4_ensguard-v6_s4143 15:47:48
+ decision_ms mean 25, max 1096  probe_post_success_pct 28.52  probe_post_connect_ms_median 53.5  benign_harmed_pct 0.01
+=== [3/4] v5_T1B_E9P_ensguard-v6_s4143 15:53:06
+ decision_ms mean 35, max 1508  probe_post_success_pct 13.87  probe_post_connect_ms_median 115.3  benign_harmed_pct 0.01
+=== [4/4] v5_T1B_benign_ensguard-v6_s4143 15:58:23
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.0
+matrix done 16:03:39
+## v6 T1B seed 4144 16:03:39
+=== [1/4] v5_T1B_A2_ensguard-v6_s4144 16:03:39
+ decision_ms mean 14, max 1238  probe_post_success_pct 90.56  probe_post_connect_ms_median 483.9  benign_harmed_pct 0.01
+=== [2/4] v5_T1B_A4_ensguard-v6_s4144 16:08:56
+ decision_ms mean 21, max 1279  probe_post_success_pct 33.72  probe_post_connect_ms_median 194.4  benign_harmed_pct 0.01
+=== [3/4] v5_T1B_E9P_ensguard-v6_s4144 16:14:14
+ decision_ms mean 21, max 1340  probe_post_success_pct 13.49  probe_post_connect_ms_median 440.9  benign_harmed_pct 0.0
+=== [4/4] v5_T1B_benign_ensguard-v6_s4144 16:20:17
+ decision_ms mean 7, max 49  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.4  benign_harmed_pct 0.0
+matrix done 16:25:32
+## v6 done 16:25:32
