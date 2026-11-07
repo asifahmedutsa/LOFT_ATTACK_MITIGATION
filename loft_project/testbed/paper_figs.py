@@ -66,7 +66,7 @@ def use_v5():
     SEEDS = [4140, 4141, 4142, 4143, 4144]
     DEFS = ["none", "ensguard", "ensguard-v4lite", "ensguard-v5", "dms-btt", "ftmaster"]
     SHOW = ["none", "ftmaster", "dms-btt", "ensguard", "ensguard-v5"]
-    NAME.update({"ensguard": "EnsGuard v3", "ensguard-v4lite": "EnsGuard v4-lite", "ensguard-v5": "EnsGuard v5"})
+    NAME.update({"ensguard": "EnsGuard v3", "ensguard-v4lite": "EnsGuard v4-lite", "ensguard-v5": "FEVER"})
 
 # Reference categorical palette (dataviz skill), fixed order; neutrals for context marks.
 C = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
@@ -510,7 +510,7 @@ def fig15(df):
             ax.set_xticks(x, [NAME[d] for d in show], rotation=40, ha="right")
             ax.grid(axis="x", visible=False)
             ax.set_title(f"{v}: {t}")
-    fig.suptitle("v5 campaign per attack (testbed, T1B; bar = mean of 5 seeds, dot = one seed)", fontsize=10)
+    fig.suptitle("FEVER campaign per attack (testbed, T1B; bar = mean of 5 seeds, dot = one seed)", fontsize=10)
     fig.tight_layout()
     save(fig, "fig15_per_attack_per_seed")
 
@@ -530,18 +530,18 @@ def fig16(seed=4141):
     t_full = [float(r["t"]) for r in rows if float(r["entries"]) >= 0.98 * CAP]
     ax.axhline(CAP, color=INK2, lw=1, ls="--")
     attack_line(ax)
-    for t, lab in ((t_blk, "v5 blocks\nboth attackers"), (t_blk + 60, "60 s block\nexpires")):
+    for t, lab in ((t_blk, "FEVER blocks\nboth attackers"), (t_blk + 60, "60 s block\nexpires")):
         ax.axvline(t, color=INK2, lw=1, ls=":")
         ax.text(t + 2, CAP * 0.97, lab, fontsize=7.5, color=INK2, va="top")
     if t_full:
         ax.axvspan(min(t_full), max(t_full), color=C[7], alpha=0.12, lw=0)
-        ax.text(max(t_full) + 2, CAP * 1.03, "v5 table full: new benign flows refused", fontsize=7.5, color=C[7])
+        ax.text(max(t_full) + 2, CAP * 1.03, "FEVER table full: new benign flows refused", fontsize=7.5, color=C[7])
     ax.set_xlim(0, DUR)
     ax.set_ylim(0, CAP * 1.12)
     ax.set_xlabel("time (s); attack from 50 s")
     ax.set_ylabel("entries in s11")
     ax.legend(fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=4)
-    ax.set_title(f"Why v5 harms more than the baselines under A2 (testbed, seed {seed})")
+    ax.set_title(f"Why FEVER harms more than the baselines under A2 (testbed, seed {seed})")
     save(fig, "fig16_a2_block_expiry")
 
 

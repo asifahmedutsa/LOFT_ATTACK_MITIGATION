@@ -1,4 +1,4 @@
-"""Builds docs/ensguard_architecture.png: the current system (EnsGuard v5) on one page.
+"""Builds docs/ensguard_architecture.png: the current system (FEVER) on one page.
 Values match results/v21/exported/ens_config_v5.json, loftbench/defenses.py (EvictBlock) and
 testbed/loft_ryu_app.py. The v3 version of this figure is in git history (before 2026-11-07)."""
 import matplotlib
@@ -32,7 +32,7 @@ def arrow(x0, y0, x1, y1, col=MUTED, style="-|>", lw=1.6, ls="-"):
                                  color=col, lw=lw, linestyle=ls))
 
 
-ax.text(80, 108, "EnsGuard v5: federated detection, eviction and blocking against low-rate "
+ax.text(80, 108, "FEVER: federated detection, eviction and blocking against low-rate "
         "flow-table overflow", ha="center", va="center", fontsize=17, weight="bold", color=INK)
 ax.text(80, 104.4, "Offline: three SDN controllers build a shared CatBoost ensemble by model sharing.   "
         "Online: each controller runs the same loop on its switch every 1 s poll.",
@@ -81,7 +81,7 @@ steps = [
      "attacker refreshes)"),
     ("coral", "05  Block rule A: detector", "a host whose evictions in the last 10 s are ≥ 50, ≥ 3 × max(median host, 10)\n"
      "and ≥ 20 % of its own entries — catches attacks the model recognises (A2)"),
-    ("coral", "06  Block rule B: volume", "NEW in v5, no ML: at ≥ 90 % occupancy, a host holding > X entries and ≥ 3 × the\n"
+    ("coral", "06  Block rule B: volume", "NEW, no ML: at ≥ 90 % occupancy, a host holding > X entries and ≥ 3 × the\n"
      "median host's — catches disguised attacks the model misses (A4, E9P)"),
     ("red", "07  PortGuard fallback", "at ≥ 90 % occupancy: weighted max-min fair share of the "
      "table per access port\n(quota, trim the highest-scoring entries first) — bounds any attacker "

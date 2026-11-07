@@ -1,4 +1,4 @@
-"""Builds docs/fedvolguard_flowchart.{png,pdf}: the framework of FedVol-Guard (EnsGuard v5) as a
+"""Builds docs/fever_flowchart.{png,pdf}: the framework of FEVER (EnsGuard v5) as a
 plain journal-style flowchart, in the layout used by the related papers (detection module on the
 left, mitigation module on the right, the switch on top). Values match
 results/v21/exported/ens_config_v5.json.
@@ -114,5 +114,5 @@ label(44, 45, "No")
 ax.text(40.6, 51.3, "next poll", fontsize=9.5, style="italic", color="#555555")
 
 for ext in ("png", "pdf"):
-    fig.savefig(f"docs/fedvolguard_flowchart.{ext}", dpi=200, facecolor="white")
-print("docs/fedvolguard_flowchart.png")
+    fig.savefig(f"docs/fever_flowchart.{ext}", dpi=200, facecolor="white")
+print("docs/fever_flowchart.png")

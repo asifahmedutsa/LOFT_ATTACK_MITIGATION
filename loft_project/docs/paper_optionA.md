@@ -1,6 +1,6 @@
 # Federated Detection of Low-Rate Flow-Table Overflow: Generalization Across Controllers, and What a Real Testbed Changes
 
-*Draft, 2026-11-07 (v5 results added). Paper direction "option A" (chosen by the author). Every number comes from a
+*Draft, 2026-11-07 (FEVER results added). Paper direction "option A" (chosen by the author). Every number comes from a
 committed results file, named in brackets; figures are in `results/paper_figs/`.
 [cite] marks a missing reference; [TODO] marks open writing work. Authors and venue are
 still to be filled in.*
@@ -49,14 +49,14 @@ seen. They are evaluated in Mininet against the same attack generator.
      detector misses them in both settings.
    - Adding the trace controller as a federated client with one easy attack makes things worse:
      A4 recall stays 0 %, and unseen-attack recall falls to 14.9 %.
-4. **A preregistered fix (v5) on a clean train/test split.** With every trace model trained on
-   the first 40 % of the trace and 120 test runs on the rest, v5 (the federated CatBoost detector,
+4. **A preregistered fix (FEVER) on a clean train/test split.** With every trace model trained on
+   the first 40 % of the trace and 120 test runs on the rest, FEVER (the federated CatBoost detector,
    a floored block rule and a detector-independent volume block) has the lowest mean benign harm
    (0.49 %, against DMS-BTT 1.71 % and FTMaster 4.80 %) and halves the attack share (21.9 %
    against 41.9-45.5 %). It wins on attack share against DMS-BTT (15 of 15 paired runs) and on
    harm, decision time and attack share against our earlier versions. It does not win on harm
    against DMS-BTT and FTMaster (10 of 15 each): under the standard attack A2 they are at about
-   0 % and v5 at 1.05 %.
+   0 % and FEVER at 1.05 %.
 
 **Contributions.** A same-data detection benchmark; a preregistered testbed comparison; the
 simulator-testbed comparison; and a documented negative result. We release code and data.
@@ -113,13 +113,13 @@ The attack is low-rate by construction, so rate-based DDoS defenses do not see i
 4. **A preregistered negative result.** Adding the trace domain's controller to the federation,
    trained on its benign traffic plus one attack, fails every detection criterion fixed in
    advance (§8).
-5. **A preregistered second campaign (v5)** on a clean train/test split of the trace, which
+5. **A preregistered second campaign (FEVER)** on a clean train/test split of the trace, which
    closes most of the gap: much lower harm and attack share under the disguised attacks, and
    about equal to the best baselines under the standard attack (§9).
 6. **Code, data and figures** in the style of the related papers (§13).
 
 **What we do not claim.** EnsGuard v3 does not beat the modern ML defenses on the testbed (§6).
-v5 beats them under the disguised attacks and on attack share, but not on harm under the
+FEVER beats them under the disguised attacks and on attack share, but not on harm under the
 standard attack A2, and its gain on the disguised attacks comes largely from a rule that does
 not use the detector (§9). We report where each version is better and where it is worse.
 
@@ -574,24 +574,27 @@ for this detector.
 
 ---
 
-## 9. v5: a preregistered fix on a clean train/test split
+## 9. FEVER: a preregistered fix on a clean train/test split
+
+We call the resulting system **FEVER** (Federated Eviction and Volume-based Enforcement against
+overflow Rules). It is the fifth version of EnsGuard; run names and result files call it v5.
 
 §6-§8 leave two problems: the trace-domain models of every defense had seen the test traffic
 (each seed replays the same 5-minute capture), and no detector catches A4 or E9P on that trace.
-v5 addresses both without touching the federated detector's training data.
+FEVER addresses both without touching the federated detector's training data.
 
-### 9.1 Design (fixed before any v5 test run; `docs/v4lite_plan.md`, `docs/v5_plan.md`)
+### 9.1 Design (fixed before any FEVER test run; `docs/v4lite_plan.md`, `docs/v5_plan.md`)
 
 - **Clean split.** The trace is split into T1A (the first 40 % of its span) and T1B (the last
   60 %). A flow belongs to the part holding its first packet, so the parts share no flow. Every
   T1 model and threshold, ours and the baselines' (DMS-BTT, FTMaster), is trained or calibrated
-  on T1A; all v5 test runs replay T1B.
+  on T1A; all FEVER test runs replay T1B.
 - **Detector (v4-lite):** the D1-D3 CatBoost members of v3 only. Offline it generalizes as well
   as RF + CatBoost at about 1/5 of the scoring cost. Scoring uses an exact 8-bit oblivious-tree
   evaluator, and only entries whose counters changed since the last poll are scored.
 - **Floored block rule (v4-lite):** a host is blocked when its evictions in 10 s are at least
   3 x max(median host, 10) and at least 20 % of its own entries.
-- **Volume block (v5):** while the table is at least 90 % full, a host holding more than X
+- **Volume block (FEVER):** while the table is at least 90 % full, a host holding more than X
   entries and at least 3 x the median host's is blocked. X is 1.5 x the busiest benign host in
   T1A testbed recordings (785-800 per switch). It was adopted by a rule fixed in advance: in an
   open-loop replay of 6 T1A recordings it blocks no benign host and both attackers under A2, A4
@@ -602,7 +605,7 @@ v5 addresses both without touching the federated detector's training data.
 
 ### 9.2 Preregistered campaign
 
-Six defenses (none, EnsGuard v3, v4-lite, v5, DMS-BTT, FTMaster) x A2, A4, E9P and benign x
+Six defenses (none, EnsGuard v3, v4-lite, FEVER, DMS-BTT, FTMaster) x A2, A4, E9P and benign x
 fresh seeds 4140-4144 = 120 runs on T1B, otherwise as §4.2. The hypotheses, seeds and analysis
 script were committed before the first test run (`results/testbed_prereg_v5/preregistration.json`).
 One run (v4-lite, E9P, seed 4142) ended early and was rerun once with the same seed, as
@@ -611,7 +614,7 @@ against, Holm over the comparators of each hypothesis.
 
 **Table 6** (`results/testbed_prereg_v5/report.md`).
 
-| Hypothesis | Comparator | v5 wins / 15 | v5 mean | Comparator mean | p (Holm) | Supported |
+| Hypothesis | Comparator | FEVER wins / 15 | FEVER mean | Comparator mean | p (Holm) | Supported |
 |---|---|---|---|---|---|---|
 | H1 benign harm | DMS-BTT | 10 | 0.49 % | 1.71 % | 0.30 | no |
 | H1 benign harm | FTMaster | 10 | 0.49 % | 4.80 % | 0.30 | no |
@@ -621,7 +624,7 @@ against, Holm over the comparators of each hypothesis.
 | H4 decision time per poll | v3 | 12 | 54 ms | 127 ms | 0.018 | **yes** |
 | H8 attack share s11 | v4-lite | 12 | 21.9 % | 43.4 % | 0.018 | **yes** |
 
-- **H5, no benign host blocked by v5:** passes (0 of 20 runs; v3 blocked 6 in the same campaign).
+- **H5, no benign host blocked by FEVER:** passes (0 of 20 runs; v3 blocked 6 in the same campaign).
 - **H6, benign-only runs clean:** passes (harm 0.00 %, lost first packets 0.12 %).
 - **H7, new-connection success not more than 5 points below v3:** passes (0 of 15 pairs).
 
@@ -629,7 +632,7 @@ against, Holm over the comparators of each hypothesis.
 
 **Table 7.** Means over 5 seeds (`results/paper_figs/v5/testbed_runs.csv`, Fig. 15).
 
-| Attack | Measure | v3 | v4-lite | v5 | DMS-BTT | FTMaster |
+| Attack | Measure | v3 | v4-lite | FEVER | DMS-BTT | FTMaster |
 |---|---|---|---|---|---|---|
 | A2 | benign harm | 2.64 % | 0.13 % | 1.05 % | 0.02 % | **0.01 %** |
 | A2 | attack share s11 | 12.2 % | 11.9 % | 12.6 % | 18.7 % | **10.0 %** |
@@ -640,33 +643,33 @@ against, Holm over the comparators of each hypothesis.
 | all | lost first packets | 34.3 % | 30.5 % | **19.8 %** | 32.6 % | 27.8 % |
 | all | median decision time per poll | 123 ms | 45 ms | **13 ms** | 65 ms | 72 ms |
 
-- **A4 and E9P.** v5 has lower harm than both baselines in every seed. v5 blocks both attackers in
+- **A4 and E9P.** FEVER has lower harm than both baselines in every seed. FEVER blocks both attackers in
   all 15 attack runs; neither baseline blocks an attacker. The gain comes from the volume block:
   v4-lite, with the same detector and no volume rule, blocks no attacker under A4 or E9P (H8).
-- **A2.** The baselines' harm is about 0 % in every seed; v5 is at about 1 % in four seeds and
-  0.02 % in one. This decides H1. Fig. 16 shows the mechanism: v5 blocks both attackers about
+- **A2.** The baselines' harm is about 0 % in every seed; FEVER is at about 1 % in four seeds and
+  0.02 % in one. This decides H1. Fig. 16 shows the mechanism: FEVER blocks both attackers about
   70 s into the attack; the 60 s block expires; the returning attackers fill the table during a
   controller overload (event queue at its limit, decisions about 1 s) before the re-block, and
   benign flows are refused. In both A2 runs inspected, the table was never full before the first
   block expired (exploratory). DMS-BTT and FTMaster, trained on A2 traffic from the same network
   (T1A), delete attack entries every poll and keep the table below 2,800 entries.
-- **New users.** Under attack only 12-47 % of new connections succeed with any defense; v5 is best
+- **New users.** Under attack only 12-47 % of new connections succeed with any defense; FEVER is best
   under A2 (47 %) and level with the others under A4 and E9P. The saturated controller, not the
   table, limits them (§6.4).
 
 **Exploratory, not preregistered** (`results/testbed_prereg_v5/exploratory_close.md`): paired by
-seed, v5 minus baseline harm under A2 is +0.02 to +1.78 points; under A4 -0.03 to -5.39 points;
+seed, FEVER minus baseline harm under A2 is +0.02 to +1.78 points; under A4 -0.03 to -5.39 points;
 under E9P -1.23 to -12.57 points.
 
-### 9.4 What v5 does and does not show
+### 9.4 What FEVER does and does not show
 
 - On traffic no model was trained on, a federated detector plus a detector-independent volume
   rule beats the per-flow baselines on the disguised attacks and on attack share, and it is the
   only defense that removes the attacker. On the standard attack the baselines, trained on that
   attack in that network, remain slightly better on harm.
 - The volume rule likely carries most of the A4/E9P gain. A volume-only ablation has not been run;
-  an open-loop replay of the v5 recordings suggests it would block the attackers 100-175 s after
-  the attack starts with no benign block, later than v5 under A2 (about 70 s) [TODO: closed-loop
+  an open-loop replay of the FEVER recordings suggests it would block the attackers 100-175 s after
+  the attack starts with no benign block, later than FEVER under A2 (about 70 s) [TODO: closed-loop
   ablation, preregistered].
 - An attacker that keeps each host below X per switch is not volume-blocked [TODO: adaptive
   attacker test].
@@ -703,7 +706,7 @@ under E9P -1.23 to -12.57 points.
 1/5 of the scoring cost (§5). On the testbed, with changed-entry scoring, it cut the median
 decision time from 123 ms to 13 ms and lost first packets from 34 % to 20 % (§9, H4).
 
-**Blocks should outlast the attacker.** All of v5's A2 harm occurred after a 60 s block expired.
+**Blocks should outlast the attacker.** All of FEVER's A2 harm occurred after a 60 s block expired.
 Holding a block while the blocked host keeps sending (visible in the drop rule's counter) is the
 obvious next step; it needs its own preregistered test.
 
@@ -725,7 +728,7 @@ obvious next step; it needs its own preregistered test.
   needed for an unadjusted p < 0.05.
 - **Post-hoc analyses.** §7, the per-attack breakdowns in §6.3 and §9.3, and the A2 mechanism
   in §9.3 are exploratory. Only §6.1, §8 and §9.2 are preregistered.
-- **Untested reviewer questions for v5:** a volume-only ablation and an attacker that stays below
+- **Untested reviewer questions for FEVER:** a volume-only ablation and an attacker that stays below
   the volume limit (§9.4).
 - **Threat model.** Federated poisoning and privacy attacks on shared models are out of scope.
 
@@ -755,7 +758,7 @@ obvious next step; it needs its own preregistered test.
 | Preregistrations and reports | `results/testbed_prereg_v3/`, `results/testbed_prereg_v5/`, `docs/v4_plan.md`, `docs/v5_plan.md` |
 | Detection benchmarks | `results/e11_detect/`, `results/e11_testbed/` |
 | v4 negative result | `results/v4/` |
-| v4-lite and v5 selection | `results/v4lite/`, `results/v5/` |
+| v4-lite and FEVER selection | `results/v4lite/`, `results/v5/` |
 | Figures | `results/paper_figs/` (v3 campaign) and `results/paper_figs/v5/` (rebuilt by `testbed/paper_figs.py [--v5]`) |
 
 [TODO: the testbed run directories, about 3.6 GB, need a data archive.]
@@ -778,9 +781,9 @@ obvious next step; it needs its own preregistered test.
 | Fig. 7 | Score distribution on testbed recordings | `fig11` |
 | Table 4 | Per-attack results | §6.3 |
 | Table 5 | v4 negative result | §8 |
-| Table 6 | v5 preregistered hypotheses | §9.2 |
-| Table 7 | v5 per attack | §9.3 |
-| Fig. 8 | v5 per attack and per seed | `v5/fig15_per_attack_per_seed` |
-| Fig. 9 | v5 A2 block expiry | `v5/fig16_a2_block_expiry` |
-| Fig. 10 | v5 comparison in the related papers' format; attack share over time | `v5/fig03_comparison`, `v5/fig02_attack_share_over_time` |
+| Table 6 | FEVER preregistered hypotheses | §9.2 |
+| Table 7 | FEVER per attack | §9.3 |
+| Fig. 8 | FEVER per attack and per seed | `v5/fig15_per_attack_per_seed` |
+| Fig. 9 | FEVER A2 block expiry | `v5/fig16_a2_block_expiry` |
+| Fig. 10 | FEVER comparison in the related papers' format; attack share over time | `v5/fig03_comparison`, `v5/fig02_attack_share_over_time` |
 | Appendix | Packet-In over time, decision time, CPU and memory, table composition, block-rule sensitivity | `fig04`, `fig07`, `fig08`, `fig10`, `fig12` |
