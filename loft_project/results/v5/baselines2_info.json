@@ -1,0 +1,9 @@
+{
+ "parity_max_abs_diff": {
+  "ftop_state": 0.0,
+  "ftop_rule": 4.440892098500626e-16,
+  "flora_rule": 0.0
+ },
+ "train_rows": 365476,
+ "table_rows": 4800
+}

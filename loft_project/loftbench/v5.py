@@ -31,7 +31,7 @@ import pandas as pd  # noqa: E402
 
 from . import ml_compare as M  # noqa: E402
 from . import testbed_baselines as TB  # noqa: E402
-from .baselines import ftmaster_rule_features  # noqa: E402
+from .baselines import flora_rule_features, ftmaster_rule_features, ftop_rule_features  # noqa: E402
 from .config import DOMAINS, SimConfig, UNSEEN_VARIANTS, attack_variant  # noqa: E402
 from .data import Dataset, collect_run  # noqa: E402
 from .experiment import COLLECT_CFG, SPLITS, _train_dms  # noqa: E402
@@ -113,6 +113,37 @@ def stage_baselines():
     out = dict(parity_max_abs_diff=err, taus=taus, train_rows=int(len(tr.y)), table_rows=int(len(T)),
                val_benign_rows=int(len(ben)))
     json.dump(out, open(f"{OUT}/baselines_info.json", "w"), indent=1)
+    print(json.dumps(out, indent=1))
+    assert max(err.values()) < 1e-5, err
+
+
+def stage_baselines2():
+    """FTOP and FloRa for T1B, trained on T1A exactly as their T1 models (loftbench.testbed_baselines
+    stage_train) and as DMS-BTT and FTMaster for T1B above: same rows, same settings."""
+    from catboost import CatBoostClassifier
+    from sklearn.ensemble import RandomForestClassifier
+    from .cbjson import CatBoostJSON
+    from .cbjson import export as cb_export
+    from .treejson import export as tree_export
+    tr, _ = _t1a()
+    T = pickle.load(open(f"{OUT}/t1a_table.pkl", "rb"))
+    m = {"ftop_state": RandomForestClassifier(100, n_jobs=4, random_state=0).fit(T[:, 8:12], T[:, -1]),
+         "ftop_rule": RandomForestClassifier(100, min_samples_leaf=5, n_jobs=4, random_state=0).fit(
+             ftop_rule_features(tr.X), tr.y),
+         "flora_rule": CatBoostClassifier(iterations=300, random_seed=0, verbose=False, thread_count=4).fit(
+             flora_rule_features(tr.X), tr.y)}
+    pickle.dump(m, open(f"{OUT}/baselines2_t1a.pkl", "wb"))
+    rng = np.random.default_rng(0)
+    Tz = T[rng.choice(len(T), min(3000, len(T)), replace=False)]
+    Xz = tr.X[rng.choice(len(tr.y), 3000, replace=False)]
+    err = {"ftop_state": tree_export(m["ftop_state"], f"{EXP}/ftop_state_T1B.json", Tz[:, 8:12]),
+           "ftop_rule": tree_export(m["ftop_rule"], f"{EXP}/ftop_rule_T1B.json", ftop_rule_features(Xz))}
+    cb_export(m["flora_rule"], f"{EXP}/flora_rule_T1B.json")
+    Z = flora_rule_features(Xz)
+    err["flora_rule"] = float(np.abs(CatBoostJSON(f"{EXP}/flora_rule_T1B.json").predict_proba(Z)[:, 1]
+                                     - m["flora_rule"].predict_proba(Z)[:, 1]).max())
+    out = dict(parity_max_abs_diff=err, train_rows=int(len(tr.y)), table_rows=int(len(T)))
+    json.dump(out, open(f"{OUT}/baselines2_info.json", "w"), indent=1)
     print(json.dumps(out, indent=1))
     assert max(err.values()) < 1e-5, err
 
@@ -319,5 +350,5 @@ def stage_export():
 
 
 if __name__ == "__main__":
-    {"collect": stage_collect, "baselines": stage_baselines, "cands": stage_cands,
+    {"collect": stage_collect, "baselines": stage_baselines, "baselines2": stage_baselines2, "cands": stage_cands,
      "volume": stage_volume, "export": stage_export}[sys.argv[1]]()
