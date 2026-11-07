@@ -12,6 +12,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
+from loftbench.config import ATTACK_NAMES  # noqa: E402
 V = sys.argv[1] if len(sys.argv) > 1 else "A2"
 CAP = 3500
 ATT = {"00:00:00:00:01:05", "00:00:00:00:01:06"}
@@ -29,7 +30,7 @@ ax.set_xlabel("Time(s)")
 ax.set_ylabel("Malicious flows in the\nflow table (%)")
 ax.axvline(50, color="gray", lw=0.8, ls=":")
 ax.text(52, 93, "attack starts", fontsize=8, color="gray", va="top")
-ax.text(0.5, -0.3, f"Percentage of malicious flows in the flow table with FEVER deployed ({V} attack).",
+ax.text(0.5, -0.3, f"Percentage of malicious flows in the flow table with FEVER deployed ({ATTACK_NAMES[V]} attack).",
         transform=ax.transAxes, ha="center", va="top", fontsize=10)
 fig.tight_layout()
 for ext in ("png", "pdf"):

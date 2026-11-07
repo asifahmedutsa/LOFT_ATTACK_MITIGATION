@@ -105,14 +105,17 @@ s += [P("1. The problem: low-rate flow-table overflow (LOFT)", H1),
           "(a) A normal rule is removed 10 s after its last packet. (b) A LOFT rule receives one packet just before "
           "the timeout, so it stays. (c) Our testbed with no defense: attack rules (orange) push out normal rules "
           "(blue) until the table is full.", 1.0, 92 * mm),
-      P("We test three versions of the attack on the testbed:"),
+      P("All our attacks are the same LOFT attack with different settings, as in the related papers, which define "
+        "“attack groups” by the refresh period, the new rules per burst and the maximum number of rules. G1, G2 and "
+        "G3 are DMS-BTT’s three groups; Mimic, Spoof, Slow, Pulse and Aware change how the packets look, the source "
+        "addresses or the timing. We test three of them on the testbed:"),
       table("The attacks used on the testbed.",
             [["Attack", "What it does", "Why we use it"],
-             ["A2 (standard)", "100 new rules per burst, a burst every 5.5-9 s, one 64-byte packet per rule, "
+             ["G2 (standard)", "100 new rules per burst, a burst every 5.5-9 s, one 64-byte packet per rule, "
               "from its own address", "The attack all related papers test"],
-             ["A4 (disguised)", "Same pace, but 1-3 packets per refresh with normal-looking sizes, from a pool "
+             ["Mimic (disguised)", "Same pace, but 1-3 packets per refresh with normal-looking sizes, from a pool "
               "of addresses", "Imitates normal traffic, like rDefender's advanced attack"],
-             ["E9P (defense-aware)", "Refreshes every 2-3 s with normal-looking packets; chosen by a search as "
+             ["Aware (defense-aware)", "Refreshes every 2-3 s with normal-looking packets; chosen by a search as "
               "the hardest attack against our defenses' settings", "Similar in spirit to ALFO's adaptive attack"]],
             [0.17, 0.53, 0.30]),
       PageBreak()]
@@ -171,8 +174,8 @@ s += [P("4. How FEVER works", H1),
           "Federated training: (1) each controller trains locally, (2) uploads its model, (3) the models are "
           "combined, (4) every controller downloads the shared detector.", 0.85, 105 * mm),
       steps([
-          "<b>Three controllers with different experience.</b> D1 has seen attacks A1 and A4, D2 has seen A2 and A5, "
-          "D3 has seen A3 and A7. Nobody has seen A6 or E9P; we keep those to test new attacks.",
+          "<b>Three controllers with different experience.</b> D1 has seen attacks G1 and Mimic, D2 has seen G2 and Spoof, "
+          "D3 has seen G3 and Pulse. Nobody has seen Slow or Aware; we keep those to test new attacks.",
           "<b>Each trains a CatBoost model</b> (a fast tree-based classifier) on its own normal traffic and attacks. "
           "Each rule is described by 17 numbers (features): 11 about the connection (packet rate, gaps between "
           "packets, packet sizes), 3 about the host that created it, and 3 about the table (how full it is, how "
@@ -214,7 +217,7 @@ s += [P("4. How FEVER works", H1),
             [0.17, 0.45, 0.38]),
       P("<b>Blocking</b> means a drop rule at the host's switch port: its packets no longer reach the table or the "
         "controller. In the current version (v6) the block is <b>permanent</b>. The earlier version (v5) released "
-        "the host after 60 s, and under A2 the attackers came back and filled the table again (Section 6.3)."),
+        "the host after 60 s, and under G2 the attackers came back and filled the table again (Section 6.3)."),
       fig("docs/fever_flowchart.png", "The same loop as a flowchart (TH1 = 70 %, TH2 = 90 %).", 0.92, 110 * mm),
       PageBreak(),
       P("4.3 The 17 features used for scoring", H2),
@@ -269,18 +272,18 @@ s += [P("4. How FEVER works", H1),
       ]),
       P("Feature 12 (rules per host) is the same quantity the volume rule uses. The difference: in the detector it "
         "is one input among 17, weighed by the model; in the volume rule it decides on its own. On the testbed "
-        "the model still scores A4 and E9P rules low, because their other features look normal, which is why the "
+        "the model still scores Mimic and Aware rules low, because their other features look normal, which is why the "
         "separate volume rule is needed."),
       P("4.4 What happens during an attack", H2),
-      P("<b>Under A2 (standard).</b> The attack rules accumulate until the table passes 70 %. The detector "
-        "recognises them (D2 trained on A2), so they are evicted. Each attacker's evictions soon pass 50 in 10 s and "
+      P("<b>Under G2 (standard).</b> The attack rules accumulate until the table passes 70 %. The detector "
+        "recognises them (D2 trained on G2), so they are evicted. Each attacker's evictions soon pass 50 in 10 s and "
         "stand far above everyone else's, so block rule A blocks both attackers, about 70 s after the attack starts. "
         "Their rules disappear and, because the block is permanent, they never return."),
-      P("<b>Under A4 and E9P (disguised).</b> The attack rules look normal, so the detector scores them low and "
+      P("<b>Under Mimic and Aware (disguised).</b> The attack rules look normal, so the detector scores them low and "
         "evicts few. The table keeps filling. Once it passes 90 %, each attacker holds far more than X rules, far "
         "more than any normal host, and block rule B blocks it, about 70-125 s after the attack starts."),
       fig(f"{V6}/fig20_malicious_share_A2.png",
-          "Share of attack rules in the table with FEVER under A2 (one testbed run): it rises until both "
+          "Share of attack rules in the table with FEVER under G2 (one testbed run): it rises until both "
           "attackers are blocked, then stays near 0 %.", 0.8, 70 * mm),
       PageBreak()]
 
@@ -346,34 +349,34 @@ s += [P("6. Results", H1),
           "On the attack nobody saw, FEVER catches 51 %, the others 9-25 %.",
       ]),
       P("6.2 Testbed: FEVER against the published methods", H2),
-      table("Testbed results, mean of five runs per attack (A2, A4, E9P); FEVER with permanent blocking (v6).",
+      table("Testbed results, mean of five runs per attack (G2, Mimic, Aware); FEVER with permanent blocking (v6).",
             [["", "FEVER", "DMS-BTT", "FTMaster", "No defense"],
              ["Benign flows harmed (all attacks)", "<b>0.01 %</b>", "1.71 %", "4.80 %", "10.13 %"],
-             ["Benign flows harmed under A2", "<b>0.01 %</b>", "0.02 %", "0.01 %", "-"],
-             ["Benign flows harmed under A4", "<b>0.02 %</b>", "2.09 %", "4.16 %", "-"],
-             ["Benign flows harmed under E9P", "<b>0.00 %</b>", "3.01 %", "10.22 %", "-"],
+             ["Benign flows harmed under G2", "<b>0.01 %</b>", "0.02 %", "0.01 %", "-"],
+             ["Benign flows harmed under Mimic", "<b>0.02 %</b>", "2.09 %", "4.16 %", "-"],
+             ["Benign flows harmed under Aware", "<b>0.00 %</b>", "3.01 %", "10.22 %", "-"],
              ["Attacker share of the table", "<b>11.9 %</b>", "41.9 %", "45.5 %", "62.1 %"],
              ["Lost first packets", "<b>9.6 %</b>", "32.6 %", "27.8 %", "-"],
              ["New connections succeeding", "<b>37.3 %</b>", "23.4 %", "23.7 %", "-"],
              ["Attackers blocked", "30 of 30", "0", "0", "-"],
              ["Innocent hosts blocked", "0", "0", "0", "-"]],
             [0.38, 0.155, 0.155, 0.155, 0.155]),
-      P("FEVER is best or tied on every measure under every attack. Under A2 it ties the two published methods on "
+      P("FEVER is best or tied on every measure under every attack. Under G2 it ties the two published methods on "
         "harm and is better on everything else; under the disguised attacks it is far better."),
       fig(f"{V6P}/fig25_a2_share_over_time.png",
-          "Attacker share of the table over time under A2 (median of five runs). FEVER drops it to 0 % at about "
+          "Attacker share of the table over time under G2 (median of five runs). FEVER drops it to 0 % at about "
           "120 s and keeps it there.", 0.9, 75 * mm),
       fig(f"{V6P}/fig03_comparison.png", "Comparison under all three attacks (bar: mean; whisker: range).",
           1.0, 100 * mm),
       PageBreak(),
       P("6.3 Why permanent blocking (v5 against v6)", H2),
-      P("In the preregistered campaign (120 runs), FEVER blocked a host for only 60 s. It already won under A4 and "
-        "E9P, but lost under A2 (harm 1.05 % against 0.01-0.02 %): when the block expired, the attackers came back "
+      P("In the preregistered campaign (120 runs), FEVER blocked a host for only 60 s. It already won under Mimic and "
+        "Aware, but lost under G2 (harm 1.05 % against 0.01-0.02 %): when the block expired, the attackers came back "
         "and filled the table again. Version v6 changes only this one setting: a blocked host stays blocked, as in "
         "FTMaster, FTODefender and FloRa. The change and its acceptance test were written down before running it."),
       table("FEVER v5 (60 s block) and v6 (permanent block) on the same runs.",
             [["", "v6", "v5"],
-             ["Benign flows harmed under A2", "0.01 %", "1.05 %"],
+             ["Benign flows harmed under G2", "0.01 %", "1.05 %"],
              ["Benign flows harmed, all attacks", "0.01 %", "0.49 %"],
              ["Attacker share", "11.9 %", "21.9 %"],
              ["Lost first packets", "9.6 %", "19.8 %"],
@@ -384,9 +387,9 @@ s += [P("6. Results", H1),
           "Ablation (60 s-block version, three runs per attack): FEVER, FEVER without the volume rule, FEVER "
           "without the detector, and rDefender.", 1.0, 70 * mm),
       bullets([
-          "<b>Without the volume rule</b>, harm under A4 and E9P rises to 1.11 % and 3.89 % and the attackers are "
+          "<b>Without the volume rule</b>, harm under Mimic and Aware rises to 1.11 % and 3.89 % and the attackers are "
           "never blocked: the volume rule is what stops disguised attacks.",
-          "<b>Without the detector</b>, the A2 attackers are blocked at about 130 s instead of 71 s and keep 30 % of "
+          "<b>Without the detector</b>, the G2 attackers are blocked at about 130 s instead of 71 s and keep 30 % of "
           "the table instead of 11 %: the detector stops standard attacks faster.",
           "So the two signals cover each other's blind spot.",
       ]),
@@ -400,7 +403,7 @@ s += [P("7. What we still need to do", H1),
       P("7.1 Open points", H2),
       table("Open points.",
             [["Weak point", "What we will do"],
-             ["The v6 result is not yet a clean test: v6 was designed after seeing the A2 result and ran on the same "
+             ["The v6 result is not yet a clean test: v6 was designed after seeing the G2 result and ran on the same "
               "seeds.", "One final campaign on new seeds (4160-4164) with every method, about 160 runs (14 h)."],
              ["FTODefender, FTOP and FloRa are not yet in the testbed comparison.", "FTODefender is implemented; "
               "train it on T1A, then include all three in the final campaign."],
@@ -446,11 +449,11 @@ s += [P("7. What we still need to do", H1),
               "shared, and their predictions are averaged. Not FedAvg. No traffic leaves a network."],
              ["Why not use only the volume rule?", "Without the detector, standard attacks are blocked about 60 s "
               "later and keep three times more of the table (Section 6.4)."],
-             ["Why did v5 lose under A2?", "Its 60 s block expired, the attackers returned and refilled the table. "
+             ["Why did v5 lose under G2?", "Its 60 s block expired, the attackers returned and refilled the table. "
               "Permanent blocking fixed it."],
              ["Is permanent blocking safe?", "No innocent host was blocked in 40 runs, but the margin is small; the "
               "busy-host test will check it."],
-             ["Why are DMS-BTT and FTMaster so good under A2?", "They were trained on A2 traffic from the same network "
+             ["Why are DMS-BTT and FTMaster so good under G2?", "They were trained on G2 traffic from the same network "
               "and delete attack rules every second. Our DMS-BTT also has an added 60 s blocklist."],
              ["Is the comparison fair?", "Every method is retrained on the same training data and run on the same "
               "testbed and seeds. The numbers are not comparable with those printed in the papers, because each "

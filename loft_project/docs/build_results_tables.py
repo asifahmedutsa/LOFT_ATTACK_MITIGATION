@@ -112,7 +112,7 @@ for d, name in DEFS:
                  f(a.probe_post_success_pct.mean(), 1, True),
                  f"{int(a.hosts_blocked_attack.sum())} / {2 * len(a)}",
                  f"{int(a.hosts_blocked_benign.sum() + B[B.defense == d].hosts_blocked_benign.sum())}"])
-s.append(table("Comparison under LFTO attacks on the testbed (A2, A4 and E9P, five runs each).",
+s.append(table("Comparison under LFTO attacks on the testbed (G2, Mimic and Aware, five runs each).",
                ["Method", "Benign flows harmed", "Average attack share", "Maximum attack share", "First packets lost",
                 "New connections succeeding", "Attackers blocked", "Innocent hosts blocked"],
                rows, [0.13, 0.12, 0.125, 0.125, 0.115, 0.135, 0.12, 0.13],
@@ -128,7 +128,7 @@ for d, name in DEFS:
 s.append(table("Results under each attack.",
                ["Method", "Benign flows harmed", "", "", "Average attack share", "", ""],
                rows, [0.22, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13], best={i: "min" for i in range(1, 7)},
-               head2=["", "A2", "A4", "E9P", "A2", "A4", "E9P"], spans=[(1, 3), (4, 6)]))
+               head2=["", "G2", "Mimic", "Aware", "G2", "Mimic", "Aware"], spans=[(1, 3), (4, 6)]))
 
 rows = []
 for d, name in DEFS:
@@ -140,7 +140,7 @@ s.append(table("Service to benign users under each attack.",
                ["Method", "First packets lost", "", "", "New connections succeeding", "", ""],
                rows, [0.22, 0.13, 0.13, 0.13, 0.13, 0.13, 0.13],
                best={1: "min", 2: "min", 3: "min", 4: "max", 5: "max", 6: "max"},
-               head2=["", "A2", "A4", "E9P", "A2", "A4", "E9P"], spans=[(1, 3), (4, 6)]))
+               head2=["", "G2", "Mimic", "Aware", "G2", "Mimic", "Aware"], spans=[(1, 3), (4, 6)]))
 
 # ---- seeds 4140-4142, with rDefender and the ablation
 c = pd.read_csv("results/fever_comparison/runs.csv")
@@ -151,7 +151,7 @@ for d, name in DEFS[:3] + [("rdefender", "rDefender"), ("ensguard-v6", "FEVER")]
     rows.append([name, f(a.harm.mean(), 2, True), f(a.share.mean(), 1, True), f(a.lost.mean(), 1, True),
                  f(a.probe.mean(), 1, True), f"{int(a.att_blocked.sum())} / {2 * len(a)}",
                  f"{int(a.ben_blocked.sum() + CB[CB.defense == d].ben_blocked.sum())}"])
-s.append(table("Comparison including rDefender (A2, A4 and E9P, three runs each).",
+s.append(table("Comparison including rDefender (G2, Mimic and Aware, three runs each).",
                ["Method", "Benign flows harmed", "Average attack share", "First packets lost",
                 "New connections succeeding", "Attackers blocked", "Innocent hosts blocked"],
                rows, [0.16, 0.14, 0.14, 0.14, 0.15, 0.13, 0.14],

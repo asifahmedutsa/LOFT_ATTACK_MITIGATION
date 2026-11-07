@@ -107,6 +107,10 @@ EXPOSURE: Dict[str, Tuple[str, ...]] = {
     "D3": ("A3", "A7"),
 }
 UNSEEN_VARIANTS = ("A6",)
+# Names used in documents and figures (run names and code keep A1-A7 and E9P): G1-G3 are the
+# DMS-BTT parameter groups; E9P is "defense-aware", tuned against our earlier defenses.
+ATTACK_NAMES = {"A1": "G1", "A2": "G2", "A3": "G3", "A4": "Mimic", "A5": "Spoof", "A6": "Slow",
+                "A7": "Pulse", "E9P": "Aware"}
 
 
 def gap_variant(g):

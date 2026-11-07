@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
+from loftbench.config import ATTACK_NAMES  # noqa: E402
+
 d = pd.read_csv("results/fever_comparison/runs.csv")
 ATT = ["A2", "A4", "E9P"]
 V = [("ensguard-v5", "FEVER", "#3a6fb0", None), ("ensguard-v4lite", "FEVER without volume block", "#9ec3e6", "//"),
@@ -26,7 +28,7 @@ for ax, key, ylab, cap in ((axs[0], "harm", "Normal flows harmed (%)", "(a) Norm
         for i, v in enumerate(ATT):
             y = d[(d.defense == k) & (d.variant == v)][key].values
             ax.plot(np.full(len(y), x[i] + (j - 1) * w), y, "o", ms=2.5, color="black")
-    ax.set_xticks(x, ATT)
+    ax.set_xticks(x, [ATTACK_NAMES[v] for v in ATT])
     ax.set_ylabel(ylab)
     ax.text(0.5, -0.17, cap, transform=ax.transAxes, ha="center", va="top", fontsize=11)
 axs[0].legend(fontsize=8.5, frameon=False, loc="upper left")
