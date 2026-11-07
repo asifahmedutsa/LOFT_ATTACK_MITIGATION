@@ -1,6 +1,6 @@
 # Federated Detection of Low-Rate Flow-Table Overflow: Generalization Across Controllers, and What a Real Testbed Changes
 
-*Draft, 2026-11-07 (FEVER results added). Paper direction "option A" (chosen by the author). Every number comes from a
+*Draft, 2026-11-07 (FEVER results and FEVER with permanent blocking added). Paper direction "option A" (chosen by the author). Every number comes from a
 committed results file, named in brackets; figures are in `results/paper_figs/`.
 [cite] marks a missing reference; [TODO] marks open writing work. Authors and venue are
 still to be filled in.*
@@ -56,7 +56,11 @@ seen. They are evaluated in Mininet against the same attack generator.
    against 41.9-45.5 %). It wins on attack share against DMS-BTT (15 of 15 paired runs) and on
    harm, decision time and attack share against our earlier versions. It does not win on harm
    against DMS-BTT and FTMaster (10 of 15 each): under the standard attack A2 they are at about
-   0 % and FEVER at 1.05 %.
+   0 % and FEVER at 1.05 %, because its 60 s block expired and the attackers returned. Keeping
+   a blocked host blocked, as FTMaster, FTODefender and FloRa do, removes that harm: in a
+   follow-up on the same seeds (20 runs, exploratory) FEVER's harm is 0.01 % under every attack
+   (A2 0.01 %, against 0.01-0.02 %) and its attack share 11.9 % [TODO: final campaign on fresh
+   seeds with every method].
 
 **Contributions.** A same-data detection benchmark; a preregistered testbed comparison; the
 simulator-testbed comparison; and a documented negative result. We release code and data.
@@ -115,12 +119,13 @@ The attack is low-rate by construction, so rate-based DDoS defenses do not see i
    advance (§8).
 5. **A preregistered second campaign (FEVER)** on a clean train/test split of the trace, which
    closes most of the gap: much lower harm and attack share under the disguised attacks, and
-   about equal to the best baselines under the standard attack (§9).
+   about equal to the best baselines under the standard attack once blocks are permanent (§9).
 6. **Code, data and figures** in the style of the related papers (§13).
 
 **What we do not claim.** EnsGuard v3 does not beat the modern ML defenses on the testbed (§6).
-FEVER beats them under the disguised attacks and on attack share, but not on harm under the
-standard attack A2, and its gain on the disguised attacks comes largely from a rule that does
+FEVER beats them under the disguised attacks and on attack share. In the preregistered campaign
+it did not beat them on harm under the standard attack A2; with permanent blocking it ties them
+there, but that result is exploratory (§9.5). Its gain on the disguised attacks comes largely from a rule that does
 not use the detector (§9). We report where each version is better and where it is worse.
 
 ---
@@ -578,6 +583,7 @@ for this detector.
 
 We call the resulting system **FEVER** (Federated Eviction and Volume-based Enforcement against
 overflow Rules). It is the fifth version of EnsGuard; run names and result files call it v5.
+§9.5 adds permanent blocking (v6), the version we propose.
 
 §6-§8 leave two problems: the trace-domain models of every defense had seen the test traffic
 (each seed replays the same 5-minute capture), and no detector catches A4 or E9P on that trace.
@@ -599,6 +605,8 @@ FEVER addresses both without touching the federated detector's training data.
   T1A testbed recordings (785-800 per switch). It was adopted by a rule fixed in advance: in an
   open-loop replay of 6 T1A recordings it blocks no benign host and both attackers under A2, A4
   and E9P (`results/v5/volume.md`).
+- **Block length:** either rule blocks a host for 60 s, doubling on repeat up to 240 s (v5). In
+  v6 (§9.5) the block is permanent.
 - **Not adopted:** a local T1A model (+0.5 points of A2 recall, within the tie margin) and a univ2
   client in the federation, which cut unseen-attack recall from 51.0 % to 8.6 %, the dilution of
   §8 again (`results/v5/cands.md`).
@@ -667,12 +675,45 @@ under E9P -1.23 to -12.57 points.
   rule beats the per-flow baselines on the disguised attacks and on attack share, and it is the
   only defense that removes the attacker. On the standard attack the baselines, trained on that
   attack in that network, remain slightly better on harm.
-- The volume rule likely carries most of the A4/E9P gain. A volume-only ablation has not been run;
-  an open-loop replay of the FEVER recordings suggests it would block the attackers 100-175 s after
-  the attack starts with no benign block, later than FEVER under A2 (about 70 s) [TODO: closed-loop
-  ablation, preregistered].
+- The volume rule carries most of the A4/E9P gain. In a testbed ablation (seeds 4140-4142, 60 s
+  block; `results/fever_ablation/`), FEVER without the volume rule has A4/E9P harm 1.11 % and
+  3.89 % (FEVER 0.05 % and 0.16 %) and never blocks the attackers there. Without the detector,
+  the volume rule alone blocks the A2 attackers at about 130 s instead of 71 s and leaves them
+  30 % of the table instead of 11 % (exploratory).
 - An attacker that keeps each host below X per switch is not volume-blocked [TODO: adaptive
   attacker test].
+
+### 9.5 Permanent blocking (v6; exploratory follow-up)
+
+All of FEVER's A2 harm occurred after a block expired (Fig. 16). v6 changes one setting: a
+blocked host stays blocked, as in FTMaster, FTODefender, FloRa and ALFO-Guard. The change and its
+acceptance conditions were fixed before any v6 run (`docs/v6_plan.md`): in the simulator (T1B at
+600 pps, development seeds 2000-2002) v6 had to be no worse than v5 on harm and attack share
+under A2, A4 and E9P, block no benign host and cause no harm without an attack. It met every
+condition (`results/v6/check.md`). It then ran on the testbed on the campaign's seeds 4140-4144
+(A2, A4, E9P, benign; 20 runs), paired with the v5 runs (`results/v6/report.md`).
+
+| Attack | Measure | FEVER v6 | FEVER v5 | DMS-BTT | FTMaster |
+|---|---|---|---|---|---|
+| A2 | harm % | 0.01 | 1.05 | 0.02 | 0.01 |
+| A2 | attack share % | 5.7 | 12.6 | 18.7 | 10.0 |
+| A4 | harm % | 0.02 | 0.32 | 2.09 | 4.16 |
+| A4 | attack share % | 16.4 | 27.2 | 47.6 | 53.4 |
+| E9P | harm % | 0.00 | 0.10 | 3.01 | 10.22 |
+| E9P | attack share % | 13.4 | 26.0 | 59.3 | 73.3 |
+| All | lost first packets % | 9.6 | 19.8 | 32.6 | 27.8 |
+| All | new connections succeeding % | 37.3 | 29.8 | 23.4 | 23.7 |
+
+- Paired with v5 over the 15 attack runs, v6 has a lower attack share in 15, lower harm in 10
+  (4 equal, 1 worse) and fewer lost first packets in 13. It blocked both attackers in every attack
+  run and no benign host in 20 runs; benign-only harm is 0.00 %.
+- Under A2 the attackers are blocked about 70 s into the attack and their share stays at 0 % for
+  the rest of the run (`v6pub/fig25_a2_share_over_time`); the table never reaches its limit.
+- **Caveats.** v6 was designed after seeing the A2 result and these runs reuse the campaign's
+  seeds, so they are not a confirmatory test [TODO: final campaign on fresh seeds 4160-4164 with
+  every method]. A 300 s run cannot show the cost of blocking an innocent host for good; the
+  busiest benign host holds about 580 entries against X of about 800 [TODO: test with a busy but
+  legitimate host]. Permanent blocking is standard practice and is not a contribution.
 
 ---
 
@@ -686,8 +727,9 @@ under E9P -1.23 to -12.57 points.
 3. The reason is domain shift that the simulator already shows, not testbed artifacts (§7).
 4. Naively adding the trace domain as a client makes things worse (§8).
 5. With a clean split, a detector-independent volume rule added to the federated detector makes
-   the defense better than the per-flow baselines under disguised attacks, and about equal under
-   the standard attack (§9).
+   the defense better than the per-flow baselines under disguised attacks; with permanent blocks
+   it is also equal on harm and better on every other measure under the standard attack (§9.5,
+   exploratory).
 
 **Implications for the field.**
 - *Report exposure.* "Accuracy 99 %" on attack parameters seen in training says little about
@@ -706,9 +748,10 @@ under E9P -1.23 to -12.57 points.
 1/5 of the scoring cost (§5). On the testbed, with changed-entry scoring, it cut the median
 decision time from 123 ms to 13 ms and lost first packets from 34 % to 20 % (§9, H4).
 
-**Blocks should outlast the attacker.** All of FEVER's A2 harm occurred after a 60 s block expired.
-Holding a block while the blocked host keeps sending (visible in the drop rule's counter) is the
-obvious next step; it needs its own preregistered test.
+**Blocks should outlast the attacker.** All of FEVER's A2 harm occurred after a 60 s block expired;
+a permanent block removes it (§9.5). The price is that a wrongly blocked host stays cut off. A
+middle course, a released host limited to a small number of entries for a while, would keep the
+attacker out without cutting off a busy legitimate host; we leave it to future work.
 
 ---
 
@@ -728,8 +771,9 @@ obvious next step; it needs its own preregistered test.
   needed for an unadjusted p < 0.05.
 - **Post-hoc analyses.** §7, the per-attack breakdowns in §6.3 and §9.3, and the A2 mechanism
   in §9.3 are exploratory. Only §6.1, §8 and §9.2 are preregistered.
-- **Untested reviewer questions for FEVER:** a volume-only ablation and an attacker that stays below
-  the volume limit (§9.4).
+- **Untested reviewer questions for FEVER:** an attacker that stays below the volume limit (§9.4),
+  and a busy legitimate host under permanent blocking (§9.5). Runs last 300 s, so the long-term
+  cost of permanent blocking is not measured.
 - **Threat model.** Federated poisoning and privacy attacks on shared models are out of scope.
 
 ---
@@ -755,11 +799,11 @@ obvious next step; it needs its own preregistered test.
 |---|---|
 | Simulator and detectors | `loftbench/` |
 | Ryu application and testbed scripts | `testbed/` |
-| Preregistrations and reports | `results/testbed_prereg_v3/`, `results/testbed_prereg_v5/`, `docs/v4_plan.md`, `docs/v5_plan.md` |
+| Preregistrations and reports | `results/testbed_prereg_v3/`, `results/testbed_prereg_v5/`, `docs/v4_plan.md`, `docs/v5_plan.md`, `docs/v6_plan.md`, `results/v6/` |
 | Detection benchmarks | `results/e11_detect/`, `results/e11_testbed/` |
 | v4 negative result | `results/v4/` |
 | v4-lite and FEVER selection | `results/v4lite/`, `results/v5/` |
-| Figures | `results/paper_figs/` (v3 campaign) and `results/paper_figs/v5/` (rebuilt by `testbed/paper_figs.py [--v5]`) |
+| Figures | `results/paper_figs/` (v3 campaign), `results/paper_figs/v5/` and `results/paper_figs/v6pub/` (rebuilt by `testbed/paper_figs.py [--v5 \| --v6 --pub]`) |
 
 [TODO: the testbed run directories, about 3.6 GB, need a data archive.]
 
@@ -785,5 +829,7 @@ obvious next step; it needs its own preregistered test.
 | Table 7 | FEVER per attack | §9.3 |
 | Fig. 8 | FEVER per attack and per seed | `v5/fig15_per_attack_per_seed` |
 | Fig. 9 | FEVER A2 block expiry | `v5/fig16_a2_block_expiry` |
-| Fig. 10 | FEVER comparison in the related papers' format; attack share over time | `v5/fig03_comparison`, `v5/fig02_attack_share_over_time` |
+| Fig. 10 | FEVER comparison in the related papers' format; attack share over time | `v6pub/fig03_comparison`, `v6pub/fig02_attack_share_over_time` |
+| Table 8 | FEVER v6 against v5 and the baselines | §9.5 |
+| Fig. 11 | Attack share over time under A2, FEVER v6 | `v6pub/fig25_a2_share_over_time` |
 | Appendix | Packet-In over time, decision time, CPU and memory, table composition, block-rule sensitivity | `fig04`, `fig07`, `fig08`, `fig10`, `fig12` |
