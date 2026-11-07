@@ -83,3 +83,59 @@ Rule (same measures, thresholds and test rows as above):
 2. Otherwise federated XGBoost (bagging) stays FEVER's detector.
 Also reported: its agreement with pooled XGBoost (mean absolute probability difference on the T1B
 test rows), and the bytes exchanged per tree.
+
+## Added 8 November: confirmation of the lossless model, and its deployment
+
+*Written and committed before any of the data below was collected or any model below trained.
+The first lossless result (section above) was chosen and reported on test seeds 3000-3002 and
+under a rule written after the pooled result was known; it is therefore treated as exploratory,
+and this section is the confirmatory test.*
+
+### Design
+- **Fresh test seeds 3003-3005** (T1B at 600 pps and UH, all eight attacks and benign). Seeds
+  3000-3002 are not used again. Thresholds as before (0.1 % of the network's benign rows, 2000-2002).
+- **Three training replicates**, each with its own training seeds: R0 = 1000-1004 (the existing
+  data), R1 = 1005-1009, R2 = 1010-1014. Model seed = replicate number. (XGBoost without
+  subsampling is deterministic given its data, so replicates differ by data, not only by seed.)
+- **Three attack placements** on the same three networks, so the result does not hinge on which
+  controller saw which attack:
+
+  | Placement | C1 (univ2 pt0) | C2 (univ2 pt3) | C3 (bigFlows T1A) |
+  |---|---|---|---|
+  | P1 (as before) | A1, A4 | A2, A5 | A3, A7 |
+  | P2 | A2, A5 | A3, A7 | A1, A4 |
+  | P3 | A3, A7 | A1, A4 | A2, A5 |
+
+  A6 and E9P stay unseen. On T1B, "seen locally" is C3's pair and "seen only by another
+  controller" is the other four, per placement.
+- 9 training sets (3 placements x 3 replicates). On each: local only (C3), one-shot sharing
+  (CatBoost), pooled XGBoost, federated XGBoost bagging (Flower, 100 x 1 tree), FedProx (Flower),
+  lossless federated XGBoost. Same settings as above.
+
+### Hypotheses (T1B, fresh test seeds; score as above)
+- H1: lossless score >= bagging score + 2 points.
+- H2: lossless T1B benign false-alarm rate <= 0.2 %.
+- The lossless model stays FEVER's detector if H1 and H2 both hold in at least 8 of the 9 sets;
+  otherwise federated XGBoost (bagging) becomes FEVER's detector again.
+- Reported, not tested: lossless minus pooled XGBoost score; per-attack recall (mean and range
+  over the 9 sets); UH results, including FedProx's recall on E9P, whatever they show.
+
+### Robustness and cost
+- Dropped controller: lossless training with a checkpoint every 50 trees; one worker is killed
+  after the checkpoint at 150 trees, all workers restart from it. Passes if the final model's
+  probabilities match the uninterrupted model within 1e-6 on the T1B test rows.
+- Traffic: loopback bytes during training minus the idle loopback rate measured over 30 s just
+  before; reported with the analytic histogram size.
+
+### Deployment (testbed controller), development seeds only
+- The deployed detector is the lossless model of P1 / R0 (results/realfl/fedxgb_hist.json),
+  exported to the controller's tree JSON (loftbench/treejson.py, parity < 1e-4).
+- tau: 0.1 % of T1A benign rows, seeds 2000-2002 (as for every detector above).
+- Check (simulator, T1B at 600 pps, seeds 2000-2002, as the v6 check): FEVER with the new
+  detector against FEVER v6 (CatBoost), all other settings unchanged. Passes if for A2, A4 and
+  E9P harm <= v6 + 0.1 points and attack occupancy <= v6 + 2 points, no benign host is blocked,
+  and benign-only harm <= 0.1 %.
+- If it fails: rule A re-tuned on the same seeds over n_min {30, 50, 80} x frac_min {0.1, 0.2,
+  0.3}; the passing setting with the lowest mean attack occupancy is kept. If none passes, the
+  testbed keeps the v6 detector and the federated model is reported offline only.
+- Final confirmation of the whole system is the testbed campaign on seeds 4160-4162.
