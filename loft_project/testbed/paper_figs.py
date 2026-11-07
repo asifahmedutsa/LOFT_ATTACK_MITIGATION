@@ -68,6 +68,21 @@ def use_v5():
     SHOW = ["none", "ftmaster", "dms-btt", "ensguard", "ensguard-v5"]
     NAME.update({"ensguard": "EnsGuard v3", "ensguard-v4lite": "EnsGuard v4-lite", "ensguard-v5": "FEVER"})
 
+
+def published_only():
+    """With --v5 --pub: FEVER against the published methods only (no defense, FTMaster, DMS-BTT), into
+    results/paper_figs/v5pub/."""
+    global DEFS, SHOW, OUT
+    DEFS = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
+    SHOW = ["none", "ftmaster", "dms-btt", "ensguard-v5"]
+    OUT = "results/paper_figs/v5pub"
+    # Journal style: the explanation goes in the caption, so long in-figure titles are dropped.
+    import matplotlib.axes
+    import matplotlib.figure
+    matplotlib.figure.Figure.suptitle = lambda self, *a, **k: None
+    _st = matplotlib.axes.Axes.set_title
+    matplotlib.axes.Axes.set_title = lambda self, t="", *a, **k: _st(self, t if len(str(t)) <= 40 else "", *a, **k)
+
 # Reference categorical palette (dataviz skill), fixed order; neutrals for context marks.
 C = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 INK, INK2, GRID, NEUTRAL, FREE = "#0b0b0b", "#52514e", "#e4e3df", "#9a9993", "#d9d8d3"
@@ -493,7 +508,7 @@ def fig12():
 # ---------------------------------------------------------------- v5 campaign only
 def fig15(df):
     """Per attack: benign harm and attack share, mean bar plus one dot per seed."""
-    show = ["none", "ensguard", "ensguard-v4lite", "ensguard-v5", "dms-btt", "ftmaster"]
+    show = DEFS
     fig, axs = plt.subplots(2, 3, figsize=(12, 6.2))
     x = np.arange(len(show))
     for j, v in enumerate(ATTACKS):
@@ -550,6 +565,9 @@ def main():
     if "--v5" in only:
         only.discard("--v5")
         use_v5()
+        if "--pub" in only:
+            only.discard("--pub")
+            published_only()
         os.makedirs(OUT, exist_ok=True)
         want = lambda n: not only or n in only  # noqa: E731
         for n, f in (("01", fig01), ("02", fig02), ("04", fig04), ("10", fig10), ("07", fig07), ("16", fig16)):
