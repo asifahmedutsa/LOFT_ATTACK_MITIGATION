@@ -1,5 +1,5 @@
-"""FEVER ablation (docs/fever_ablation_plan.md): FEVER, FEVER without the volume block and FEVER
-without the detector, on the seeds all three have.
+"""FEVER ablation (docs/fever_ablation_plan.md): FEVER, FEVER without the volume block, FEVER
+without the detector and rDefender, on the seeds all four have.
 
     python3 testbed/analyze_ablation.py      # writes results/fever_ablation/{runs.csv, report.md}
 """
@@ -11,7 +11,7 @@ R = os.path.expanduser("~/loft-runs")
 OUT = "results/fever_ablation"
 ATTACKS = ["A2", "A4", "E9P"]
 VARS = [("ensguard-v5", "FEVER"), ("ensguard-v4lite", "FEVER without volume"),
-        ("ensguard-v5-noml", "FEVER without ML")]
+        ("ensguard-v5-noml", "FEVER without ML"), ("rdefender", "rDefender")]
 KEYS = ["benign_harmed_pct", "attack_share_avg_pct_s11", "benign_packet_in_lost_pct", "probe_post_success_pct",
         "hosts_blocked_attack", "hosts_blocked_benign", "first_attack_block_s", "decision_ms_mean"]
 

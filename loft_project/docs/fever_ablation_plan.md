@@ -13,6 +13,7 @@ Does each of the two main parts add something on the real testbed?
 | FEVER | ensguard-v5 | yes | yes | v5 campaign (reused) |
 | FEVER without volume | ensguard-v4lite | yes | no | v5 campaign (reused) |
 | FEVER without ML | ensguard-v5-noml | no | yes | **new runs** |
+| rDefender (published, no ML) | rdefender | no | per-port occupancy (ATOS), random deletion | **new runs** |
 
 FEVER without ML keeps the volume block (same X per switch) and PortGuard; with no detector,
 nothing is evicted by score, block rule A never fires, and PortGuard trims the lowest packet
@@ -22,7 +23,9 @@ reused runs and the new runs differ only in the defense.
 ## Runs
 
 T1B, tree3, benign scale 0.5, 300 s, attack at 50 s; A2, A4, E9P and benign x seeds 4140-4142
-= 12 new runs (about 65 min). Seeds 4143-4144 can be added later with
+x {FEVER without ML, rDefender} = 24 new runs (about 2 h 10 min). rDefender was added on
+2026-11-07, still before any ablation run, at the user's request: it is the closest published
+defense to the volume block (per-port occupancy, no ML). Seeds 4143-4144 can be added later with
 `ABL_SEEDS="4143 4144"`; the analysis then uses every seed that all three variants have.
 
 ## Analysis (testbed/analyze_ablation.py, written before the runs)
@@ -39,4 +42,6 @@ Reading, fixed in advance:
   FEVER-without-volume in most A4/E9P pairs (already seen in the v5 campaign, H8).
 - **The detector is redundant** if FEVER-without-ML matches FEVER (within 0.1 point of harm and
   2 points of attack share) under every attack. This would be reported as such.
+- **Against rDefender:** FEVER and FEVER-without-ML are compared with it on harm and attack share
+  per attack, with paired wins, as for the ablations.
 - Any benign host blocked by FEVER-without-ML is reported.
