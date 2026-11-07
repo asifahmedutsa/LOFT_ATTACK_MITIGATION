@@ -15,6 +15,12 @@ A6 (Slow) and E9P (Aware) are trained on by no one.
 The univ2 replay rate is set, before any attack run, so that its benign-only table occupancy
 (mean entries over 60-240 s, seeds 2000-2002) is within 15 % of T1A at 1,200 pps.
 
+**Amended 8 November, after the benign-only calibration and before any attack run.** univ2 is a
+much lighter network: at 6,000 pps its parts hold 716-835 entries against T1A's 1,681, and matching
+T1A would mean replaying univ2 faster than it was captured. Each univ2 part is therefore replayed
+at its own captured rate (pt0 11,178 pps, pt3 10,226 pps, pt6 9,246 pps), holding 1,370, 1,149 and
+1,025 entries; the networks differ in load, as real networks do.
+
 ## Data
 
 - Training rows: each controller's own network, its attacks and benign only, seeds 1000-1004

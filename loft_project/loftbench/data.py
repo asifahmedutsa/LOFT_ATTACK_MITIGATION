@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .config import DOMAINS, VARIANTS, SimConfig
+from .config import DOMAINS, VARIANTS, SimConfig, attack_variant
 from .sim import run_episode
 from .trace import TRACE_DOMAIN_IDX, TRACE_DOMAINS
 from .traffic import build_traffic
@@ -54,13 +54,14 @@ class Dataset:
 
 
 def run_id_of(domain, variant, seed):
-    return profile_of(domain)[1] * 10_000_000 + (0 if variant is None else int(variant[1:])) * 100_000 + seed
+    k = 0 if variant is None else int(variant[1:]) if variant[1:].isdigit() else 9   # E9P -> 9
+    return profile_of(domain)[1] * 10_000_000 + k * 100_000 + seed
 
 
 def collect_run(domain, variant, seed, cfg: SimConfig, frac=0.03):
     prof, idx = profile_of(domain)
-    tr = build_traffic(prof, idx, VARIANTS[variant] if variant else None, seed, cfg.duration,
-                       cfg.attack_start)
+    att = None if not variant else VARIANTS[variant] if variant in VARIANTS else attack_variant(variant)
+    tr = build_traffic(prof, idx, att, seed, cfg.duration, cfg.attack_start)
     rid = run_id_of(domain, variant, seed)
     rng = np.random.default_rng(rid)
     rows_X, rows_d, rows_y, rows_t, states = [], [], [], [], []

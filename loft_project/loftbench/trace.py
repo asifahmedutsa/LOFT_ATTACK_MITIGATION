@@ -47,10 +47,15 @@ TRACE_DOMAINS = {
                         window=(0.0, 0.4)),
     "T1B": TraceProfile("T1B-bigflows-last-60pct", "bigflows.npz", 1200.0, anchor="private",
                         window=(0.4, 1.0)),
+    # Real-traffic federated training (docs/realfl_plan.md): three univ2 parts, each the first
+    # 3,000,000 packets of one capture file, replayed at its own captured rate.
+    "U1": TraceProfile("U1-univ2-pt0", "univ2_pt0.npz", 11178.0),
+    "U2": TraceProfile("U2-univ2-pt3", "univ2_pt3.npz", 10226.0),
+    "UH": TraceProfile("UH-univ2-pt6", "univ2_pt6.npz", 9246.0),
 }
 # After D1-D3, for attacker address ranges; T1A and T1B are T1's network (same hosts, same
 # attacker addresses), only the replayed part of the capture differs.
-TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5, "T1A": 3, "T1B": 3}
+TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5, "T1A": 3, "T1B": 3, "U1": 6, "U2": 7, "UH": 8}
 
 
 @lru_cache(maxsize=4)
