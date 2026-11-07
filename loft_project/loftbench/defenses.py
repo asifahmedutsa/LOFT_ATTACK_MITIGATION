@@ -410,7 +410,7 @@ class EvictBlock(Defense):
     def __init__(self, model, tau, feature_idx=None, name="evictblock", rho=0.5, h_crit=0.90,
                  target=0.80, window_s=10.0, n_min=20, f_min=0.5, block_s=30.0, exempt=(),
                  m0=1.0, frac_min=0.0, score_changed_only=False, vol_x=None, vol_k=3.0,
-                 vol_rho=0.9):
+                 vol_rho=0.9, permanent=False):
         self.model, self.tau, self.feature_idx, self.name = model, tau, feature_idx, name
         self.rho, self.h_crit, self.target = rho, h_crit, target
         self.window_s, self.n_min, self.f_min, self.block_s = window_s, n_min, f_min, block_s
@@ -426,6 +426,8 @@ class EvictBlock(Defense):
         # a host holding more than vol_x entries and >= vol_k x the median host's is blocked,
         # whatever the detector says. vol_x is calibrated per switch on its own benign traffic.
         self.vol_x, self.vol_k, self.vol_rho = vol_x, vol_k, vol_rho
+        # v6 (docs/v6_plan.md): a blocked host is never released.
+        self.permanent = permanent
         self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
         # model None: no detector (the FEVER-without-ML ablation); nothing is evicted by score,
@@ -496,7 +498,8 @@ class EvictBlock(Defense):
         new_block[self.exempt] = False
         for q in np.flatnonzero(new_block):
             self.n_blocks[q] += 1
-            self.blocked_until[q] = t + min(self.block_s * 2 ** (self.n_blocks[q] - 1), self.MAX_BLOCK_S)
+            self.blocked_until[q] = np.inf if self.permanent else \
+                t + min(self.block_s * 2 ** (self.n_blocks[q] - 1), self.MAX_BLOCK_S)
             self.blocks.append((t, int(q)))
         gone = flag | (self.blocked_until[p] > t)
         return fids[gone], None

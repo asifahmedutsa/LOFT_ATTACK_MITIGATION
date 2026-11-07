@@ -87,7 +87,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
-            "ftodefender")
+            "ftodefender", "ensguard-v6")
 
 
 def ip2int(s):
@@ -160,14 +160,15 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
-    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml"):
+    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
         # block rule, from ens_config_v4lite.json. ensguard-v5-noml: FEVER without the detector
         # (ablation): the volume block and PortGuard (trimming by packet rate) only.
         cfile = {"ensguard": "ens_config.json", "ensguard-v4lite": "ens_config_v4lite.json",
-                 "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json"}[name]
+                 "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json",
+                 "ensguard-v6": "ens_config_v6.json"}[name]
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)
@@ -176,7 +177,8 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                         f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
                         m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
                         score_changed_only=bool(ec.get("score_changed_only", False)),
-                        vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch))
+                        vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch),
+                        permanent=bool(b.get("permanent", False)))
         return PortGuard(eb, name=name, mode="full", **{k: pg[k] for k in pg if k != "mode"})
     if name == "portguard":
         return PortGuard(None, name=name, **{k: pg[k] for k in pg if k != "mode"})
