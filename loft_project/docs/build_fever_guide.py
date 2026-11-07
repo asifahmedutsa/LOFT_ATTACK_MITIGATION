@@ -87,7 +87,7 @@ def table(cap, rows, widths, head=None):
 V6, V6P = "results/paper_figs/v6", "results/paper_figs/v6pub"
 s = [P("FEVER: a plain explanation", TITLE),
      P("Federated Eviction and Volume-based Enforcement against overflow Rules. Notes for the supervisor "
-       "meeting, 7 November 2026.", SUB)]
+       "meeting, 7 November 2026 (updated: features, real data and scaling plan).", SUB)]
 
 # ---------------------------------------------------------------- 1
 s += [P("1. The problem: low-rate flow-table overflow (LOFT)", H1),
@@ -176,7 +176,7 @@ s += [P("4. How FEVER works", H1),
           "<b>Each trains a CatBoost model</b> (a fast tree-based classifier) on its own normal traffic and attacks. "
           "Each rule is described by 17 numbers (features): 11 about the connection (packet rate, gaps between "
           "packets, packet sizes), 3 about the host that created it, and 3 about the table (how full it is, how "
-          "fast it changes).",
+          "fast it changes). Section 4.3 lists them.",
           "<b>Models are shared, data is not.</b> The shared detector runs all three models on a rule and takes the "
           "average of their attack probabilities. If any one controller has seen this kind of attack, its model "
           "gives a high score and lifts the average. (This is model sharing; it is not FedAvg, which averages the "
@@ -217,7 +217,61 @@ s += [P("4. How FEVER works", H1),
         "the host after 60 s, and under A2 the attackers came back and filled the table again (Section 6.3)."),
       fig("docs/fever_flowchart.png", "The same loop as a flowchart (TH1 = 70 %, TH2 = 90 %).", 0.92, 110 * mm),
       PageBreak(),
-      P("4.3 What happens during an attack", H2),
+      P("4.3 The 17 features used for scoring", H2),
+      P("Every rule in the table is described by 17 numbers. All of them come from what any OpenFlow 1.3 "
+        "controller already sees: each rule's packet and byte counters, its age and its source address, plus the "
+        "controller's own memory of earlier polls. No packet contents are inspected and no extra hardware is "
+        "needed. The features sit at three levels: the rule itself, the host that created it, and the whole "
+        "table (loftbench/features.py)."),
+      table("The 17 features, their level, and where similar features appear.",
+            [["#", "Feature", "Level", "In plain words", "Similar feature in"],
+             ["1", "log_pkts", "Rule", "How many packets the rule has matched", "all ML papers"],
+             ["2", "log_bytes", "Rule", "How many bytes it has matched", "all ML papers"],
+             ["3", "log_dur", "Rule", "How long the rule has existed", "all ML papers"],
+             ["4", "mean_size", "Rule", "Average packet size", "FTMaster, FTOP, FTODefender, DMS-BTT"],
+             ["5", "log_rate", "Rule", "Packets per second", "FTOP, FloRa"],
+             ["6", "log_pit", "Rule", "Average time between packets", "DMS-BTT (PIT), FTMaster, FTODefender"],
+             ["7", "log_dpkts", "Rule", "Packets since the last poll (1 s ago)", "ours"],
+             ["8", "idle_polls", "Rule", "Seconds since the rule last received a packet", "ours"],
+             ["9", "active_ratio", "Rule", "Share of polls in which the rule received packets", "ours"],
+             ["10", "gap_cv", "Rule", "How regular the gaps between its packets are", "FloRa (arrival pattern)"],
+             ["11", "gap_mean", "Rule", "Average gap between bursts of activity", "FloRa (arrival pattern)"],
+             ["12", "src_entries", "Host", "How many rules the same host holds", "ours, per rule"],
+             ["13", "src_new", "Host", "How many rules that host created in the last 10 s", "ours, per rule"],
+             ["14", "src_small_frac", "Host", "Share of that host's rules with at most 3 packets", "ours"],
+             ["15", "occupancy", "Table", "How full the table is", "FTMaster, DMS-BTT (state)"],
+             ["16", "install_rate", "Table", "New rules per second in the last 5 s", "ours"],
+             ["17", "table_apit", "Table", "Average time between packets over all rules", "DMS-BTT (APIT)"]],
+            [0.05, 0.15, 0.08, 0.42, 0.30]),
+      P("<b>Why three levels.</b> One rule on its own often looks harmless. Rule-level features say how the rule "
+        "behaves; host-level features say what its owner is doing (a host creating hundreds of tiny rules is "
+        "suspicious); table-level features say whether the table is under pressure. A LOFT rule typically has "
+        "one small packet, then a long silence of about 7 s (features 1, 4, 8, 9), comes from a host with many "
+        "small new rules (12-14), and appears while the table is filling quickly (15, 16)."),
+      P("<b>Is there novelty in the features?</b> Only a little, and the features should not be presented as a "
+        "main contribution. Most rule-level features (1-6, 10-11) and two table-level ones (15, 17) appear in "
+        "earlier papers. What is different:"),
+      bullets([
+          "<b>Host context attached to every rule</b> (12-14). FTMaster and FTODefender measure the sources only "
+          "for the whole table (the entropy of source addresses, new sources), to decide <i>whether</i> an attack "
+          "is happening. FEVER gives each rule its own host's numbers, so the model can tell <i>which</i> rules "
+          "belong to an attacking host.",
+          "<b>Keep-alive pattern from the poll history</b> (7-9): how long a rule has been silent and how often it "
+          "is active. LOFT rules are kept alive by one packet just before the timeout, and these features describe "
+          "that directly. We have not seen them in the related papers we reimplemented.",
+          "<b>One model sees all three levels at once.</b> DMS-BTT, FTMaster and FTOP work in two separate stages "
+          "(a table-level check, then a rule-level classifier). FEVER scores each rule with its rule, host and "
+          "table features together.",
+          "<b>Features that transfer between networks</b>, which federation needs: every controller must compute "
+          "exactly the same features, and a model trained in one network must work in another. Counts are "
+          "log-scaled and table features are relative to the table size, so the shared models do not depend on one "
+          "network's table size or traffic volume.",
+      ]),
+      P("Feature 12 (rules per host) is the same quantity the volume rule uses. The difference: in the detector it "
+        "is one input among 17, weighed by the model; in the volume rule it decides on its own. On the testbed "
+        "the model still scores A4 and E9P rules low, because their other features look normal, which is why the "
+        "separate volume rule is needed."),
+      P("4.4 What happens during an attack", H2),
       P("<b>Under A2 (standard).</b> The attack rules accumulate until the table passes 70 %. The detector "
         "recognises them (D2 trained on A2), so they are evicted. Each attacker's evictions soon pass 50 in 10 s and "
         "stand far above everyone else's, so block rule A blocks both attackers, about 70 s after the attack starts. "
@@ -264,6 +318,20 @@ s += [P("5. How we tested", H1),
              ["Decision time", "Time the controller needs per poll", "lower"],
              ["Innocent hosts blocked", "Normal users wrongly cut off", "must be 0"]],
             [0.27, 0.53, 0.20]),
+      P("5.3 What is real and what is generated", H2),
+      table("Real and generated parts of the experiments.",
+            [["Part", "Real or generated", "Note"],
+             ["Switch and controller software (Open vSwitch, Ryu, OpenFlow 1.3)", "Real", "The software used in "
+              "practice and by the Tang et al. papers; runs in Mininet on one laptop"],
+             ["Normal traffic on the testbed", "Real", "bigFlows, a real network capture (368 MB), replayed; "
+              "split by time into training (40 %) and test (60 %) parts"],
+             ["Attack traffic", "Generated", "No public LOFT dataset exists; every related paper generates its "
+              "attacks too"],
+             ["The three federated training networks (D1-D3)", "Simulated", "Built from traffic models in our "
+              "simulator; to be replaced by real traces (Section 7.2)"],
+             ["Federation", "Offline", "Models are trained and shared before the experiment, then loaded by the "
+              "controller; to be run live between controllers (Section 7.2)"]],
+            [0.38, 0.17, 0.45]),
       PageBreak()]
 
 # ---------------------------------------------------------------- 6
@@ -329,6 +397,7 @@ s += [P("6. Results", H1),
 
 # ---------------------------------------------------------------- 7
 s += [P("7. What we still need to do", H1),
+      P("7.1 Open points", H2),
       table("Open points.",
             [["Weak point", "What we will do"],
              ["The v6 result is not yet a clean test: v6 was designed after seeing the A2 result and ran on the same "
@@ -348,8 +417,29 @@ s += [P("7. What we still need to do", H1),
              ["Narrow scope: one laptop, one trace, one topology, five seeds, 300 s runs.", "A second trace as a "
               "separate test network; more seeds; state it in the limitations."]],
             [0.52, 0.48]),
-      P("Target venue: NetSoft 2027 (deadline around late January 2027)."),
-      P("8. Questions to expect", H1),
+      P("7.2 Plan to make it scalable and use more real data", H2),
+      table("Scaling plan.",
+            [["Step", "What we will do", "What it shows"],
+             ["1 More real data", "Add univ2 (the university data-centre trace used by FTOP, already downloaded) as "
+              "a second test network. Train the three federated controllers on different real traces (bigFlows, "
+              "univ2, CAIDA or MAWI backbone traces) instead of simulated networks.", "That the results hold on real "
+              "traffic from several networks, not one capture"],
+             ["2 Live federation", "Run three Ryu controllers, each with its own Mininet network, that train "
+              "locally and exchange models over the network during the experiment. Measure the traffic this costs "
+              "(each model is about 1 MB) and grow from 3 to 5 and 10 controllers.", "That federation works as a "
+              "running system and scales with the number of controllers"],
+             ["3 Larger networks", "Fat-tree and larger tree topologies with more switches and hosts; table sizes "
+              "from 1,000 to 10,000 rules; other idle timeouts; higher traffic rates.", "That FEVER is not tied to "
+              "one small topology or table size"],
+             ["4 Better hardware", "Move from the laptop to a lab server or cloud machines, with the controller on "
+              "its own machine; if available, a physical OpenFlow switch or Raspberry Pis (as FloRa used).",
+              "Results without one overloaded laptop; closer to a real deployment"],
+             ["5 Stronger tests", "Final campaign on new seeds with every method; longer runs; an attacker spread "
+              "over many hosts; a busy but legitimate host.", "A clean, confirmatory result and the limits of the "
+              "volume rule"]],
+            [0.17, 0.53, 0.30]),
+      P("Before the NetSoft deadline (late January 2027), steps 5, 1 and 2 are feasible; steps 3 and 4 depend on lab "
+        "resources and fit the thesis after the paper."),
       table("Likely questions and short answers.",
             [["Question", "Answer"],
              ["Is this really federated learning?", "It is federated model sharing: models are trained locally and "
@@ -367,7 +457,7 @@ s += [P("7. What we still need to do", H1),
               "paper uses its own setup."],
              ["What is new compared with rDefender?", "rDefender limits each port's share but never finds or blocks "
               "the attacker. FEVER identifies the attacking host, by detector or by volume, and removes it."]],
-            [0.34, 0.66]),
+            [0.34, 0.66], head="8. Questions to expect"),
       table("Glossary.",
             [["Word", "Meaning"],
              ["Flow table / rule", "The switch's list of forwarding instructions, one per connection"],
