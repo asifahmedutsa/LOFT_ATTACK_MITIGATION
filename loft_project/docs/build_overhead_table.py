@@ -49,15 +49,26 @@ base_idle = ben[ben.defense == "none"].cpu_pct.mean()
 rows = []
 for k, name in NAME:
     a, b = att[att.defense == k], ben[ben.defense == k]
-    rows.append([name, f"{b.cpu_pct.mean():.1f} %", f"{b.cpu_pct.mean() - base_idle:+.1f} %" if k != "none" else "-",
-                 f"{a.cpu_pct.mean():.1f} %", f"{a.mem_mb.mean():.0f}",
-                 f"{a.mem_mb.mean() - base_mem:+.0f}" if k != "none" else "-", f"{a.decision_ms_median.mean():.0f}"])
-s = [table("<b>Table 1</b><br/>System overhead measured on the same testbed.",
-           ["Method", "CPU, no attack", "CPU added, no attack", "CPU under attack", "Peak memory (MB)",
-            "Memory added (MB)", "Decision time per poll (ms)"],
-           rows, [0.13, 0.13, 0.15, 0.14, 0.14, 0.14, 0.17],
-           "Controller process (Ryu), sampled every 1 s. No attack: 5 runs; under attack: A2, A4 and E9P x 5 runs. "
-           "Under attack the controller saturates one core with or without a defense.")]
+    rows.append([name, f"{b.cpu_pct.mean():.1f}", f"{b.cpu_pct.mean() - base_idle:+.1f}" if k != "none" else "-",
+                 f"{a.cpu_pct.mean():.1f}",
+                 f"{a.mem_mb.mean():.0f}", f"{a.mem_mb.mean() - base_mem:+.0f}" if k != "none" else "-",
+                 f"{a.decision_ms_median.mean():.0f}"])
+c = lambda t: Paragraph(f"<b>{t}</b>", ParagraphStyle("h", parent=S["cell"], alignment=1))  # noqa: E731
+v = lambda t: Paragraph(str(t), ParagraphStyle("v", parent=S["cell"], alignment=1))  # noqa: E731
+data = [[c("Method"), c("CPU usage (%)"), "", "", c("Memory (MB)"), "", c("Time per decision (ms)")],
+        ["", c("No attack"), c("Increase over no defense"), c("Under attack"), c("Peak"),
+         c("Increase over no defense"), ""]]
+data += [[Paragraph(r[0], S["cell"])] + [v(x) for x in r[1:]] for r in rows]
+t1 = Table(data, colWidths=[w * W for w in (0.14, 0.12, 0.16, 0.13, 0.11, 0.16, 0.18)])
+t1.setStyle(TableStyle([("SPAN", (1, 0), (3, 0)), ("SPAN", (4, 0), (5, 0)), ("SPAN", (0, 0), (0, 1)),
+                        ("SPAN", (6, 0), (6, 1)),
+                        ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
+                        ("LINEBELOW", (1, 0), (3, 0), 0.4, colors.black), ("LINEBELOW", (4, 0), (5, 0), 0.4, colors.black),
+                        ("LINEBELOW", (0, 1), (-1, 1), 0.5, colors.black),
+                        ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                        ("TOPPADDING", (0, 0), (-1, -1), 2.5), ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5)]))
+s = [KeepTogether([Paragraph("<b>Table 1</b><br/>System overhead of each method.", S["cap"]), t1, Spacer(1, 10)])]
 
 pub = [["SFTO-Guard", "+1.64 %", "-", "Mininet + Ryu"],
        ["FTMaster", "+2.38 %", "230", "Mininet + Ryu"],
