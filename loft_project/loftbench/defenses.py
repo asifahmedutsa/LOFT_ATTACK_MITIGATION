@@ -428,6 +428,9 @@ class EvictBlock(Defense):
         self.vol_x, self.vol_k, self.vol_rho = vol_x, vol_k, vol_rho
         self.exempt = list(exempt)           # ports never blocked (the testbed's unknown sources)
         self.admit_filter = self._admit
+        # model None: no detector (the FEVER-without-ML ablation); nothing is evicted by score,
+        # so only the volume block acts, and an enclosing PortGuard trims by packet rate.
+        self.needs_features = model is not None
 
     def reset(self, ctx):
         self.port = ctx["flow_port"]
@@ -455,8 +458,10 @@ class EvictBlock(Defense):
         if n == 0 or (n / cap < self.rho and not (self.probation_until > t).any()):
             self.hist.append((t, np.zeros(n_ports), np.zeros(n_ports)))
             return None, None
-        X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
-        if self.score_changed_only and "pkts" in obs:
+        if self.model is None:
+            s = np.zeros(len(fids))
+        elif self.score_changed_only and "pkts" in obs:
+            X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
             pk, by, it = (np.asarray(obs[k]) for k in ("pkts", "bytes", "install_t"))
             ch = (self._pk[fids] != pk) | (self._by[fids] != by) | ~(self._it[fids] == it)
             if ch.any():
@@ -464,6 +469,7 @@ class EvictBlock(Defense):
                 self._pk[fids[ch]], self._by[fids[ch]], self._it[fids[ch]] = pk[ch], by[ch], it[ch]
             s = self._sc[fids]
         else:
+            X = obs["X"] if self.feature_idx is None else obs["X"][:, self.feature_idx]
             s = self.model.predict_proba(X)
         flag = s >= self.tau
         if n / cap < self.rho:               # below pressure: act on probation hosts only

@@ -85,7 +85,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
-            "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5")
+            "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml")
 
 
 def ip2int(s):
@@ -151,16 +151,18 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
-    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5"):
+    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
-        # block rule, from ens_config_v4lite.json.
+        # block rule, from ens_config_v4lite.json. ensguard-v5-noml: FEVER without the detector
+        # (ablation): the volume block and PortGuard (trimming by packet rate) only.
         cfile = {"ensguard": "ens_config.json", "ensguard-v4lite": "ens_config_v4lite.json",
-                 "ensguard-v5": "ens_config_v5.json"}[name]
+                 "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json"}[name]
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
-        eb = EvictBlock(EnsembleJSON(model_dir, ec), ec["tau"][domain], name="evictblock",
+        model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)
+        eb = EvictBlock(model, ec["tau"][domain], name="evictblock",
                         rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
                         f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
                         m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
