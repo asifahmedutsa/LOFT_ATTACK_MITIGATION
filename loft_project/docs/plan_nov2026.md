@@ -1,59 +1,65 @@
-# FEVER: schedule to NetSoft 2027 (from 8 November 2026)
+# FEVER: plan for 9-15 November 2026 (risks 1-4), then to NetSoft 2027
 
-Order follows the publication risks, highest first. Testbed runs: one at a time, overnight where long.
-Exact NetSoft 2027 deadline to be confirmed (expected late January).
+Decided 8 Nov: no Scapy (the current raw-socket generator stays, documented and validated against
+the papers' fill times); risks 1-4 this week; final campaign with 3 seeds.
 
-| Risk | Level | Addressed in |
+| Risk | Level | This week |
 |---|---|---|
-| FEVER's detector trained on simulated traffic; baselines on real traffic | High | Weeks 1-2 |
-| Baselines not checked against their own papers | High | Weeks 2-3 |
-| v6 result on reused seeds | Medium | Week 4 (final campaign, fresh seeds) |
-| "Is it really federated learning?" | Medium | Week 2 (federated XGBoost), week 5 (live) |
-| No scalability results | Medium | Week 5 |
-| Attack tool (Scapy) | Low | Week 1 |
+| 1. FEVER's detector trained on simulated traffic; baselines on real traffic | High | Mon-Tue |
+| 2. Baselines not checked against their own papers | High | Tue-Wed |
+| 3. v6 result on reused seeds | Medium | Wed night-Thu (final campaign) |
+| 4. "Is it really federated learning?" | Medium | Tue (Flower, multi-round) |
 
-## Week 1 (9-15 Nov): real traffic and Scapy
-- Mon-Tue: Scapy attack generator; offline check of packets and timing; speed check. User reinstalls the testbed.
-  Testbed check: no defense x G2, Mimic, Aware, Spoof, Pulse x 2 seeds (10 runs, ~1 h).
-- Tue: no-sharing ablation on the existing benchmark (each controller's own model only), offline.
-- Wed-Thu: real-traffic controllers. C1 univ2 parts 0-2, C2 univ2 parts 3-5, C3 bigFlows T1A; replay rates
-  set so benign load matches; labelled data collection with Scapy attacks
-  (C1 G1 + Mimic, C2 G2 + Spoof, C3 G3 + Pulse, plus normal; 5 seeds; ~54 runs, ~5 h, overnight).
-- Gate (Fri 13 Nov): Scapy passes (time to full table within about 10 %); data collected.
+## Mon 9: real-traffic training data
+- Controllers: C1 univ2 parts 0-2, C2 univ2 parts 3-5, C3 bigFlows T1A (the test network's own controller).
+- Attacks per controller: C1 G1 + Mimic, C2 G2 + Spoof, C3 G3 + Pulse; Slow and Aware seen by no one.
+- Replayed in the simulator (as the baselines' T1A training data was), labelled rule rows per poll.
+- univ2 replay rate set so its benign table load matches bigFlows.
+- Before any training: the rule that picks FEVER's detector, written and committed.
 
-## Week 2 (16-22 Nov): federated training on real traffic
-- Flower: federated XGBoost (bagging) and FedProx; plus local only, one-shot sharing, pooled data.
-- Evaluation by exposure on bigFlows T1B rows and the held-out univ2 part 6.
-- Rule fixed in advance for which detector FEVER uses; decision on 20 Nov.
-- Start baseline fixes: port features restored (FTMaster, FTOP, FTODefender), DMS-BTT original version,
-  FTODefender trained on T1A, rDefender per refused request.
+## Tue 10: federated learning on real traffic (risks 1, 4)
+- Flower, multi-round: federated XGBoost (bagging) and FedProx (neural network).
+- Compared with: local only (the no-sharing ablation), one-shot sharing, pooled data.
+- Exposure test on bigFlows T1B rows and held-out univ2 part 6: seen locally, seen only by another
+  controller, seen by no one; recall, precision, F1 at 0.1 % false alarms.
+- Detector chosen by Monday's rule.
 
-## Week 3 (23-29 Nov): faithful baselines and the new FEVER
-- Each baseline once in its own paper's setting, compared with its reported numbers.
-- Controller reads the new model; development check on development seeds. User reinstalls.
+## Tue 10 - Wed 11: faithful baselines (risk 2)
+- DMS-BTT as published (no added blocklist, paper thresholds); the strengthened version reported beside it.
+- rDefender reacting per refused request (event-based), not per poll.
+- FTODefender trained on T1A and checked.
+- Port features restored (FTMaster DDoP/CDD, FTOP IPs/ports, FTODefender VGFSP/VGFDP) where the
+  replayed traces carry ports; otherwise listed as deviations.
+- Each baseline run once in its own paper's setting (simulator) and compared with its reported numbers.
 
-## Week 4 (30 Nov-6 Dec): final campaign (preregistered, fresh seeds 4160-4164)
-- Methods: none, FTMaster, FTOP, FTODefender, FloRa, DMS-BTT (original), rDefender, FEVER.
-- Attacks: G2, Mimic, Aware, Spoof, Pulse, plus normal only. 8 x 6 x 5 = 240 runs, ~21 h (3 nights).
-- Ablations: FEVER without sharing, without volume rule, without detector (45 runs, ~4 h).
+## Wed 11: deployment and preregistration
+- Controller reads the chosen detector; development check on development seeds.
+- Final campaign preregistered: hypotheses pooled over the five attacks (15 pairs per comparison),
+  per-attack results as means and ranges.
+- User reinstalls the testbed.
 
-## Week 5 (7-13 Dec): live federation and scalability
-- Live: Flower server plus 3 controller processes; rounds, bytes, time.
-- Controllers 3 -> 6 -> 9 (more univ2 and bigFlows slices), offline.
-- Testbed: attackers 2 -> 4 -> 8, including colluding attackers below the volume limit; hosts 6 -> 12 (~30 runs).
+## Wed 11 night - Thu 12: final campaign (risk 3), fresh seeds 4160-4162
+- Methods: none, FTMaster, FTOP, FTODefender, FloRa, DMS-BTT (as published), rDefender, FEVER.
+- Traffic: G2, Mimic, Aware, Spoof, Pulse, normal only. 8 x 6 x 3 = 144 runs.
+- Ablations: FEVER without sharing, without the volume rule, without the detector; G2, Mimic, Aware
+  x 3 seeds = 27 runs.
+- 171 runs, about 15 h, one at a time.
 
-## Week 6 (14-20 Dec): analysis, figures, tables; reruns if needed
+## Fri 13 - Sun 15: analysis, tables, figures; reruns of any failed run
 
-## Weeks 7-9 (21 Dec-10 Jan): paper writing; supervisor review
-
-## Weeks 10-11 (11-24 Jan): revisions, artifact, submission
+## After this week
+- Week of 16 Nov: live federation (Flower server plus controller processes over the network).
+- Week of 23 Nov: scalability (3 -> 6 -> 9 controllers; 2 -> 4 -> 8 attackers, colluding below the
+  volume limit; more hosts).
+- 30 Nov - 10 Jan: figures, writing, supervisor review.
+- 11-24 Jan: revisions, artifact, submission (NetSoft 2027 deadline to be confirmed).
 
 ## Fallbacks
 - Federated XGBoost worse than one-shot sharing: FEVER keeps one-shot sharing; FL reported as comparison.
-- Laptop cannot run the larger topologies: scalability offline plus the sizes the laptop handles; ask for a server.
-- A baseline cannot be made to match its paper: report the mismatch and its likely cause.
+- A baseline cannot match its paper: report the mismatch and its likely cause.
+- A close per-attack comparison that matters: 2 more seeds for that attack only, labelled as added.
 
 ## Needed from the user
-- Reinstall the testbed after week 1 day 2 and in week 3.
-- Laptop free (lid open, AC, no Zoom or Chrome) on run nights: 11-12 Nov, 25-26 Nov, 1-4 Dec, 9-10 Dec.
+- Reinstall on Wed 11.
+- Laptop free from Wed 11 evening to Thu 12 evening (lid open, AC, no Zoom or Chrome).
 - Ask the supervisor about a lab server; confirm the NetSoft deadline.
