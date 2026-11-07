@@ -61,3 +61,25 @@ UH results are reported but do not enter the choice.
 5 trees per client; Flower's FedXgbBagging keeps only one new tree per client per round, so that
 model held 64 trees instead of 300. It is rerun as 100 rounds of one tree per client. No result of
 either run was looked at before this change.
+
+## Added 8 November, after the results above: lossless federated XGBoost
+
+*Written and committed before this detector was coded, trained or evaluated. It is proposed after
+seeing that no federated detector carried Mimic (A4) to T1B while pooled training did, so it is
+reported as an added test, not part of the original comparison.*
+
+Detector: histogram-based federated XGBoost. Three worker processes, one per controller, each
+loading only its own rows (results/realfl/fl_data/C*.npz). They agree the feature bins by merging
+quantile sketches; for every tree node each worker sends only the sums of gradients and hessians
+per feature bin, the sums are added (allreduce) and every worker picks the same split. No rows,
+labels or per-row values leave a worker. This is XGBoost's own distributed hist algorithm
+(xgboost.collective with RabitTracker, the scheme of NVIDIA FLARE's histogram-based federated
+XGBoost); it trains the same model as pooled XGBoost. Settings as pooled XGBoost: 300 trees,
+depth 6, learning rate 0.1, hist.
+
+Rule (same measures, thresholds and test rows as above):
+1. It replaces federated XGBoost (bagging) as FEVER's detector if its T1B score is at least
+   2 points above the bagging model's (37.31) and its T1B benign false-alarm rate is at most 0.2 %.
+2. Otherwise federated XGBoost (bagging) stays FEVER's detector.
+Also reported: its agreement with pooled XGBoost (mean absolute probability difference on the T1B
+test rows), and the bytes exchanged per tree.
