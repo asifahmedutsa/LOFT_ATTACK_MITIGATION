@@ -158,6 +158,8 @@ def stage_evaluate():
         named["Federated XGBoost (Flower)"] = Booster(f"{OUT}/fedxgb.json")
     if os.path.exists(f"{OUT}/fedxgb_cyclic.json"):           # exploratory: not in the choice rule
         named["Cyclic federated XGBoost (exploratory)"] = Booster(f"{OUT}/fedxgb_cyclic.json")
+    if os.path.exists(f"{OUT}/fedxgb_hist.json"):             # added test, its own rule (plan, 8 Nov)
+        named["Lossless federated XGBoost (added)"] = Booster(f"{OUT}/fedxgb_hist.json")
     if os.path.exists(f"{OUT}/fedprox.npz"):
         from .models import MLP, Standardizer
         z = np.load(f"{OUT}/fedprox.npz")
@@ -201,8 +203,19 @@ def stage_evaluate():
         fx = score("Federated XGBoost (Flower)") if "Federated XGBoost (Flower)" in T.index else -1
         if score(f) >= max(one, fx) + 2 and T.loc[f, "benign_fpr"] <= 0.2:
             choice, why = f, "rule 2"
+    added = {}
+    h = "Lossless federated XGBoost (added)"
+    if h in T.index and choice == "Federated XGBoost (Flower)":
+        test = Dataset.concat([runs[(TESTDOM["T1B"], v, s)] for v in ALL + [None] for s in TEST])
+        diff = np.abs(named[h].predict_proba(test.X) - named["Pooled (XGBoost)"].predict_proba(test.X))
+        added = dict(score=round(score(h), 2), fpr=round(float(T.loc[h, "benign_fpr"]), 3),
+                     mean_abs_diff_vs_pooled_xgboost=float(diff.mean()), max_abs_diff=float(diff.max()))
+        if score(h) >= score(choice) + 2 and T.loc[h, "benign_fpr"] <= 0.2:
+            choice, why = h, "added rule 1"
+        print("lossless federated XGBoost:", added)
     scores = {d: round(score(d), 2) for d in T.index}
-    json.dump(dict(choice=choice, rule=why, scores_T1B=scores), open(f"{OUT}/choice.json", "w"), indent=1)
+    json.dump(dict(choice=choice, rule=why, scores_T1B=scores, lossless=added), open(f"{OUT}/choice.json", "w"),
+              indent=1)
     print("scores on T1B:", scores)
     print("FEVER's detector:", choice, f"({why})")
 

@@ -74,3 +74,26 @@ Scores on T1B (mean of 'seen only by another controller' and 'seen by no one'): 
 - Aware is missed by every tree model on both networks (0-3 %); FedProx catches it on UH (67 %) but not on bigFlows.
 - Federated XGBoost matches one-shot sharing (within 0.3 points) and is real multi-round FL, so it replaces it as FEVER's detector by the rule fixed in advance.
 - Not tested yet: lossless (histogram-based) federated XGBoost, which trains as pooled XGBoost does and could close the Mimic gap on bigFlows; it would need its own rule fixed before running.
+
+## Added test: lossless (histogram-based) federated XGBoost
+
+Rule fixed and committed before the model was coded (docs/realfl_plan.md, section added 8 November).
+Three worker processes, each with only its own rows; XGBoost's collective adds the workers'
+per-bin gradient and hessian sums for every tree node. 300 trees, depth 6, 17 features,
+27 s on this laptop. Loopback traffic: 2.16 GB in total, 7.2 MB per tree (bagging: 0.8 MB in total).
+
+| Network | Detector | False alarms (%) | G1 | G2 | G3 | Mimic | Spoof | Slow | Pulse | Aware |
+|---|---|---|---|---|---|---|---|---|---|---|
+| T1B | Federated XGBoost, bagging | 0.03 | 99.84 | 99.99 | 99.99 | 0.36 | 99.94 | 0.06 | 100.0 | 0.00 |
+| T1B | Lossless federated XGBoost | 0.04 | 100.00 | 100.00 | 99.99 | 97.60 | 100.00 | 72.71 | 100.0 | 2.72 |
+| T1B | Pooled XGBoost (no privacy) | 0.02 | 100.00 | 100.00 | 99.99 | 97.39 | 100.00 | 70.42 | 100.0 | 2.09 |
+| UH | Federated XGBoost, bagging | 0.18 | 99.97 | 100.00 | 100.00 | 97.93 | 100.00 | 66.78 | 100.0 | 0.45 |
+| UH | Lossless federated XGBoost | 0.09 | 100.00 | 100.00 | 100.00 | 98.62 | 100.00 | 79.35 | 100.0 | 2.31 |
+| UH | Pooled XGBoost (no privacy) | 0.09 | 99.99 | 100.00 | 100.00 | 98.54 | 100.00 | 78.72 | 100.0 | 1.85 |
+
+T1B score 59.42 against 37.31 for bagging (rule: at least 2 points more, false alarms at most
+0.2 %): **the lossless model replaces the bagging model as FEVER's detector (added rule 1).**
+It agrees with pooled XGBoost (mean absolute probability difference 0.005 on the T1B test rows);
+the small differences come from the merged quantile sketches. The cost is communication: about
+nine times the bagging model's traffic per tree, and the per-node gradient sums are shared
+(no rows or labels). Aware is still missed (2.7 %); the volume rule handles it on the testbed.

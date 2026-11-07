@@ -1,6 +1,6 @@
 {
- "choice": "Federated XGBoost (Flower)",
- "rule": "rule 1",
+ "choice": "Lossless federated XGBoost (added)",
+ "rule": "added rule 1",
  "scores_T1B": {
   "Local only (C3)": 37.35,
   "One-shot sharing (CatBoost)": 37.09,
@@ -9,6 +9,13 @@
   "Pooled (XGBoost)": 58.88,
   "Federated XGBoost (Flower)": 37.31,
   "Cyclic federated XGBoost (exploratory)": 38.22,
+  "Lossless federated XGBoost (added)": 59.42,
   "FedProx (Flower)": 39.34
+ },
+ "lossless": {
+  "score": 59.42,
+  "fpr": 0.041,
+  "mean_abs_diff_vs_pooled_xgboost": 0.004919401369988918,
+  "max_abs_diff": 0.8148831725120544
  }
 }

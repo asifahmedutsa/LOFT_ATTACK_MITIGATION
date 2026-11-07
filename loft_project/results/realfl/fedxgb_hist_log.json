@@ -1,0 +1,32 @@
+{
+ "workers": [
+  {
+   "client": "C1",
+   "rank": 0,
+   "rows": 240763,
+   "seconds": 22.9,
+   "trees": 300,
+   "features": 17
+  },
+  {
+   "client": "C2",
+   "rank": 1,
+   "rows": 226230,
+   "seconds": 22.9,
+   "trees": 300,
+   "features": 17
+  },
+  {
+   "client": "C3",
+   "rank": 2,
+   "rows": 254220,
+   "seconds": 22.9,
+   "trees": 300,
+   "features": 17
+  }
+ ],
+ "seconds": 27.2,
+ "loopback_bytes": 2158838724,
+ "loopback_bytes_per_tree": 7196129,
+ "histogram_bytes": 69632
+}
