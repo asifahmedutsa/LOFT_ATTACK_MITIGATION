@@ -19,6 +19,7 @@ from reportlab.platypus import (Image, KeepTogether, ListFlowable, ListItem, Pag
 
 OUT = "docs/supervisor_report.pdf"
 FIG = "results/paper_figs"
+FIG5 = "results/paper_figs/v5"
 FD = os.path.join(os.path.dirname(matplotlib.__file__), "mpl-data/fonts/ttf")
 for name, f in (("DV", "DejaVuSans.ttf"), ("DV-B", "DejaVuSans-Bold.ttf"),
                 ("DV-I", "DejaVuSans-Oblique.ttf"), ("DV-BI", "DejaVuSans-BoldOblique.ttf")):
@@ -76,8 +77,8 @@ def fig(path, cap, w=1.0):
 
 
 def shows(points):
-    """The 'What this shows' block under a figure."""
-    return [P("What this shows", "h3"), bullets(points, "p")]
+    """The 'What this shows' block under a figure, kept on one page."""
+    return [KeepTogether([P("What this shows", "h3"), bullets(points, "p")])]
 
 
 def note(text, bg=BAND):
@@ -92,7 +93,7 @@ def footer(c, doc):
     c.saveState()
     c.setFont("DV", 7.5)
     c.setFillColor(MUTED)
-    c.drawString(18 * mm, 10 * mm, "EnsGuard: federated defense against low-rate flow-table overflow  ·  status report, 6 November 2026")
+    c.drawString(18 * mm, 10 * mm, "EnsGuard: federated defense against low-rate flow-table overflow  ·  status report, 7 November 2026")
     c.drawRightString(A4[0] - 18 * mm, 10 * mm, f"page {doc.page}")
     c.restoreState()
 
@@ -100,18 +101,19 @@ def footer(c, doc):
 s = []
 # ------------------------------------------------------------------ 0. summary
 s += [P("EnsGuard: federated defense against low-rate flow-table overflow", "title"),
-      P("Status report for the supervisor: architecture, experiments, results, strengths, weaknesses and the next tests. 6 November 2026.", "sub"),
+      P("Status report for the supervisor: architecture, experiments, results, strengths, weaknesses and the next tests. 7 November 2026.", "sub"),
       P("The short version", "h1"),
       bullets([
           "<b>What we built.</b> EnsGuard lets several SDN controllers share trained detectors instead of raw traffic. Each controller scores every flow-table entry every second, evicts suspicious entries, blocks hosts that keep getting evicted, and falls back to a fair share of the table per port.",
           "<b>Clear win (offline, simulator).</b> EnsGuard is the best detector at recognising attacks a controller never trained on. At a 0.1 % false-alarm rate it catches 98.7 % of attacks seen only by another controller, where the published detectors fall to 79-82 %. It catches 48.5 % of an attack no controller saw, against 34.4 % for our earlier FL-DualGuard and 9.5-24.9 % for FTOP, FTMaster, FloRa and DMS-BTT.",
-          "<b>Real testbed (preregistered, 200 runs).</b> EnsGuard beats the classic defenses (EVICT, SIFT, TableGuard) on how much of the table the attacker holds: 14 of 15 paired runs each, Holm-adjusted p = 0.004. It does <b>not</b> beat the modern ML defenses (DMS-BTT, FTMaster, FTOP, rDefender, FL-DualGuard) on harm to normal users or on the attacker's share. It blocked an innocent host in 4 of its 20 runs.",
+          "<b>Newest result: EnsGuard v5 on the testbed (preregistered, 120 runs, 7 November).</b> On traffic no model was trained on, v5 has the lowest benign harm (0.49 % mean, against DMS-BTT 1.71 % and FTMaster 4.80 %) and half the attacker share of every other defense (22 % against 42-46 %). Under the disguised attacks A4 and E9P it is better than both published methods in every run (harm 0.10-0.32 % against 2-10 %), and it is the only defense that blocks the attackers. It blocked no innocent host. Under the standard attack A2 it is close but behind (harm 1.05 % against about 0.02 %), because its 60 s block expires and the attackers return. 4 of 7 preregistered tests and all 3 guards pass; the harm tests against DMS-BTT and FTMaster fail on A2 (Section 4.12).",
+          "<b>Earlier testbed campaign (v3, preregistered, 200 runs).</b> EnsGuard v3 beats the classic defenses (EVICT, SIFT, TableGuard) on how much of the table the attacker holds: 14 of 15 paired runs each, Holm-adjusted p = 0.004. It does <b>not</b> beat the modern ML defenses (DMS-BTT, FTMaster, FTOP, rDefender, FL-DualGuard) on harm to normal users or on the attacker's share. It blocked an innocent host in 4 of its 20 runs.",
           "<b>Why the testbed is harder.</b> Per-entry logs recorded on the testbed show that the simulator already predicts the problem. On the real trace traffic (bigFlows), the disguised attacks A4 and E9P score lower than the noisiest normal traffic, so <i>every</i> detector misses them, ours and the published ones. Poll jitter on the testbed is not the cause.",
           "<b>A fix we tried, with rules fixed in advance, failed.</b> Adding the trace domain as a fourth federated controller (trained on its normal traffic plus one standard attack) did not catch A4. It also cut detection of unseen attacks from 48.5 % to 14.9 %. We stopped as the rules required; this is a useful negative result.",
-          "<b>Proposed paper.</b> An honest paper: federated detection that generalises offline, a preregistered testbed comparison with eight other defenses, the measured simulator-to-testbed gap, and the negative result. Draft: docs/paper_optionA.md.",
+          "<b>Proposed paper.</b> An honest paper: federated detection that generalises offline; the v3 testbed comparison with eight other defenses and why it fell short; the negative v4 result; and v5, which closes most of the gap on a clean train/test split. Draft: docs/paper_optionA.md.",
       ]),
       P("How to read this report", "h2"),
-      P("Section 1 explains the attack. Section 2 walks through the architecture step by step. Section 3 describes how we tested. Section 4 gives the results with figures. Section 5 lists where EnsGuard does well and where it needs work. Section 6 proposes the next tests. Section 7 compares our experiments with the related papers. The appendix has the remaining figures and a glossary."),
+      P("Section 1 explains the attack. Section 2 walks through the architecture step by step. Section 3 describes how we tested. Section 4 gives the results with figures (4.12 is the newest, v5). Section 5 lists where EnsGuard does well and where it needs work. Section 6 proposes the next tests. Section 7 compares our experiments with the related papers. The appendix has the remaining figures and a glossary."),
       PageBreak()]
 
 # ------------------------------------------------------------------ 1. problem
@@ -165,7 +167,8 @@ s += [P("3. How we tested", "h1"),
              ["Simulator online test", "Our simulator LOFT-Bench, fresh seeds 26000-26004, run once", "How well does the full defense protect users when everything is simulated?"],
              ["Preregistered testbed campaign (v3)", "Real Mininet + Open vSwitch + Ryu testbed, seeds 4120-4124", "Does EnsGuard beat 8 other defenses on a real OpenFlow controller? 200 runs."],
              ["Testbed entry logs", "12 extra testbed runs with per-entry logging, seeds 4131-4133", "Why do testbed and simulator disagree?"],
-             ["v4 trial", "Simulator + the 12 testbed logs", "Does adding the trace controller to the federation fix the miss?"]],
+             ["v4 trial", "Simulator + the 12 testbed logs", "Does adding the trace controller to the federation fix the miss?"],
+             ["Preregistered testbed campaign (v5)", "Same testbed; trace split into T1A (train) and T1B (test); fresh seeds 4140-4144", "Does v5 beat v3, v4-lite, DMS-BTT and FTMaster on traffic nobody trained on? 120 runs."]],
             [0.28, 0.32, 0.40]),
       P("Testbed setup", "h2"),
       bullets([
@@ -345,58 +348,121 @@ s += [P("4.4 Testbed: the preregistered hypotheses", "h2"),
       ]),
       PageBreak()]
 
-s += [P("4.11 Work in progress: v4-lite (today)", "h2"),
-      P("v4-lite keeps the federated D1-D3 detector and targets the two testbed problems a defense change can fix: innocent hosts blocked (H4) and slow scoring. Rules were fixed before each step (docs/v4lite_plan.md); only development data are used."),
-      P("<b>Step 2, detector: CatBoost only passes every check</b> (mean and spread over 3 training seeds, results/v4lite/detsel.md):", "p"),
-      table([["Detector", "Recall on attacks not trained on", "Harm (sim)", "Attacker occupancy (sim)", "Innocent hosts blocked", "Scoring time per 10k entries"],
-             ["RF + CatBoost (v3)", "92.2 % (±0.9)", "0.66 % (±0.16)", "8.2 % (±0.2)", "0", "104 ms"],
-             ["CatBoost only", "92.5 % (±1.6)", "0.67 % (±0.12)", "6.2 % (±0.5)", "0", "20 ms"]],
-            [0.2, 0.18, 0.14, 0.18, 0.14, 0.16], tint=[(2, GOOD)]),
+s += [P("4.11 From v3 to v5: what changed", "h2"),
+      P("Each change below was chosen on development data with a rule fixed beforehand, then frozen before the v5 test runs (docs/v4lite_plan.md, docs/v5_plan.md).", "p"),
+      table([["Version", "Change", "Why"],
+             ["v4-lite", "CatBoost only (the D1-D3 CatBoost members of v3)", "same generalisation as RF + CatBoost, about 5 times faster scoring (20 against 104 ms per 10k entries)"],
+             ["v4-lite", "block rule with a floor: median at least 10 evictions, and at least 20 % of the host's own entries flagged", "the v3 rule's median fell to 0 and blocked busy innocent hosts (H4)"],
+             ["v4-lite", "score only entries whose counters changed since the last poll; exact 8-bit CatBoost scorer", "cuts the per-poll decision time on the saturated controller"],
+             ["v5", "clean split of the trace: every T1 model and threshold (ours, DMS-BTT's, FTMaster's) trained on the first 40 % (T1A), tests on the last 60 % (T1B)", "in v3 the baselines' T1 models had seen the test traffic"],
+             ["v5", "volume block: a host holding more than X entries (1.5 x the busiest benign host on T1A: 785-800 per switch) and at least 3 x the median host, while the table is at least 90 % full, is blocked", "a detector-independent rule for the disguised attacks the detector misses"],
+             ["dropped", "a local T1A model, and a univ2 client in the federation", "no gain on A4/E9P; the univ2 client cut unseen-attack recall from 51 % to 8.6 % (dilution, as in v4)"]],
+            [0.12, 0.5, 0.38]),
+      P("Development check before the test (T1B, seeds 4134-4136): A4 harm 0.01-0.04 %, both attackers blocked, benign runs clean.", "small"),
+      PageBreak(),
+      P("4.12 The v5 campaign: preregistered result (7 November)", "h2"),
+      P("Six defenses (none, EnsGuard v3, v4-lite, v5, DMS-BTT, FTMaster) x A2, A4, E9P and benign x fresh seeds 4140-4144 = 120 runs on T1B, the part of the trace no model or threshold was trained on. Hypotheses, seeds and tests were committed before any test run (results/testbed_prereg_v5/preregistration.json). One run (v4-lite, E9P, seed 4142) ended early and was rerun once with the same seed, as preregistered. Source: results/testbed_prereg_v5/report.md."),
+      table([["Hypothesis", "v5 wins / 15", "Result", "Means: v5 vs comparator"],
+             ["H1 harm vs DMS-BTT", "10", "not supported (p = 0.30)", "0.49 % vs 1.71 %; v5 loses all 5 A2 pairs"],
+             ["H1 harm vs FTMaster", "10", "not supported (p = 0.30)", "0.49 % vs 4.80 %; v5 loses all 5 A2 pairs"],
+             ["H2 attacker share vs DMS-BTT", "15", "supported (Holm p = 0.0001)", "21.9 % vs 41.9 %"],
+             ["H2 attacker share vs FTMaster", "11", "not supported (p = 0.059)", "21.9 % vs 45.5 %; v5 wins 1 of 5 A2 pairs"],
+             ["H3 harm vs v3", "12", "supported (p = 0.018)", "0.49 % vs 3.48 %"],
+             ["H4 decision time vs v3", "12", "supported (p = 0.018)", "54 vs 127 ms (mean per poll)"],
+             ["H8 attacker share vs v4-lite (the volume block)", "12", "supported (p = 0.018)", "21.9 % vs 43.4 %"],
+             ["H5 no innocent host blocked", "-", "pass", "0 of v5's 20 runs"],
+             ["H6 benign runs clean", "-", "pass", "harm 0.00 %, lost first packets 0.12 %"],
+             ["H7 new-connection success not worse than v3", "-", "pass", "0 of 15 pairs more than 5 points worse"]],
+            [0.34, 0.12, 0.24, 0.30], tint=[(1, BAD), (2, BAD), (3, GOOD), (4, BAD), (5, GOOD), (6, GOOD), (7, GOOD), (8, GOOD), (9, GOOD), (10, GOOD)]),
       Spacer(1, 6),
-      P("<b>Step 3, block rule: the planned fix does not work.</b> Replaying the 12 testbed recordings reproduces the H4 failure: the v3 rule would block innocent hosts 4 times (3 under A4, where it blocks no attacker, and 1 under A2). Requiring a minimum flagged fraction of a host's own entries removes all innocent blocks (4 to 0), but in the simulator it stops the E9P attacker from being blocked (2.0 to 0.1 per run), so E9P harm triples (1.8 % to 5.9 %) and A4 attacker occupancy rises from 4.4 % to 22 %. The median floor alone had no effect. The rule fixed this morning lacked a guard against such losses, so we are not adopting it; a corrected round is the next decision (results/v4lite/blocksel.md).", "p"),
-      P("<b>Step 4, scoring only changed entries:</b> being measured on the testbed recordings.", "p"),
+      table([["Attack", "v3 harm", "v4-lite harm", "v5 harm", "DMS-BTT harm", "FTMaster harm", "v5 share", "DMS-BTT share", "FTMaster share"],
+             ["A2", "2.64 %", "0.13 %", "1.05 %", "0.02 %", "0.01 %", "12.6 %", "18.7 %", "10.0 %"],
+             ["A4", "5.59 %", "1.68 %", "0.32 %", "2.09 %", "4.16 %", "27.2 %", "47.6 %", "53.4 %"],
+             ["E9P", "2.21 %", "2.97 %", "0.10 %", "3.01 %", "10.22 %", "26.0 %", "59.3 %", "73.3 %"]],
+            [0.08, 0.1, 0.12, 0.1, 0.12, 0.12, 0.1, 0.13, 0.13]),
+      P("Mean of 5 seeds; share = average attacker share of the core table s11. v5 blocked both attackers in all 15 attack runs; v3 blocked 6 innocent hosts; neither baseline blocked an attacker.", "small"),
+      fig(f"{FIG5}/fig15_per_attack_per_seed.png", "Figure 15. v5 campaign per attack: bar = mean of 5 seeds, dot = one seed. v5 in orange."),
+      *shows([
+          "<b>A4 and E9P (top middle and right):</b> v5's harm is at most 0.08 % in 8 of its 10 runs (0.32 % and 0.10 % mean; the worst run is 1.46 %), while DMS-BTT (2.1 % and 3.0 %) and FTMaster (4.2 % and 10.2 %) leave several percent of normal flows harmed. v5 is lower than both baselines in every seed.",
+          "<b>A2 (top left):</b> the two baselines are at almost exactly 0 % in every seed; v5 is at about 1 % in four seeds and 0.02 % in one. This is the only place v5 is worse, and the reason H1 fails: a tie or a small loss counts against v5 in the sign test.",
+          "<b>Attacker share (bottom):</b> v5 halves it under A4 and E9P (26-27 % against 48-73 %). Under A2 all ML defenses keep it low (10-19 %); FTMaster is slightly lower than v5 (10 % against 13 %), which is why H2 against FTMaster misses by one pair.",
+          "<b>Progress across our own versions:</b> v3 to v4-lite cuts harm (better block rule, faster scoring); v4-lite to v5 halves the attacker share under A4 and E9P (the volume block).",
+      ]),
+      PageBreak(),
+      fig(f"{FIG5}/fig16_a2_block_expiry.png", "Figure 16. Why v5 harms more under A2 (seed 4141): core-table entries over time for v5 and the two baselines."),
+      *shows([
+          "v5 blocks both attackers at 119 s, and its table drops to about 850 entries. No harm has occurred so far.",
+          "At 179 s the 60 s block expires, the attackers return, and the controller is overloaded (event queue at its limit, decisions take about 1 s instead of 30 ms). v5's table fills to 3,500 at 210 s and stays full until about 225 s: 617 normal flows are refused, which is all of this run's 0.84 % harm.",
+          "DMS-BTT and FTMaster never block anyone. They delete attack entries every second, which keeps their tables at 2,400-2,800 at most, so they never fill. They do this well on A2 because they were trained on A2 traffic from this same network (T1A); on A4 and E9P, which they never saw, they fail.",
+          "<b>Likely fix (v6, not yet tested):</b> keep a block while the host is still sending (the drop rule's packet counter shows this), or re-block a returning host at a lower bar. This needs a new preregistration and fresh seeds.",
+      ]),
+      fig(f"{FIG5}/fig03_comparison.png", "Figure 3 (v5 campaign). The related papers' comparison table, measured on T1B (A2, A4, E9P x 5 seeds; v5 in orange)."),
+      *shows([
+          "<b>Average attacker share and table usage:</b> v5 is clearly lowest (22 % and 40 %); every other defense is at 42-46 % and 56-61 %.",
+          "<b>Maximum share:</b> about the same for all defenses (78-85 %), because every defense lets the attacker build up before acting.",
+          "<b>Seconds at the limit:</b> v5 has the fewest (3 s), against 7 s for DMS-BTT and 29 s for FTMaster.",
+          "<b>Packet-In messages:</b> v5 has the most (119 k). Its controller loses the fewest first packets (20 % against 28-34 %), so more Packet-Ins actually reach and are handled by the controller; the count measures load, not failure.",
+      ]),
+      PageBreak(),
+      fig(f"{FIG5}/fig02_attack_share_over_time.png", "Figure 2 (v5 campaign). Attacker share of s11 over time, median of 5 seeds."),
+      *shows([
+          "Under A4 and E9P, v5 (pink) drops the attacker to 0 % once the volume block fires (about 125-180 s), while every other curve stays near the no-defense line. The share creeps back after the block expires, but the table no longer fills.",
+          "Under A2, v5 removes the attacker at about 120 s, the attacker returns at about 190-250 s (block expiry, Figure 16), and is removed again. FTMaster keeps it at 0 % from 150 s on.",
+      ]),
+      fig(f"{FIG5}/fig05_packet_in_loss.png", "Figure 5 (v5 campaign). Lost first packets (left) and benign harm (right), mean of 5 seeds."),
+      *shows([
+          "v5 loses the fewest first packets under A4 (16 % against 26-33 % for the others) and E9P (29 % against 37-57 %), because changed-entry scoring keeps its poll at about 12-15 ms and its blocks remove the attacker's Packet-Ins.",
+          "Under A2, FTMaster loses the fewest (10 %); v5 is in the middle (14 %).",
+      ]),
+      PageBreak(),
+      fig(f"{FIG5}/fig07_decision_time.png", "Figure 7 (v5 campaign). Per-poll processing time at s11 under attack."),
+      *shows(["v5's median poll takes about 13 ms, the fastest of the six (DMS-BTT 65 ms, FTMaster 72 ms, v3 123 ms): the result of CatBoost only, the exact 8-bit scorer and scoring only changed entries (H4 supported)."]),
+      fig(f"{FIG5}/fig06_new_flow_service.png", "Figure 6 (v5 campaign). New-connection probe."),
+      *shows(["New users still suffer under every defense: 27-47 % of new connections succeed under A2, about 30 % under A4 and 12 % under E9P. v5 is best under A2 (47 %) and level with the others under A4 and E9P. The controller, not the table, is the bottleneck for new users (Section 6, test 4)."]),
       PageBreak()]
 
 # ------------------------------------------------------------------ 5. good / bad
 s += [P("5. Where EnsGuard does well, and where it needs work", "h1"),
+      P("Current system: v5 (Section 4.12). Rows marked v3 are from the earlier campaign; where v5 fixed a v3 problem it says so.", "p"),
       P("Does well", "h2"),
       table([["What", "Evidence"],
              ["Detecting attacks a controller never trained on (offline)", "98.7 % on attacks seen only elsewhere (others 79-82 %); 48.5 % on an attack nobody saw (next best 34.4 %)"],
-             ["The full defense in simulation", "harm 0.36-2.0 % per attack; A4 harm 0.73 % against 20.5 % for DMS-BTT with blocklist; no normal host blocked"],
-             ["Beats the classic defenses on the testbed", "lower attacker share than EVICT, SIFT, TableGuard in 14 of 15 runs each (H2, p = 0.004)"],
-             ["Quietest control channel", "fewest Packet-Ins over the three attacks (61 k) and under A4 and E9P individually"],
-             ["Protects normal users under the adaptive attack E9P", "harm 0.9 %, next best 4.4 %"],
-             ["New users under the standard attack A2", "38 % of new connections succeed, the most of any defense"],
-             ["Rarely lets the table overflow", "second-fewest seconds full and Table-Full messages under A4 and E9P"],
-             ["No side effects without an attack", "harm 0.00 %, lost first packets 0.04 % (H3)"]],
-            [0.42, 0.58], tint=[(i, GOOD) for i in range(1, 9)]),
+             ["Disguised and adaptive attacks on the testbed (v5)", "A4 harm 0.32 %, E9P 0.10 %, against 2.1-10.2 % for DMS-BTT and FTMaster; better in every run"],
+             ["Keeps the attacker out of the table (v5)", "average attacker share 22 % against 42-46 %; H2 vs DMS-BTT 15 of 15; H8 vs v4-lite 12 of 15"],
+             ["Removes the attacker (v5)", "both attackers blocked in all 15 attack runs; neither baseline blocks anyone"],
+             ["No innocent host blocked (v5)", "0 in 20 runs (v3 blocked 6 in this campaign; fixed by the floored block rule)"],
+             ["Fast decisions (v5)", "about 13 ms median per poll, 54 ms mean, against 123 / 127 ms for v3 (H4 supported)"],
+             ["Fewest lost first packets under A4 and E9P (v5)", "A4 16 % against 26-33 %; E9P 29 % against 37-57 %"],
+             ["Clear improvement over v3", "harm 0.49 % against 3.48 % (H3 supported)"],
+             ["No side effects without an attack", "harm 0.00 %, lost first packets 0.12 % (H6)"]],
+            [0.42, 0.58], tint=[(i, GOOD) for i in range(1, 10)]),
       P("Needs work", "h2"),
       table([["What", "Evidence", "Likely cause"],
-             ["No significant win over modern ML defenses on the testbed", "H1 supported against none; H2 not against DMS-BTT, FTMaster, FTOP, rDefender, FL-DualGuard", "detector misses A4 and E9P on the trace domain"],
-             ["Misses the disguised attacks on the trace domain", "A4 and E9P recall 0 % (as for every detector)", "domain shift between training domains and real trace"],
-             ["Harm to normal users under A2 and A4", "A2 2.8 % (FTMaster 0.04 %); A4 7.6 % (no defense 8.6 %)", "evictions of normal entries; blocks of busy hosts"],
-             ["Blocks innocent hosts", "4 of 20 runs (H4 fails)", "block rule's median falls to 0"],
-             ["Slowest and heaviest", "median 160-232 ms per poll under A4/E9P; most memory (315 MB)", "six-model ensemble; the RF is about 80 % of the cost"],
-             ["Loses the most first packets under A4 and E9P", "25 % and 48 %", "slow scoring on a saturated controller"]],
-            [0.3, 0.4, 0.3], tint=[(i, BAD) for i in range(1, 7)]),
+             ["Standard attack A2: behind the per-flow baselines on harm", "1.05 % against 0.02 % (DMS-BTT) and 0.01 % (FTMaster); loses all 5 A2 pairs, so H1 fails", "the 60 s block expires and the attackers fill the table before the re-block (Figure 16)"],
+             ["Attacker share under A2 slightly above FTMaster", "13 % against 10 %; H2 vs FTMaster 11 of 15, one pair short", "same"],
+             ["The volume rule may carry most of the gain", "v4-lite (same detector, no volume rule) never blocks under A4/E9P; no volume-only run yet", "untested ablation; a reviewer will ask"],
+             ["The volume rule could be evaded", "an attacker holding fewer than X (about 800) entries per switch is never volume-blocked", "untested adaptive attacker"],
+             ["Detector still misses A4 and E9P on the trace domain", "A4/E9P recall about 0 % for every detector (Section 4.9)", "domain shift"],
+             ["New users still suffer under attack", "only 12-47 % of new connections succeed with any defense", "the single controller saturates (87-98 % of one core)"],
+             ["Narrow testbed scope", "one trace, one topology, one laptop, 5 seeds", "hardware limits"]],
+            [0.3, 0.4, 0.3], tint=[(i, BAD) for i in range(1, 8)]),
       PageBreak()]
 
 # ------------------------------------------------------------------ 6. next tests
 s += [P("6. Tests we can run next", "h1"),
-      P("Ordered by expected value. Every new design choice is made on development seeds and then tested once on fresh seeds under a new preregistration, as for v3 and v4.", "p"),
+      P("Ordered by expected value. As before, every design choice is made on development seeds and then tested once on fresh seeds under a new preregistration.", "p"),
       table([["#", "Test", "What it would show", "Effort"],
-             ["1", "<b>v4-lite:</b> keep the D1-D3 detector, switch to CatBoost only, add a floor to the block rule (median at least m0, and a minimum flagged fraction of the host's own entries), score only entries whose counters changed", "Fixes H4 (innocent hosts blocked), cuts scoring time to about a fifth and should reduce lost first packets", "about 1.5 days incl. a 100-run overnight campaign"],
-             ["2", "<b>Exposure-aware federation:</b> weight each controller's vote by the attacks it has seen, or let each controller learn a small local combiner over the shared models' scores", "Whether federation can help the trace domain without diluting generalisation (the v4 lesson)", "offline first, about 0.5 day"],
-             ["3", "<b>Broader attack library for the trace controller:</b> train it on the public attacks A1-A3, A5, A7 (A4, E9P, A6 still held out)", "Whether v4 failed because the controller saw too few attacks", "offline, a few hours"],
-             ["4", "<b>Relieve the controller:</b> an OpenFlow meter limiting Packet-Ins per access port, or the controller on a separate machine", "How much of the testbed harm is controller saturation rather than defense quality (affects every defense)", "about 1 day"],
-             ["5", "<b>More testbed domains:</b> the univ2 trace at FTOP's rate (T2) and native rate (T3)", "Whether the A4/E9P miss is specific to bigFlows", "one overnight run each"],
-             ["6", "<b>Flash crowds</b> (FTOP's benign-overflow test)", "Whether EnsGuard wrongly treats a sudden legitimate surge as an attack", "a few hours"],
-             ["7", "<b>Eviction-policy attack (ALFO-style)</b>", "Robustness to an attack that adapts to FIFO / LRU / random eviction", "about 1 day (new attack generator)"],
-             ["8", "<b>Three controllers live at once</b> on two machines", "The full federated deployment on real switches, not one domain per run", "needs a second machine"],
-             ["9", "<b>More seeds</b> for the key cells", "More statistical power: with 5 seeds a win needs 12 of 15 paired runs", "one night per 50 runs"]],
+             ["1", "<b>Volume-only ablation:</b> v5 with the detector switched off (block by volume only)", "Whether the federated detector adds anything on the testbed. An offline replay of the v5 recordings suggests volume-only blocks the attackers 100-175 s after the attack starts with no innocent block, later than v5 under A2 (about 70 s)", "9 development runs (about 50 min), then part of the next campaign"],
+             ["2", "<b>v6: hold the block while the attacker keeps sending</b> (release only after, say, 30 s of silence on the drop rule), or re-block a returning host at a lower bar", "Removes the A2 harm (all of it occurred after a block expired)", "small code change; development check; about 7 h campaign with v5, v6, DMS-BTT, FTMaster"],
+             ["3", "<b>Adaptive attacker below the volume limit</b> (at most X entries per switch, more attacker hosts)", "Robustness of the volume rule; the obvious reviewer attack", "new attack variant; a few hours"],
+             ["4", "<b>Relieve the controller:</b> an OpenFlow meter on Packet-Ins per access port, or the controller on a separate machine", "How much of the remaining harm to new users is controller saturation (affects every defense)", "about 1 day"],
+             ["5", "<b>Exposure-aware federation</b> (weight each controller's vote by the attacks it has seen, or a local combiner)", "Whether federation can help the trace domain without dilution (the v4 and univ2 lesson)", "offline first, about 0.5 day"],
+             ["6", "<b>A second trace domain</b> (univ2) as a separate test network, not a federation client", "Whether v5's testbed result holds on other traffic", "one overnight run"],
+             ["7", "<b>Flash crowds</b> (FTOP's benign-overflow test)", "Whether the volume rule wrongly blocks a sudden legitimate surge", "a few hours"],
+             ["8", "<b>More seeds</b> for the key cells", "More power: with 5 seeds a win needs 12 of 15 paired runs", "one night per 50 runs"]],
             [0.04, 0.38, 0.38, 0.2]),
       Spacer(1, 6),
-      note("<b>My recommendation.</b> Tests 1 and 4 together give the fairest picture of EnsGuard on the real testbed within about two days. Test 2 is the most interesting research question and can run offline in parallel."),
+      note("<b>My recommendation.</b> Tests 1 and 2 together answer the two questions a reviewer will ask first (is the ML needed, and can the A2 gap be closed) in about one day. Test 3 should follow before submission."),
       PageBreak()]
 
 # ------------------------------------------------------------------ 7. vs papers
@@ -411,8 +477,8 @@ s += [P("7. How our experiments compare with the related papers", "h1"),
             [0.3, 0.3, 0.18, 0.22]),
       Spacer(1, 6),
       bullets([
-          "On <b>A2</b>, the attack the other papers test, every ML defense works on our testbed; FTMaster is best on attacker share and harm, EnsGuard is second on attacker share and best for new connections.",
-          "On <b>A4 and E9P</b>, which most papers do not test, every detector fails on the trace domain. This agrees with rDefender and ALFO, which also found that feature-based detectors degrade under disguised and adaptive attacks.",
+          "On <b>A2</b>, the attack the other papers test, every ML defense works on our testbed. In the v5 campaign FTMaster and DMS-BTT have the lowest harm (about 0.01-0.02 %); v5 is close behind (1.05 %) and best for new connections (47 %).",
+          "On <b>A4 and E9P</b>, which most papers do not test, every <i>detector</i> fails on the trace domain. This agrees with rDefender and ALFO, which also found that feature-based detectors degrade under disguised and adaptive attacks. v5 still protects users there through its volume block (harm 0.10-0.32 % against 2-10 %).",
           "None of the related papers tests attacks held out from training or seen by a different controller. Our E11 benchmark fills that gap, and it is where EnsGuard clearly leads.",
           "Our numbers come from our reimplementations on one setup, so they are comparable with each other but not with the numbers printed in the papers (each paper re-runs its baselines under its own setup).",
       ]),
@@ -421,7 +487,7 @@ s += [P("7. How our experiments compare with the related papers", "h1"),
           "One laptop and one controller: the controller saturates under attack, which affects every defense.",
           "One trace domain on the testbed; the synthetic domains are simulator-only.",
           "Reimplemented baselines; attacks from our own generator; 5 test seeds per cell.",
-          "Section 4.9 and the per-attack breakdowns are exploratory; only 4.4 and 4.10 are preregistered.",
+          "Section 4.9, Figure 16 and the per-attack breakdowns are exploratory; 4.4, 4.10 and the hypothesis table of 4.12 are preregistered.",
       ]),
       PageBreak()]
 
@@ -454,10 +520,12 @@ s += [P("Appendix: remaining figures", "h1"),
              ["Federated / model sharing", "controllers exchange trained models, never their traffic"],
              ["Preregistration", "hypotheses, seeds and tests written down before the test runs, so results cannot be tuned afterwards"],
              ["Holm correction", "adjusts p-values when one hypothesis is tested against several comparators"],
-             ["Domain shift", "the deployment traffic differs from the training traffic, so learned thresholds no longer fit"]],
+             ["Domain shift", "the deployment traffic differs from the training traffic, so learned thresholds no longer fit"],
+             ["T1A / T1B", "the first 40 % / last 60 % of the bigFlows trace; every model is trained on T1A and tested on T1B"],
+             ["Volume block", "v5's second block rule: block a host holding far more entries than any normal host, independent of the detector"]],
             [0.28, 0.72]),
       Spacer(1, 8),
-      P("Sources: docs/paper_optionA.md (full draft), results/e11_detect, results/evictblock, results/testbed_prereg_v3, results/e11_testbed, results/v4, results/paper_figs. Code: loftbench/ (simulator and detectors), testbed/ (Ryu application and scripts).", "small")]
+      P("Sources: docs/paper_optionA.md (full draft), results/e11_detect, results/evictblock, results/testbed_prereg_v3, results/testbed_prereg_v5, results/e11_testbed, results/v4, results/v4lite, results/v5, results/paper_figs (v3 campaign) and results/paper_figs/v5. Code: loftbench/ (simulator and detectors), testbed/ (Ryu application and scripts).", "small")]
 
 doc = SimpleDocTemplate(OUT, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
                         bottomMargin=18 * mm, title="EnsGuard status report", author="asifahmedutsa")

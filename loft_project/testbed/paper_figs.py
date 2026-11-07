@@ -23,7 +23,13 @@ Detection figures use E11 (simulator, results/e11_detect) and the testbed entry 
  13   accuracy / precision / recall / F1, one panel each, every paper's detector at the same 0.1 % FPR
  14   the same at each paper's own threshold
 
-    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py   # writes results/paper_figs/
+With --v5 the testbed figures (01-08, 10) are drawn from the preregistered v5 campaign instead
+(~/loft-runs/v5_T1B_*, T1B, seeds 4140-4144, 6 defenses) into results/paper_figs/v5/, plus
+ 15   per-seed harm and attack share, v5 against DMS-BTT and FTMaster, per attack
+ 16   A2 timeline: why v5 harms more than the baselines under A2 (its block expires)
+
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py         # writes results/paper_figs/
+    PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py --v5    # writes results/paper_figs/v5/
 """
 import csv
 import glob
@@ -49,6 +55,18 @@ NAME = {"none": "None", "evict": "EVICT", "sift": "SIFT", "tableguard": "TableGu
         "rdefender": "rDefender", "ftmaster": "FTMaster", "ftop": "FTOP", "dms-btt": "DMS-BTT",
         "dualguard-portguard-hostid": "FL-DualGuard", "ensguard": "EnsGuard"}
 ATT_MACS = {"00:00:00:00:01:05", "00:00:00:00:01:06"}
+PREFIX, DOM, HL = "v3_T1", "T1", "ensguard"     # campaign run-name prefix, domain, highlighted defense
+SHOW = ["none", "ftmaster", "ftop", "dms-btt", "ensguard"]
+
+
+def use_v5():
+    """Switch the testbed figures to the preregistered v5 campaign (T1B, seeds 4140-4144)."""
+    global PREFIX, DOM, HL, SHOW, SEEDS, DEFS, OUT
+    PREFIX, DOM, HL, OUT = "v5_T1B", "T1B", "ensguard-v5", "results/paper_figs/v5"
+    SEEDS = [4140, 4141, 4142, 4143, 4144]
+    DEFS = ["none", "ensguard", "ensguard-v4lite", "ensguard-v5", "dms-btt", "ftmaster"]
+    SHOW = ["none", "ftmaster", "dms-btt", "ensguard", "ensguard-v5"]
+    NAME.update({"ensguard": "EnsGuard v3", "ensguard-v4lite": "EnsGuard v4-lite", "ensguard-v5": "EnsGuard v5"})
 
 # Reference categorical palette (dataviz skill), fixed order; neutrals for context marks.
 C = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
@@ -63,7 +81,7 @@ plt.rcParams.update({
 
 
 def run_dir(v, d, s):
-    return f"{R}/v3_T1_{v}_{d}_s{s}"
+    return f"{R}/{PREFIX}_{v}_{d}_s{s}"
 
 
 def summary(path):
@@ -80,16 +98,16 @@ def summary(path):
 
 def series(d, sw="s11"):
     """Per-second grid 0..DUR: total entries, attacker entries at switch sw, and Packet-In per
-    second at the whole controller (controller_T1.csv; the access switches send most of them)."""
+    second at the whole controller (controller_<DOM>.csv; the access switches send most of them)."""
     grid = np.arange(0, DUR + 1)
-    rows = list(csv.DictReader(open(f"{d}/switch_T1_{sw}.csv")))
-    crow = list(csv.DictReader(open(f"{d}/controller_T1.csv")))
+    rows = list(csv.DictReader(open(f"{d}/switch_{DOM}_{sw}.csv")))
+    crow = list(csv.DictReader(open(f"{d}/controller_{DOM}.csv")))
     tc = np.array([float(r["t"]) for r in crow])
     pc = np.array([float(r["packet_in"]) for r in crow])
     t = np.array([float(r["t"]) for r in rows])
     ent = np.array([float(r["entries"]) for r in rows])
     att = {}
-    for r in csv.DictReader(open(f"{d}/switch_T1_{sw}_macs.csv")):
+    for r in csv.DictReader(open(f"{d}/switch_{DOM}_{sw}_macs.csv")):
         if r["mac"] in ATT_MACS:
             att[float(r["t"])] = att.get(float(r["t"]), 0) + int(r["entries"])
     a = np.array([att.get(x, 0) for x in t], float)
@@ -132,7 +150,8 @@ def attack_line(ax):
 # ---------------------------------------------------------------- testbed time series
 def fig01():
     for v in ATTACKS:
-        fig, axs = plt.subplots(2, 5, figsize=(12, 4.6), sharex=True, sharey=True)
+        nc = (len(DEFS) + 1) // 2
+        fig, axs = plt.subplots(2, nc, figsize=(2.4 * nc, 4.6), sharex=True, sharey=True)
         for ax, d in zip(axs.flat, DEFS):
             g = np.arange(0, DUR + 1)
             tot, att = med(v, d, 1), med(v, d, 2)
@@ -156,10 +175,9 @@ def fig01():
 
 
 def fig02():
-    show = ["none", "ftmaster", "ftop", "dms-btt", "ensguard"]
     fig, axs = plt.subplots(1, 3, figsize=(12, 3.4), sharey=True)
     for ax, v in zip(axs, ATTACKS):
-        for i, d in enumerate(show):
+        for i, d in enumerate(SHOW):
             pa = 100 * med(v, d, 2) / CAP
             ax.plot(np.arange(0, DUR + 1), pa, color=NEUTRAL if d == "none" else C[i],
                     lw=2, ls="--" if d == "none" else "-", label=NAME[d])
@@ -174,7 +192,7 @@ def fig02():
 
 def fig04():
     cases = [("benign", "none", "no attack", NEUTRAL, "--"), ("A4", "none", "A4, no defense", C[1], "-"),
-             ("A4", "dms-btt", "A4, DMS-BTT", C[3], "-"), ("A4", "ensguard", "A4, EnsGuard", C[0], "-")]
+             ("A4", "dms-btt", "A4, DMS-BTT", C[3], "-"), ("A4", HL, f"A4, {NAME[HL]}", C[0], "-")]
     fig, ax = plt.subplots(figsize=(7, 3.2))
     for v, d, lab, col, ls in cases:
         y = pd.Series(med(v, d, 3)).rolling(5, min_periods=1, center=True).mean()
@@ -223,7 +241,7 @@ def per_run():
                 p = run_dir(v, d, s)
                 sm = summary(f"{p}/summary.txt")
                 cpu, mem = cpu_mem(p)
-                dec = [float(r["decision_ms"]) for r in csv.DictReader(open(f"{p}/switch_T1_s11.csv"))
+                dec = [float(r["decision_ms"]) for r in csv.DictReader(open(f"{p}/switch_{DOM}_s11.csv"))
                        if float(r["t"]) >= T_ATT]
                 rows.append(dict(variant=v, defense=d, seed=s,
                                  pa_avg=sm.get("attack_share_avg_pct_s11"), pa_max=sm.get("attack_share_max_pct_s11"),
@@ -241,7 +259,8 @@ def per_run():
     return df
 
 
-def bars(ax, df, key, title, fmt="{:.1f}", hl="ensguard"):
+def bars(ax, df, key, title, fmt="{:.1f}", hl=None):
+    hl = hl or HL
     g = df.groupby("defense")[key]
     m, lo, hi = g.mean().reindex(DEFS), g.min().reindex(DEFS), g.max().reindex(DEFS)
     x = np.arange(len(DEFS))
@@ -269,8 +288,9 @@ def fig03(df):
     fig.suptitle("Defense comparison on the testbed (A2, A4, E9P x 5 seeds; bar = mean, whisker = min-max)",
                  fontsize=10)
     fig.tight_layout()
-    fig.text(0.01, -0.01, "EVICT replaces entries when the table is full, so the switch sends no Table-Full "
-             "message (the papers report NA).", fontsize=7.5, color=INK2)
+    if "evict" in DEFS:
+        fig.text(0.01, -0.01, "EVICT replaces entries when the table is full, so the switch sends no Table-Full "
+                 "message (the papers report NA).", fontsize=7.5, color=INK2)
     save(fig, "fig03_comparison")
     g = a.groupby("defense")[["pa_avg", "pa_max", "usage_avg", "overflow_s", "packet_in", "table_full",
                               "pin_lost", "harm", "probe_ok", "decision_ms_median", "cpu_pct", "mem_mb"]].mean()
@@ -316,13 +336,13 @@ def fig07():
         x = []
         for v in ATTACKS:
             for s in SEEDS:
-                x += [float(r["decision_ms"]) for r in csv.DictReader(open(f"{run_dir(v, d, s)}/switch_T1_s11.csv"))
+                x += [float(r["decision_ms"]) for r in csv.DictReader(open(f"{run_dir(v, d, s)}/switch_{DOM}_s11.csv"))
                       if float(r["t"]) >= T_ATT]
         data.append(np.maximum(x, 0.1))
     b = ax.boxplot(data, whis=(5, 95), showfliers=False, patch_artist=True, widths=0.6,
                    medianprops=dict(color=INK, lw=1.5))
     for p, d in zip(b["boxes"], DEFS):
-        p.set(facecolor=C[1] if d == "ensguard" else C[0], alpha=0.85, edgecolor="white")
+        p.set(facecolor=C[1] if d == HL else C[0], alpha=0.85, edgecolor="white")
     ax.set_yscale("log")
     ax.set_xticks(np.arange(1, len(DEFS) + 1), [NAME[d] for d in DEFS], rotation=45, ha="right")
     ax.set_ylabel("decision time per poll (ms, log)")
@@ -470,9 +490,77 @@ def fig12():
     save(fig, "fig12_block_rule_sensitivity")
 
 
+# ---------------------------------------------------------------- v5 campaign only
+def fig15(df):
+    """Per attack: benign harm and attack share, mean bar plus one dot per seed."""
+    show = ["none", "ensguard", "ensguard-v4lite", "ensguard-v5", "dms-btt", "ftmaster"]
+    fig, axs = plt.subplots(2, 3, figsize=(12, 6.2))
+    x = np.arange(len(show))
+    for j, v in enumerate(ATTACKS):
+        a = df[df.variant == v]
+        for ax, (k, t) in zip(axs[:, j], [("harm", "benign flows harmed (%)"), ("pa_avg", "average attack share s11 (%)")]):
+            m = a.groupby("defense")[k].mean().reindex(show)
+            cols = [C[1] if d == HL else (NEUTRAL if d == "none" else C[0]) for d in show]
+            ax.bar(x, m, color=cols, width=0.7, edgecolor="white", lw=1, alpha=0.85)
+            for i, d in enumerate(show):
+                y = a[a.defense == d][k].values
+                ax.plot(np.full(len(y), i) + np.linspace(-0.18, 0.18, len(y)), y, "o", ms=3.5, color=INK, mec="white", mew=0.5)
+                ax.annotate(f"{m[d]:.2f}" if k == "harm" else f"{m[d]:.0f}", (i, max(y.max(), m[d])), xytext=(0, 2),
+                            textcoords="offset points", ha="center", va="bottom", fontsize=6.5, color=INK)
+            ax.set_xticks(x, [NAME[d] for d in show], rotation=40, ha="right")
+            ax.grid(axis="x", visible=False)
+            ax.set_title(f"{v}: {t}")
+    fig.suptitle("v5 campaign per attack (testbed, T1B; bar = mean of 5 seeds, dot = one seed)", fontsize=10)
+    fig.tight_layout()
+    save(fig, "fig15_per_attack_per_seed")
+
+
+def fig16(seed=4141):
+    """A2, one seed: core-table entries over time for v5 and the two baselines, with v5's block,
+    its expiry and the time its table was full."""
+    fig, ax = plt.subplots(figsize=(8.5, 3.6))
+    g = np.arange(0, DUR + 1)
+    for d, col in (("dms-btt", C[3]), ("ftmaster", C[2]), (HL, C[1])):
+        _, e, a, _ = series(run_dir("A2", d, seed))
+        ax.plot(g, e, color=col, lw=1.8, label=f"{NAME[d]}: all entries")
+        if d == HL:
+            ax.fill_between(g, 0, a, color=col, alpha=0.25, lw=0, label=f"{NAME[d]}: attacker entries")
+    rows = list(csv.DictReader(open(f"{run_dir('A2', HL, seed)}/controller_{DOM}.csv")))
+    t_blk = next(float(r["t"]) for r in rows if float(r["drop_rules"]) > 0)
+    t_full = [float(r["t"]) for r in rows if float(r["entries"]) >= 0.98 * CAP]
+    ax.axhline(CAP, color=INK2, lw=1, ls="--")
+    attack_line(ax)
+    for t, lab in ((t_blk, "v5 blocks\nboth attackers"), (t_blk + 60, "60 s block\nexpires")):
+        ax.axvline(t, color=INK2, lw=1, ls=":")
+        ax.text(t + 2, CAP * 0.97, lab, fontsize=7.5, color=INK2, va="top")
+    if t_full:
+        ax.axvspan(min(t_full), max(t_full), color=C[7], alpha=0.12, lw=0)
+        ax.text(max(t_full) + 2, CAP * 1.03, "v5 table full: new benign flows refused", fontsize=7.5, color=C[7])
+    ax.set_xlim(0, DUR)
+    ax.set_ylim(0, CAP * 1.12)
+    ax.set_xlabel("time (s); attack from 50 s")
+    ax.set_ylabel("entries in s11")
+    ax.legend(fontsize=7.5, loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=4)
+    ax.set_title(f"Why v5 harms more than the baselines under A2 (testbed, seed {seed})")
+    save(fig, "fig16_a2_block_expiry")
+
+
 def main():
-    os.makedirs(OUT, exist_ok=True)
     only = set(sys.argv[1:])
+    if "--v5" in only:
+        only.discard("--v5")
+        use_v5()
+        os.makedirs(OUT, exist_ok=True)
+        want = lambda n: not only or n in only  # noqa: E731
+        for n, f in (("01", fig01), ("02", fig02), ("04", fig04), ("10", fig10), ("07", fig07), ("16", fig16)):
+            if want(n):
+                f()
+        df = per_run()
+        for n, f in (("03", fig03), ("05", fig05), ("06", fig06), ("08", fig08), ("15", fig15)):
+            if want(n):
+                f(df)
+        return
+    os.makedirs(OUT, exist_ok=True)
     want = lambda n: not only or n in only  # noqa: E731
     if want("01"):
         fig01()

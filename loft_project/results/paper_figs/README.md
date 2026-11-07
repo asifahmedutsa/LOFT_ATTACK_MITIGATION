@@ -28,3 +28,15 @@ Notes:
   yet, and every bar is the same.
 - In Fig. 08 every defense runs at about 93 % of one core, because the controller is saturated under
   attack (posthoc_diagnosis.md). CPU therefore does not separate the defenses here.
+
+## v5 campaign (`v5/`)
+
+`PYTHONPATH=. ~/.venvs/loft/bin/python testbed/paper_figs.py --v5` redraws the testbed figures
+(01-08, 10) from the preregistered v5 campaign (~/loft-runs/v5_T1B_*, T1B, seeds 4140-4144; none,
+EnsGuard v3, v4-lite, v5, DMS-BTT, FTMaster) into `v5/`, with `v5/testbed_runs.csv` and
+`v5/comparison_table.csv`, plus two figures of its own:
+
+| File | What | Data |
+|---|---|---|
+| v5/fig15_per_attack_per_seed | benign harm and attack share per attack; bar = mean, dot = one seed | v5 campaign |
+| v5/fig16_a2_block_expiry | A2, seed 4141: s11 entries over time for v5, DMS-BTT and FTMaster; v5's block, its expiry and the time its table was full | v5 campaign (exploratory) |
