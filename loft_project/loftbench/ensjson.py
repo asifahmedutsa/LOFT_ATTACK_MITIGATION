@@ -133,6 +133,8 @@ class EnsembleJSON:
         cfg = cfg or json.load(open(os.path.join(model_dir, "ens_config.json")))
         fast = FastOblivious8 if cfg.get("fast_cb") else FastOblivious
         self.cb = [fast(CatBoostJSON(os.path.join(model_dir, f))) for f in cfg["cb"]]
+        # XGBoost tree models (TreeJSON), e.g. FEVER's federated detector (ens_config_fl.json).
+        self.xgb = [TreeJSON(os.path.join(model_dir, f)) for f in cfg.get("xgb", [])]
         self.rf = [FastForest(TreeJSON(os.path.join(model_dir, f))) for f in cfg["rf"]]
         self.rf_source = "json" if self.rf else "none"
         try:
@@ -151,6 +153,8 @@ class EnsembleJSON:
     def predict_proba(self, X):
         if len(X) == 0:
             return np.zeros(0)
+        if self.xgb:
+            return np.mean([m.predict_proba(X)[:, 1] for m in self.xgb], axis=0)
         cb = np.mean([m.predict_proba(X)[:, 1] for m in self.cb], axis=0)
         if not self.rf:                      # CatBoost only (ensguard-v4lite)
             return cb

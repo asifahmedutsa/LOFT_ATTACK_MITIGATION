@@ -33,12 +33,13 @@ EXP = "results/v21/exported"
 SEEDS = (2000, 2001, 2002)
 VARS = ("A2", "A4", "E9P", "benign")
 CFGS = {"v5": "ens_config_v5.json", "v6": "ens_config_v6.json", "fever": "ens_config_v6.json"}
+ALL_CFGS = dict(CFGS, **{"fever-fl": "ens_config_fl.json"})   # fever-fl: federated XGBoost detector
 N_BENIGN = 4
 SW = "s11"
 
 
 def make(key):
-    ec = json.load(open(f"{EXP}/{CFGS[key]}"))
+    ec = json.load(open(f"{EXP}/{ALL_CFGS[key]}"))
     pg = json.load(open(f"{EXP}/defenses.json"))["portguard"]
     b = ec["block"]
     eb = EvictBlock(EnsembleJSON(EXP, ec), ec["tau"]["T1B"], name="evictblock",
@@ -46,7 +47,7 @@ def make(key):
                     f_min=b["k"], block_s=b["block_s"], m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
                     score_changed_only=bool(ec.get("score_changed_only", False)),
                     vol_x=b["vol_x"]["T1B"][SW], permanent=bool(b.get("permanent", False)))
-    if key == "fever":                       # v6 without PortGuard
+    if key in ("fever", "fever-fl"):          # v6 without PortGuard
         return eb
     return PortGuard(eb, name=key, mode="full", **{k: pg[k] for k in pg if k != "mode"})
 

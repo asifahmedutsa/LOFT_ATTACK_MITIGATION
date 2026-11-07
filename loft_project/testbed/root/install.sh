@@ -40,9 +40,10 @@ rm -rf "$NEW"
 install -d -m 0755 "$NEW/code" "$NEW/bin" "$NEW/code/results/v21"
 cp -r "$SRC/loftbench" "$SRC/testbed" "$NEW/code/"
 cp -r "$SRC/results/v21/exported" "$NEW/code/results/v21/"
-# Replay files for the trace domains T1-T3 (written by loftbench.pcapflows; not in git).
+# Replay files for the trace domains T1-T3 and the univ2 parts U1/U2/UH (written by
+# loftbench.pcapflows; not in git).
 install -d -m 0755 "$NEW/code/traces"
-for f in bigflows.npz univ2.npz; do
+for f in bigflows.npz univ2.npz univ2_pt0.npz univ2_pt3.npz univ2_pt6.npz; do
     if [ -f "$SRC/traces/$f" ]; then cp "$SRC/traces/$f" "$NEW/code/traces/"; fi
 done
 cp -r "$SITE" "$NEW/py38-site"

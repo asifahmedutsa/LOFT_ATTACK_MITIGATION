@@ -55,10 +55,15 @@ TRACE_DOMAINS = {
     # T1B at the testbed's 600 pps (one replay pass is 343 s; at 1,200 pps it is 172 s).
     "T1Bt": TraceProfile("T1B-bigflows-last-60pct-600pps", "bigflows.npz", 600.0, anchor="private",
                          window=(0.4, 1.0)),
+    # The univ2 parts on the testbed at FTOP's 1,000 pps (docs/testbed_training_plan.md).
+    "U1t": TraceProfile("U1-univ2-pt0-1000pps", "univ2_pt0.npz", 1000.0),
+    "U2t": TraceProfile("U2-univ2-pt3-1000pps", "univ2_pt3.npz", 1000.0),
+    "UHt": TraceProfile("UH-univ2-pt6-1000pps", "univ2_pt6.npz", 1000.0),
 }
 # After D1-D3, for attacker address ranges; T1A and T1B are T1's network (same hosts, same
 # attacker addresses), only the replayed part of the capture differs.
-TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5, "T1A": 3, "T1B": 3, "U1": 6, "U2": 7, "UH": 8, "T1Bt": 3}
+TRACE_DOMAIN_IDX = {"T1": 3, "T2": 4, "T3": 5, "T1A": 3, "T1B": 3, "U1": 6, "U2": 7, "UH": 8, "T1Bt": 3,
+                    "U1t": 6, "U2t": 7, "UHt": 8}
 
 
 @lru_cache(maxsize=4)
