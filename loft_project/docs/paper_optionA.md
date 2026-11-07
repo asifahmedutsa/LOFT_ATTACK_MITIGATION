@@ -769,8 +769,8 @@ obvious next step; it needs its own preregistered test.
 
 | Item | Content | Source |
 |---|---|---|
-| Fig. 1 | System overview: controllers share models; evict, block, fair share | `docs/ensguard_architecture.png` [TODO: update for option A] |
-| Fig. 2 | Testbed topology (tree3) | `docs/ensguard_network.png` |
+| Fig. 1 | FEVER architecture: federated training; detection and mitigation modules | `docs/fever_architecture.png` (flowchart: `docs/fever_flowchart.png`) |
+| Fig. 2 | Testbed topology (tree3) | `docs/fever_topology.png` |
 | Table 1 | E11 recall and PR-AUC by exposure | §5 |
 | Fig. 3 | E11 classifier comparison | `fig09_classifier_comparison` |
 | Table 2 | Preregistered H1-H4 | §6.1 |

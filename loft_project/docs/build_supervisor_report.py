@@ -134,7 +134,7 @@ s += [P("1. The problem: low-rate flow-table overflow (LOFT)", "h1"),
 # ------------------------------------------------------------------ 2. architecture
 s += [P("2. FEVER architecture, step by step", "h1"),
       P("<b>FEVER</b> (Federated Eviction and Volume-based Enforcement against overflow Rules) is the current version of EnsGuard (v5 in run names and result files).", "p"),
-      fig("docs/ensguard_architecture.png", "Figure A. FEVER: offline federated training (top) and the loop each controller runs every 1 s poll (bottom). v3, the version of the first testbed campaign, used RF + CatBoost and had no volume rule (Section 4.11)."),
+      fig("docs/fever_architecture.png", "Figure A. FEVER: attack detection and attack mitigation run on each controller every 1 s poll; the shared detector they use comes from federated training (bottom). v3, the version of the first testbed campaign, used RF + CatBoost and had no volume rule (Section 4.11)."),
       fig("docs/fever_flowchart.png", "Figure A2. The FEVER framework as a flowchart, in the style of the related papers. TH1 = 70 % and TH2 = 90 % table occupancy; τ is the per-controller score threshold; volume blocking blocks a host holding more than X entries and at least 3 times the median host's.", 0.9),
       P("Offline: building the shared detector", "h2"),
       bullets([
@@ -153,7 +153,7 @@ s += [P("2. FEVER architecture, step by step", "h1"),
           "<b>06 Block rule B (volume, new in FEVER, no ML).</b> While the table is at least 90 % full, a host holding more than X entries and at least 3 times the median host's is blocked. This catches disguised attacks the model misses (A4, E9P). Either rule blocks a host for 60 s, doubling on repeat (at most 240 s).",
           "<b>07 PortGuard fallback.</b> If the table is still at least 90 % full, each access port gets a weighted fair share, trimming the highest-scoring entries first. This bounds any attacker both rules miss.",
       ]),
-      fig("docs/ensguard_network.png", "Figure B. Deployment: each domain has a Ryu controller, a core switch and two access switches, four normal hosts and two attackers. On the testbed laptop we run one domain at a time (see Section 3)."),
+      fig("docs/fever_topology.png", "Figure B. Testbed network: a Ryu controller running FEVER, core switch S1 to the server, access switches S2 and S3 with two users and one attacker each. Each of the three domains D1-D3 has this shape; the testbed laptop runs one domain at a time (Section 3).", 0.85),
       P("Why this design", "h2"),
       bullets([
           "<b>Federation</b> addresses the main gap in the literature: per-controller detectors are trained and tested on the same attacks and fail on attacks seen elsewhere.",
