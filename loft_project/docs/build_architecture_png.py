@@ -1,5 +1,6 @@
-"""Builds docs/ensguard_architecture.png: the current system (FL-EnsGuard) on one page.
-Values match results/v21/exported/ens_config.json and testbed/loft_ryu_app.py."""
+"""Builds docs/ensguard_architecture.png: the current system (EnsGuard v5) on one page.
+Values match results/v21/exported/ens_config_v5.json, loftbench/defenses.py (EvictBlock) and
+testbed/loft_ryu_app.py. The v3 version of this figure is in git history (before 2026-11-07)."""
 import matplotlib
 
 matplotlib.use("Agg")
@@ -31,9 +32,9 @@ def arrow(x0, y0, x1, y1, col=MUTED, style="-|>", lw=1.6, ls="-"):
                                  color=col, lw=lw, linestyle=ls))
 
 
-ax.text(80, 108, "FL-EnsGuard: federated detection, eviction and blocking against low-rate "
+ax.text(80, 108, "EnsGuard v5: federated detection, eviction and blocking against low-rate "
         "flow-table overflow", ha="center", va="center", fontsize=17, weight="bold", color=INK)
-ax.text(80, 104.4, "Offline: three SDN controllers build a shared ensemble by model sharing.   "
+ax.text(80, 104.4, "Offline: three SDN controllers build a shared CatBoost ensemble by model sharing.   "
         "Online: each controller runs the same loop on its switch every 1 s poll.",
         ha="center", va="center", fontsize=11, color=MUTED)
 
@@ -41,13 +42,13 @@ ax.text(80, 104.4, "Offline: three SDN controllers build a shared ensemble by mo
 box(4, 74.6, 152, 25.9, "gray", r=2.2, lw=1.0)
 ax.text(7, 98, "OFFLINE  ·  FEDERATED TRAINING (model sharing, no raw flow data leaves a domain)",
         fontsize=10.5, weight="bold", color=C["gray"][1], va="center")
-for i, d in enumerate(("D1", "D2", "D3")):
+for i, (d, seen) in enumerate((("D1", "A1, A4"), ("D2", "A2, A5"), ("D3", "A3, A7"))):
     x = 8 + i * 34
     e = box(x, 79, 30, 16, "blue")
     ax.text(x + 15, 92, f"Controller {d}", ha="center", fontsize=11.5, weight="bold", color=e)
-    ax.text(x + 15, 87.6, "local flow-entry data\n(only the attacks it has seen)", ha="center",
+    ax.text(x + 15, 87.6, f"local flow-entry data:\nits own benign traffic + attacks {seen}", ha="center",
             va="center", fontsize=9, color=INK)
-    ax.text(x + 15, 82.2, "trains RF (50 trees, depth 12)\n+ CatBoost on 17 features",
+    ax.text(x + 15, 82.4, "trains one CatBoost model\non 17 features",
             ha="center", va="center", fontsize=9, color=INK)
     ax.plot([x + 15, x + 15], [79, 77.6], color=C["blue"][1], lw=1.4)
 ax.plot([23, 108], [77.6, 77.6], color=C["blue"][1], lw=1.4)
@@ -57,9 +58,11 @@ ax.text(64, 76.3, "each controller uploads its trained models (not its data)", h
         fontsize=8.8, color=C["blue"][1], va="center")
 e = box(110, 79, 42, 16, "purp")
 ax.text(131, 92, "Shared ensemble", ha="center", fontsize=11.5, weight="bold", color=e)
-ax.text(131, 86.4, "score = mean P(attack) of the 6 models\n(3 RF + 3 CatBoost)\n"
-        "τ per domain at a 0.1 % benign-flag budget\non validation data (testbed τ = 0.639)",
-        ha="center", va="center", fontsize=9, color=INK)
+ax.text(131, 86.2, "score = mean P(attack) of the 3 CatBoost models\n"
+        "each domain sets its own τ at a 0.1 % benign-flag budget\n"
+        "testbed, from T1A traffic only: τ = 0.620 and\nvolume limit X = 1.5 × busiest benign host\n"
+        "(785-800 entries per switch)",
+        ha="center", va="center", fontsize=8.8, color=INK, linespacing=1.3)
 arrow(131, 79, 131, 70.5, col=C["purp"][1], lw=2)
 ax.text(133, 72.6, "same model deployed to every controller", fontsize=9, color=C["purp"][1],
         va="center")
@@ -70,20 +73,21 @@ ax.text(7, 71, "ONLINE  ·  EACH CONTROLLER, EVERY 1 s FLOW-STATS POLL", fontsiz
 steps = [
     ("blue", "01  Read flow stats", "OpenFlow 1.3 flow-stats reply: per-entry packets, bytes, age,\n"
      "source MAC (host identity) and ingress port; table occupancy"),
-    ("teal", "02  17 causal features", "11 flow-level (rate, gaps, sizes) · 3 source-level "
-     "(the host's other entries)\n· 3 context-level (table occupancy and churn)"),
-    ("purp", "03  Score with the ensemble", "P(attack) per entry from the shared RF + CatBoost "
-     "ensemble;\nruns only while the table is ≥ 70 % full (ρ = 0.7) or a host is on probation"),
+    ("teal", "02  Features, changed only", "17 features per entry (11 flow · 3 source host · 3 table);\n"
+     "only entries whose counters changed since the last poll are rescored (median 13 ms per poll)"),
+    ("purp", "03  Score", "P(attack) per entry from the 3 shared CatBoost models (exact 8-bit scorer);\n"
+     "runs only while the table is ≥ 70 % full (ρ = 0.7) or a host is on probation"),
     ("amber", "04  Evict", "delete every entry with score ≥ τ  (frees the slots the low-rate "
      "attacker refreshes)"),
-    ("coral", "05  Block outlier hosts", "a host whose evictions in the last 10 s are ≥ 50 and ≥ 3× "
-     "the median host's\nis blocked (drop rule by MAC) 60 s, doubling on repeat, at most 240 s; "
-     "then 20 s probation"),
-    ("red", "06  PortGuard fallback", "at ≥ 90 % occupancy: weighted max-min fair share of the "
+    ("coral", "05  Block rule A: detector", "a host whose evictions in the last 10 s are ≥ 50, ≥ 3 × max(median host, 10)\n"
+     "and ≥ 20 % of its own entries — catches attacks the model recognises (A2)"),
+    ("coral", "06  Block rule B: volume", "NEW in v5, no ML: at ≥ 90 % occupancy, a host holding > X entries and ≥ 3 × the\n"
+     "median host's — catches disguised attacks the model misses (A4, E9P)"),
+    ("red", "07  PortGuard fallback", "at ≥ 90 % occupancy: weighted max-min fair share of the "
      "table per access port\n(quota, trim the highest-scoring entries first) — bounds any attacker "
-     "the model misses"),
+     "both rules miss"),
 ]
-y0, h, gap = 60.5, 8.2, 1.6
+y0, h, gap = 62.0, 7.2, 1.25
 for i, (col, title, desc) in enumerate(steps):
     y = y0 - i * (h + gap)
     e = box(6, y, 40, h, col)
@@ -93,6 +97,8 @@ for i, (col, title, desc) in enumerate(steps):
     if i < len(steps) - 1:
         arrow(26, y, 26, y - gap, col=MUTED, lw=1.4)
 yb = y0 - (len(steps) - 1) * (h + gap)
+ax.text(64, yb - 2.6, "Rule A or B: drop rule by MAC for 60 s, doubling on repeat "
+        "(at most 240 s), then 20 s probation", ha="center", fontsize=9.2, color=C["coral"][1], style="italic")
 
 # Switch / outcome on the right
 e = box(126, 34, 30, 26.7, "gray", lw=1.2)
@@ -101,15 +107,15 @@ ax.text(141, 46.5, "flow table\n(3500 entries,\nidle timeout 10 s)\n\nreactive p
         "rules from Packet-In", ha="center", va="center", fontsize=9.2, color=INK, linespacing=1.3)
 arrow(126, 56, 122, 64.6, col=C["blue"][1], lw=1.4)
 ax.text(123.2, 61.5, "stats", fontsize=8.5, color=C["blue"][1], rotation=0)
-for yy in (y0 - 3 * (h + gap) + h / 2, y0 - 4 * (h + gap) + h / 2, yb + h / 2):
+for yy in (y0 - 3 * (h + gap) + h / 2, y0 - 4 * (h + gap) + h / 2, y0 - 5 * (h + gap) + h / 2, yb + h / 2):
     arrow(122, yy, 126, max(min(yy, 58), 36), col=C["red"][1], lw=1.2)
 ax.text(141, 30.5, "delete · drop rule · quota", ha="center", fontsize=9, color=C["red"][1])
 
 e = box(126, 10, 30, 17, "teal", lw=1.2)
 ax.text(141, 24.2, "Outcome", ha="center", fontsize=11.5, weight="bold", color=e)
-ax.text(141, 17.6, "attack entries removed\nbefore the table fills;\nbenign hosts keep their\n"
-        "share and new flows\nstill get rules", ha="center", va="center", fontsize=9.2, color=INK,
-        linespacing=1.3)
+ax.text(141, 17.4, "testbed, unseen traffic (T1B):\nbenign harm 0.49 %\nattacker share 22 %\n"
+        "attackers blocked in 15/15 runs\nno innocent host blocked", ha="center", va="center", fontsize=9.2,
+        color=INK, linespacing=1.3)
 
 ax.text(80, 1.4, "Testbed: Mininet + Open vSwitch + Ryu, tree topology (core s11, edge s12/s13) per "
         "controller; the controller runs the same defense code as the simulator.",

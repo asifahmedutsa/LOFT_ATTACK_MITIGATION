@@ -132,30 +132,31 @@ s += [P("1. The problem: low-rate flow-table overflow (LOFT)", "h1"),
       PageBreak()]
 
 # ------------------------------------------------------------------ 2. architecture
-s += [P("2. EnsGuard architecture, step by step", "h1"),
-      fig("docs/ensguard_architecture.png", "Figure A. EnsGuard: offline federated training (top) and the loop each controller runs every 1 s poll (bottom)."),
+s += [P("2. EnsGuard architecture (current version, v5), step by step", "h1"),
+      fig("docs/ensguard_architecture.png", "Figure A. EnsGuard v5: offline federated training (top) and the loop each controller runs every 1 s poll (bottom). v3, the version of the first testbed campaign, used RF + CatBoost and had no volume rule (Section 4.11)."),
       P("Offline: building the shared detector", "h2"),
       bullets([
           "<b>Step 1. Each controller trains locally.</b> Controllers D1, D2 and D3 each collect labelled flow-table entries from their own network. Each has seen different attacks: D1 saw A1 and A4, D2 saw A2 and A5, D3 saw A3 and A7. Nobody saw A6 or E9P.",
-          "<b>Step 2. Two models per controller.</b> Each trains a Random Forest (50 trees, depth 12) and a CatBoost model on the same 17 features.",
-          "<b>Step 3. Models are shared, data is not.</b> Each controller uploads its trained models; the shared detector is the average attack probability of all 6 models. A controller benefits from attacks only the others have seen.",
-          "<b>Step 4. Each controller sets its own alarm threshold τ.</b> τ is chosen so that only 0.1 % of that controller's own normal entries would be flagged (on the testbed's traffic, τ = 0.639).",
+          "<b>Step 2. One model per controller.</b> Each trains a CatBoost model on 17 features. (v3 also trained a Random Forest; dropping it kept the accuracy and made scoring about 5 times faster.)",
+          "<b>Step 3. Models are shared, data is not.</b> Each controller uploads its trained model; the shared detector is the average attack probability of the 3 models. A controller benefits from attacks only the others have seen.",
+          "<b>Step 4. Each controller sets its own settings from its own normal traffic.</b> The alarm threshold τ flags only 0.1 % of its normal entries; the volume limit X is 1.5 times the busiest normal host. On the testbed both come from the training part of the trace only (T1A): τ = 0.620, X = 785-800 entries per switch.",
       ]),
       P("Online: the loop every second on every switch", "h2"),
       bullets([
           "<b>01 Read flow statistics</b> from the switch: per-entry packets, bytes, age, source MAC and port, and how full the table is.",
-          "<b>02 Compute 17 features</b> per entry: 11 about the flow (rate, gaps between packets, sizes), 3 about its source host, 3 about the table (occupancy, churn).",
-          "<b>03 Score</b> each entry with the shared ensemble (only while the table is at least 70 % full, or a host is on probation).",
+          "<b>02 Compute 17 features</b> per entry, only for entries whose counters changed since the last poll: 11 about the flow (rate, gaps between packets, sizes), 3 about its source host, 3 about the table (occupancy, churn).",
+          "<b>03 Score</b> each entry with the 3 shared CatBoost models (only while the table is at least 70 % full, or a host is on probation).",
           "<b>04 Evict</b> every entry scoring at least τ.",
-          "<b>05 Block outlier hosts.</b> A host whose evictions in the last 10 s are at least 50 and at least 3 times the median host's is blocked for 60 s (doubling on repeat, at most 240 s).",
-          "<b>06 PortGuard fallback.</b> If the table is still at least 90 % full, each access port gets a weighted fair share, trimming the highest-scoring entries first. This bounds any attacker the detector misses.",
+          "<b>05 Block rule A (detector).</b> A host whose evictions in the last 10 s are at least 50, at least 3 times the median host's (counting the median as at least 10), and at least 20 % of its own entries is blocked. This catches attacks the model recognises, such as A2.",
+          "<b>06 Block rule B (volume, new in v5, no ML).</b> While the table is at least 90 % full, a host holding more than X entries and at least 3 times the median host's is blocked. This catches disguised attacks the model misses (A4, E9P). Either rule blocks a host for 60 s, doubling on repeat (at most 240 s).",
+          "<b>07 PortGuard fallback.</b> If the table is still at least 90 % full, each access port gets a weighted fair share, trimming the highest-scoring entries first. This bounds any attacker both rules miss.",
       ]),
       fig("docs/ensguard_network.png", "Figure B. Deployment: each domain has a Ryu controller, a core switch and two access switches, four normal hosts and two attackers. On the testbed laptop we run one domain at a time (see Section 3)."),
       P("Why this design", "h2"),
       bullets([
           "<b>Federation</b> addresses the main gap in the literature: per-controller detectors are trained and tested on the same attacks and fail on attacks seen elsewhere.",
-          "<b>Two model families</b> (RF and CatBoost) were chosen on validation data because their average generalised slightly better than either alone (Section 4.1 discusses the cost).",
-          "<b>Evict, then block, then fair share</b> mirrors the published systems (FTMaster, FTODefender and FloRa evict and block) but adds a fallback that does not depend on the detector.",
+          "<b>CatBoost only:</b> v3 averaged RF and CatBoost; CatBoost alone generalises about as well at a fifth of the cost (Section 4.1), which matters on a saturated controller.",
+          "<b>Evict, then block, then fair share</b> mirrors the published systems (FTMaster, FTODefender and FloRa evict and block). v5 adds two parts that do not depend on the detector: the volume rule and the fair-share fallback.",
       ]),
       PageBreak()]
 
