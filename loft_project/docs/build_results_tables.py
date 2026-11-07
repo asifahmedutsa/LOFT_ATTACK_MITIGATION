@@ -142,28 +142,6 @@ s.append(table("Service to benign users under each attack.",
                best={1: "min", 2: "min", 3: "min", 4: "max", 5: "max", 6: "max"},
                head2=["", "A2", "A4", "E9P", "A2", "A4", "E9P"], spans=[(1, 3), (4, 6)]))
 
-rows = []
-for d, name in DEFS:
-    b = B[B.defense == d]
-    rows.append([name, f(b.benign_harmed_pct.mean(), 2, True), f(b.benign_packet_in_lost_pct.mean(), 2, True),
-                 f(b.probe_post_success_pct.mean(), 1, True), f"{int(b.hosts_blocked_benign.sum())}"])
-s.append(table("Benign traffic only (no attack, five runs).",
-               ["Method", "Benign flows harmed", "First packets lost", "New connections succeeding",
-                "Innocent hosts blocked"], rows, [0.24, 0.19, 0.19, 0.19, 0.19]))
-
-rows = []
-for d, name in (("ensguard-v5", "FEVER, 60 s block"), ("ensguard-v6", "FEVER, permanent block")):
-    rr = [name] + [f(A[(A.defense == d) & (A.variant == v)].benign_harmed_pct.mean(), 2, True) for v in ATT]
-    rr += [f(m(A, d, "attack_share_avg_pct_s11"), 1, True), f(m(A, d, "benign_packet_in_lost_pct"), 1, True),
-           f(m(A, d, "probe_post_success_pct"), 1, True)]
-    rows.append(rr)
-s.append(table("Effect of the block length (same runs).",
-               ["Variant", "Benign flows harmed", "", "", "Average attack share", "First packets lost",
-                "New connections succeeding"],
-               rows, [0.25, 0.1, 0.1, 0.1, 0.15, 0.14, 0.16],
-               best={1: "min", 2: "min", 3: "min", 4: "min", 5: "min", 6: "max"},
-               head2=["", "A2", "A4", "E9P", "", "", ""], spans=[(1, 3)]))
-
 # ---- seeds 4140-4142, with rDefender and the ablation
 c = pd.read_csv("results/fever_comparison/runs.csv")
 CA, CB = c[c.variant.isin(ATT)], c[c.variant == "benign"]
@@ -178,22 +156,6 @@ s.append(table("Comparison including rDefender (A2, A4 and E9P, three runs each)
                 "New connections succeeding", "Attackers blocked", "Innocent hosts blocked"],
                rows, [0.16, 0.14, 0.14, 0.14, 0.15, 0.13, 0.14],
                best={1: "min", 2: "min", 3: "min", 4: "max"}, note="Seeds 4140-4142, the runs rDefender has."))
-
-rows = []
-for d, name in (("ensguard-v5", "FEVER, 60 s block"), ("ensguard-v4lite", "Without volume blocking"),
-                ("ensguard-v5-noml", "Without detector")):
-    a = CA[CA.defense == d]
-    rr = [name] + [f(a[a.variant == v].harm.mean(), 2, True) for v in ATT]
-    rr += [f(a.share.mean(), 1, True), f"{int(a.att_blocked.sum())} / {2 * len(a)}",
-           f(a[a.variant == "A2"].first_block.mean(), 0), f"{int(a.ben_blocked.sum() + CB[CB.defense == d].ben_blocked.sum())}"]
-    rows.append(rr)
-s.append(table("Ablation (A2, A4 and E9P, three runs each).",
-               ["Variant", "Benign flows harmed", "", "", "Average attack share", "Attackers blocked",
-                "Time to block under A2 (s)", "Innocent hosts blocked"],
-               rows, [0.24, 0.09, 0.09, 0.09, 0.13, 0.11, 0.13, 0.12],
-               best={1: "min", 2: "min", 3: "min", 4: "min", 6: "min"},
-               head2=["", "A2", "A4", "E9P", "", "", "", ""], spans=[(1, 3)],
-               note="Run with the 60 s block, before permanent blocking; seeds 4140-4142."))
 
 # ---- overhead
 o = pd.read_csv("results/paper_figs/v6/testbed_runs.csv")
