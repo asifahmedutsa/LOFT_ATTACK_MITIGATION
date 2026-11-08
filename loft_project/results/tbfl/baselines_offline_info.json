@@ -1,0 +1,7 @@
+{
+ "test_rows": 1455489,
+ "benign_test_rows": 69377,
+ "cal_rows": 88207,
+ "testbed, C3 only rows": 461811,
+ "testbed, C1-C3 pooled rows": 1215642
+}
