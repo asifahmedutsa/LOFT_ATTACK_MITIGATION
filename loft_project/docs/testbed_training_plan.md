@@ -76,3 +76,9 @@ Passes if for A2, A4 and E9P harm <= v6 + 0.1 points and attack occupancy <= v6 
 benign host is blocked, and benign-only harm <= 0.1 %. If it fails, rule A is re-tuned on these
 seeds over n_min {30, 50, 80} x frac_min {0.1, 0.2, 0.3} using recorded rows replayed in
 the simulator, and checked again on seed 4183. The final campaign (4160-4162) is unchanged.
+
+**Clarified 8 November, after the detector choice and before any deployment-check run.** On the
+testbed, attack occupancy is the attack share of the table after onset, averaged over the three
+switches (summarize_run.py attack_share_avg_pct_s11-s13); harm is benign_harmed_pct; the check
+compares fever-fl with fever (v6 without PortGuard, as deployed) on T1B at 600 pps
+(testbed/campaign_flcheck.sh, testbed/analyze_flcheck.py).

@@ -1,0 +1,19 @@
+{
+ "choice": "One-shot sharing (CatBoost)",
+ "best_score": 37.93,
+ "scores_T1B": {
+  "Local only (C3)": 37.96,
+  "One-shot sharing (CatBoost)": 37.87,
+  "Pooled (CatBoost)": 55.92,
+  "Pooled (XGBoost)": 54.19,
+  "Federated XGBoost bagging (Flower)": 37.93,
+  "Lossless federated XGBoost": 55.03,
+  "FedProx (Flower)": 35.76
+ },
+ "eligible": [
+  "One-shot sharing (CatBoost)",
+  "Federated XGBoost bagging (Flower)",
+  "FedProx (Flower)"
+ ],
+ "H1_lossless_ge_bagging_plus_2": true
+}

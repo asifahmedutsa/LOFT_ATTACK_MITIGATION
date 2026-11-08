@@ -1,0 +1,212 @@
+[
+ {
+  "round": 1,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 4.78
+ },
+ {
+  "round": 2,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 5.53
+ },
+ {
+  "round": 3,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 6.31
+ },
+ {
+  "round": 4,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 7.07
+ },
+ {
+  "round": 5,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 7.84
+ },
+ {
+  "round": 6,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 8.59
+ },
+ {
+  "round": 7,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 9.33
+ },
+ {
+  "round": 8,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 10.08
+ },
+ {
+  "round": 9,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 10.84
+ },
+ {
+  "round": 10,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 11.6
+ },
+ {
+  "round": 11,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 12.38
+ },
+ {
+  "round": 12,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 13.13
+ },
+ {
+  "round": 13,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 13.88
+ },
+ {
+  "round": 14,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 14.6
+ },
+ {
+  "round": 15,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 15.34
+ },
+ {
+  "round": 16,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 16.11
+ },
+ {
+  "round": 17,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 16.87
+ },
+ {
+  "round": 18,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 17.63
+ },
+ {
+  "round": 19,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 18.38
+ },
+ {
+  "round": 20,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 19.13
+ },
+ {
+  "round": 21,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 19.87
+ },
+ {
+  "round": 22,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 20.6
+ },
+ {
+  "round": 23,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 21.37
+ },
+ {
+  "round": 24,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 22.15
+ },
+ {
+  "round": 25,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 22.91
+ },
+ {
+  "round": 26,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 23.67
+ },
+ {
+  "round": 27,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 24.4
+ },
+ {
+  "round": 28,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 25.12
+ },
+ {
+  "round": 29,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 25.89
+ },
+ {
+  "round": 30,
+  "clients": 3,
+  "failures": 0,
+  "model_bytes": 2436,
+  "time": 26.64
+ }
+]
