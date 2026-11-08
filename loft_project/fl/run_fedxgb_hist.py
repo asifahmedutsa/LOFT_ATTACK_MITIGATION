@@ -10,7 +10,8 @@ then picks the same split. No rows or labels leave a worker. Same settings as po
     ~/.venvs/fl/bin/python fl/run_fedxgb_hist.py --drop   # dropped-controller test (drop_test.json; the T1B check
                                                           # is in loftbench.realfl_confirm)
 
-FL_DATA, FL_OUT and FL_SEED choose the controllers' data, the output folder and the model seed.
+FL_DATA, FL_OUT and FL_SEED choose the controllers' data, the output folder and the model seed; FL_TREES,
+FL_PARAMS (JSON, merged into PARAMS) and FL_NAME train another detector's model the same way.
 """
 import json
 import multiprocessing as mp
@@ -22,10 +23,12 @@ OUT = os.environ.get("FL_OUT", "results/realfl")
 DATA = os.environ.get("FL_DATA", f"{OUT}/fl_data")
 SEED = int(os.environ.get("FL_SEED", "0"))
 CLIENTS = ("C1", "C2", "C3")
-TREES = 300
+TREES = int(os.environ.get("FL_TREES", "300"))
+NAME = os.environ.get("FL_NAME", "fedxgb_hist")     # output files <NAME>.json, <NAME>_log.json
 CKPT, KILL, KILL_AT = 50, "C2", 150            # dropped-controller test
 PARAMS = dict(objective="binary:logistic", eta=0.1, max_depth=6, tree_method="hist", max_bin=256,
               nthread=1, eval_metric="logloss", seed=SEED)
+PARAMS.update(json.loads(os.environ.get("FL_PARAMS", "{}")))   # another detector's settings (exploratory runs)
 
 
 def lo_bytes():
@@ -90,14 +93,14 @@ def train():
     time.sleep(30)
     idle_rate = (lo_bytes() - i0) / (time.time() - t_idle)
     t0, b0 = time.time(), lo_bytes()
-    codes, info = session(f"{OUT}/fedxgb_hist.json", TREES)
+    codes, info = session(f"{OUT}/{NAME}.json", TREES)
     secs = time.time() - t0
     sent = lo_bytes() - b0 - idle_rate * secs
     d = info[0]["features"]
     log = dict(workers=info, seconds=round(secs, 1), loopback_bytes=round(sent), idle_bytes_per_s=round(idle_rate),
                loopback_bytes_per_tree=round(sent / TREES),
                histogram_bytes=d * PARAMS["max_bin"] * 2 * 8)   # one node's gradient/hessian sums (double)
-    json.dump(log, open(f"{OUT}/fedxgb_hist_log.json", "w"), indent=1)
+    json.dump(log, open(f"{OUT}/{NAME}_log.json", "w"), indent=1)
     print(json.dumps(log, indent=1))
     return all(c == 0 for c in codes)
 

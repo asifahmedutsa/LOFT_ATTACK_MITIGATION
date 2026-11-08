@@ -1,0 +1,5 @@
+method,training,threshold,tau,false_alarms,accuracy,precision,recall,f1,fnr,mcc,recall A1,recall A2,recall A3,recall A4,recall A5,recall A6,recall A7,recall E9P
+"FTMaster, lossless federated","testbed, C1-C3",0.5 (paper),0.5,3.0659,89.3147,98.3935,86.0464,91.8067,13.9536,0.7808,99.9316,99.9116,99.8574,87.7817,99.8482,82.819,99.8577,24.3643
+"FTMaster, lossless federated","testbed, C1-C3",0.1 % of T1A benign,0.9905,0.2522,81.2078,99.8148,73.1248,84.4102,26.8752,0.6702,96.2138,96.2803,95.6945,64.5673,96.1681,37.4455,89.5798,3.2539
+"FTMaster, pooled (no privacy)","testbed, C1-C3",0.5 (paper),0.5,3.0875,89.3994,98.356,86.2041,91.88,13.7959,0.782,99.9348,99.9124,99.8626,88.1829,99.8524,83.1683,99.8569,24.8954
+"FTMaster, pooled (no privacy)","testbed, C1-C3",0.1 % of T1A benign,0.9908,0.2162,80.9455,99.8265,72.7385,84.1564,27.2615,0.6667,95.6012,95.9595,95.2465,64.4791,95.6508,35.3265,88.8125,4.2144

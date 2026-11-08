@@ -39,3 +39,22 @@ FTOP at the 0.1 % rule (C3 only, pooled): its random forest gives probability 1.
 the T1A benign rows, so the threshold lands above every score and nothing is flagged; the rule does not
 apply to it. FEVER's false alarms here, 0.79 %, differ from report.md's 0.72 % at the same recall; the
 cause is not yet found.
+
+## FTMaster's detector trained by lossless federation (exploratory, 8 November)
+
+FTMaster's six features and settings (XGBoost, 200 trees, depth 6, eta 0.3), trained with
+fl/run_fedxgb_hist.py on C1-C3's testbed rows (three workers, histogram sums; 0.66 GB loopback
+traffic, 24 s), scored by loftbench/tbfl_ftm_fed.py.
+
+| Detector | Threshold | False alarms % | Recall | F1 | MCC | Mimic | Slow | Aware |
+|---|---|---|---|---|---|---|---|---|
+| FEVER (lossless federated, 17 features) | 0.1 % T1A benign | 0.79 | 76.82 | 86.79 | 0.70 | 60.93 | 9.20 | 25.43 |
+| FTMaster, lossless federated | 0.1 % T1A benign | 0.25 | 73.12 | 84.41 | 0.67 | 64.57 | 37.45 | 3.25 |
+| FTMaster, pooled (no privacy) | 0.1 % T1A benign | 0.22 | 72.74 | 84.16 | 0.67 | 64.48 | 35.33 | 4.21 |
+| FTMaster, lossless federated | 0.5 | 3.07 | 86.05 | 91.81 | 0.78 | 87.78 | 82.82 | 24.36 |
+| FTMaster, pooled (no privacy) | 0.5 | 3.09 | 86.20 | 91.88 | 0.78 | 88.18 | 83.17 | 24.90 |
+| FTMaster, C3 only (its paper) | 0.5 | 0.33 | 64.66 | 78.48 | 0.60 | 0.07 | 0.09 | 0.05 |
+
+Federated and pooled FTMaster agree within 0.4 points on every measure but are not the same model
+row by row (largest difference in one row's probability 0.998): the workers' merged quantile sketch
+gives slightly different bins from single-machine training.
