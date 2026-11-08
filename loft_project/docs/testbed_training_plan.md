@@ -107,3 +107,12 @@ comparison. This amendment is made after the offline T1B results were seen
   and E9P, unless the two are within 1 point, in which case bagging (it shares less). If one
   passes, that one. If neither passes, rule A is re-tuned for each as described above and checked
   on seed 4183, and the same order applies.
+
+**Note, 8 November, 14:30 (fix before any valid deployment-check result).** The first four runs
+(A2, fever and fever-fl-bag, seeds 4181-4182) were stopped and set aside
+(~/loft-runs/_invalid_flc_nodroprules): the controller gave drop rules to hosts blocked by the
+evict-block layer only when that layer sat inside PortGuard, so fever and fever-fl-* (the layer
+alone) blocked hosts without drop rules (no host_block logged, 32 % lost first packets in every
+arm). testbed/loft_ryu_app.py now gives the layer alone the same drop rules. The v6 campaign
+(ensguard-v6, with PortGuard) is not affected. The check is rerun in full with unchanged
+conditions.

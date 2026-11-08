@@ -238,13 +238,17 @@ class Switch:
         self.admit = getattr(self.defense, "admit_filter", None)
         self.pg = self.defense if isinstance(self.defense, PortGuard) else None
         # ensguard: the evict-block layer inside PortGuard; its blocked hosts get drop rules.
-        self.eb = self.pg.inner if self.pg is not None and isinstance(self.pg.inner, EvictBlock) else None
+        # fever, fever-fl*: the evict-block layer alone (no PortGuard), with the same drop rules.
+        if isinstance(self.defense, EvictBlock):
+            self.eb = self.defense
+        else:
+            self.eb = self.pg.inner if self.pg is not None and isinstance(self.pg.inner, EvictBlock) else None
         self._blocks_logged = 0
         # Churn quarantine: a quarantined host's entries go with one delete matching its MAC,
         # and a drop rule keeps its new flows from the controller (as PortGuard's quota).
         self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
         self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and (
-            self.pg is not None or self.feq is not None)
+            self.pg is not None or self.feq is not None or self.eb is not None)
         self.drop_until, self.drop_pk, self.ref_mac = {}, {}, {}
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = self._tf_last = 0
