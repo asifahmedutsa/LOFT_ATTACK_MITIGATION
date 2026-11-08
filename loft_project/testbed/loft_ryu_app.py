@@ -87,7 +87,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
-            "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll")
+            "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg")
 
 
 def ip2int(s):
@@ -161,7 +161,7 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
     if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6", "fever", "fever-fl",
-                "fever-fl-bag", "fever-fl-ll"):
+                "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
@@ -171,9 +171,10 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                  "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json",
                  "ensguard-v6": "ens_config_v6.json", "fever": "ens_config_v6.json",
                  "fever-fl": "ens_config_fl.json", "fever-fl-bag": "ens_config_fl_bag.json",
-                 "fever-fl-ll": "ens_config_fl_ll.json"}[name]
+                 "fever-fl-ll": "ens_config_fl_ll.json", "fever-fl-ll-pg": "ens_config_fl_ll.json"}[name]
         # fever-fl*: detectors trained on testbed rows (docs/testbed_training_plan.md): one-shot
-        # CatBoost, Flower XGBoost bagging, lossless federated XGBoost.
+        # CatBoost, Flower XGBoost bagging, lossless federated XGBoost; fever-fl-ll-pg: the last
+        # inside PortGuard, as ensguard-v6 is v6 inside PortGuard.
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)

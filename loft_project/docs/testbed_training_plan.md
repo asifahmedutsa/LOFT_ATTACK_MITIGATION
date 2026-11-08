@@ -136,3 +136,8 @@ condition. **FEVER's deployed detector: lossless federated XGBoost** (amendment 
 with PortGuard, as in the v6 campaign), on the same traffic and seeds (8 runs), to measure what
 PortGuard adds on the tree (attack share at the access switches s12, s13). It does not enter the
 pass conditions or the choice above.
+
+**Addition, 8 November, 18:55 (after the check, descriptive only).** A fifth arm, fever-fl-ll-pg
+(the deployed lossless federated XGBoost inside PortGuard, as ensguard-v6 is v6 inside PortGuard),
+on the same traffic and seeds (8 runs), compared with fever-fl-ll. It does not change the deployed
+detector or the choice above.
