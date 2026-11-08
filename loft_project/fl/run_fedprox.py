@@ -6,6 +6,7 @@ round, proximal term mu = 0.01 (as in FL-DualGuard). Feature scaling uses federa
 each client contributes only its row count, feature sums and sums of squares.
 
     PYTHONPATH=. ~/.venvs/fl/bin/python fl/run_fedprox.py      # writes results/realfl/fedprox.npz, fedprox_log.json
+    FL_MU=0 PYTHONPATH=. ~/.venvs/fl/bin/python fl/run_fedprox.py   # FedAvg: fedavg.npz, fedavg_log.json
 """
 import json
 import os
@@ -19,7 +20,9 @@ OUT = os.environ.get("FL_OUT", "results/realfl")
 DATA = os.environ.get("FL_DATA", f"{OUT}/fl_data")
 SEED = int(os.environ.get("FL_SEED", "0"))
 ADDR = "127.0.0.1:8098"
-ROUNDS, MU, HIDDEN = 30, 0.01, 32
+ROUNDS, HIDDEN = 30, 32
+MU = float(os.environ.get("FL_MU", "0.01"))
+NAME = "fedavg" if MU == 0 else "fedprox"     # FedProx with mu = 0 is FedAvg
 CLIENTS = ("C1", "C2", "C3")
 
 
@@ -49,10 +52,10 @@ def server():
             params, metrics = super().aggregate_fit(rnd, results, failures)
             if params is not None:
                 w = parameters_to_ndarrays(params)
-                np.savez(f"{OUT}/fedprox.npz", *w, mean=sc.mean, std=sc.std)
+                np.savez(f"{OUT}/{NAME}.npz", *w, mean=sc.mean, std=sc.std)
                 log.append(dict(round=rnd, clients=len(results), failures=len(failures),
                                 model_bytes=int(sum(a.nbytes for a in w)), time=round(time.time() - t0, 2)))
-                json.dump(log, open(f"{OUT}/fedprox_log.json", "w"), indent=1)
+                json.dump(log, open(f"{OUT}/{NAME}_log.json", "w"), indent=1)
             return params, metrics
 
     strategy = Saving(proximal_mu=MU, fraction_fit=1.0, min_fit_clients=3, min_available_clients=3,
@@ -103,4 +106,4 @@ if __name__ == "__main__":
     for p in cls:
         p.wait()
     srv.wait(timeout=120)
-    print(f"FedProx: {ROUNDS} rounds, mu {MU}, {time.time() - t0:.0f} s")
+    print(f"{NAME}: {ROUNDS} rounds, mu {MU}, {time.time() - t0:.0f} s")

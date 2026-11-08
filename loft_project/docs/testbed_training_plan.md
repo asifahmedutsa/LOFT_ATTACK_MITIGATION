@@ -82,3 +82,28 @@ testbed, attack occupancy is the attack share of the table after onset, averaged
 switches (summarize_run.py attack_share_avg_pct_s11-s13); harm is benign_harmed_pct; the check
 compares fever-fl with fever (v6 without PortGuard, as deployed) on T1B at 600 pps
 (testbed/campaign_flcheck.sh, testbed/analyze_flcheck.py).
+
+## Amendment 1 (8 November 2026, after the offline results above, before any deployment-check run)
+
+Requirement from the supervisor: FEVER's deployed detector must be trained by round-based federated
+learning, in which the controllers exchange model updates over several rounds. One-shot sharing (a
+single exchange of finished local models) therefore no longer qualifies; it stays in the paper as a
+comparison. This amendment is made after the offline T1B results were seen
+(results/tbfl/report.md), and is reported as such.
+
+- Offline reference added: FedAvg (Flower; FedProx's script with mu = 0, 30 rounds, same rows,
+  seed and network as FedProx). It is not a candidate for deployment and does not enter the
+  choice rule above; results/tbfl/choice.json is unchanged.
+- Deployment check with three arms instead of two, all on T1B at 600 pps, A2, A4, E9P and benign,
+  seeds 4181-4182 (24 runs, about 3 h): fever (v6 as deployed), fever-fl-bag (Flower XGBoost
+  bagging, threshold 0.7376) and fever-fl-ll (lossless federated XGBoost, threshold 0.4953). Both
+  thresholds are 0.1 % of the T1A benign rows of seeds 4173-4175, as offline; everything else
+  (block rule, rho, volume rule) is v6's. The lossless model enters although its offline T1B false
+  alarms (0.72 %) exceed the 0.2 % limit, because the check measures what those false alarms cost
+  on the testbed (harm and benign hosts blocked); the offline limit is reported next to it.
+- Pass conditions per arm unchanged (harm <= fever + 0.1 and attack occupancy <= fever + 2 on A2,
+  A4 and E9P; no benign host blocked; benign-only harm <= 0.1 %).
+- Deployed detector: if both arms pass, the one with the lower mean attack occupancy over A2, A4
+  and E9P, unless the two are within 1 point, in which case bagging (it shares less). If one
+  passes, that one. If neither passes, rule A is re-tuned for each as described above and checked
+  on seed 4183, and the same order applies.

@@ -25,6 +25,7 @@ Gate G0 for univ2 at 1,000 pps passed on all three parts (seed 4190) and on U1t 
 |---|---|---|
 | Federated XGBoost, bagging | Flower, 100 rounds, 3 clients every round, 0 failures | 1.16 MB sent in total, model 1.08 MB, 212 s |
 | FedProx | Flower, 30 rounds, 0 failures | 27 s |
+| FedAvg (reference, amendment 1) | Flower, 30 rounds, mu = 0 | 35 s |
 | Lossless federated XGBoost | 3 workers, histogram sums, 300 trees | about 2.6 GB loopback traffic (8.7 MB per tree), 38 s |
 | One-shot sharing | 3 local CatBoost models, mean probability | one model per controller, once |
 
@@ -36,6 +37,7 @@ Gate G0 for univ2 at 1,000 pps passed on all three parts (seed 4190) and on U1t 
 | One-shot sharing (CatBoost) | 0.12 | 75.36 | 99.91 | 64.65 | 78.50 | 99.93 | 99.96 | 99.86 | 0.05 | 99.67 | 0.07 | 99.82 | 0.04 |
 | Federated XGBoost, bagging | 0.16 | 75.39 | 99.86 | 64.72 | 78.54 | 99.95 | 100.00 | 99.88 | 0.10 | 99.85 | 0.09 | 99.97 | 0.10 |
 | FedProx | 0.03 | 72.92 | 99.62 | 61.31 | 75.90 | 93.53 | 99.28 | 93.12 | 1.13 | 88.94 | 0.28 | 98.02 | 0.03 |
+| FedAvg (reference) | 0.02 | 71.89 | 99.86 | 59.67 | 74.70 | 92.41 | 98.26 | 91.87 | 0.08 | 89.02 | 0.04 | 89.08 | 0.01 |
 | Lossless federated XGBoost | 0.72 | 83.73 | 99.74 | 76.82 | 86.79 | 99.96 | 100.00 | 99.87 | 60.93 | 99.85 | 9.20 | 99.96 | 25.43 |
 | Pooled CatBoost (no privacy) | 0.88 | 84.19 | 99.71 | 77.50 | 87.21 | 99.94 | 100.00 | 99.84 | 65.11 | 99.78 | 7.11 | 99.90 | 27.86 |
 | Pooled XGBoost (no privacy) | 0.78 | 83.46 | 99.72 | 76.45 | 86.54 | 99.96 | 100.00 | 99.87 | 61.09 | 99.81 | 8.68 | 99.95 | 23.06 |
@@ -48,6 +50,7 @@ False alarms: benign rows of the benign-only test runs. Acc./Prec./Rec./F1 over 
 | One-shot sharing | 99.84 | 75.70 | 0.05 | 37.87 |
 | Federated XGBoost, bagging | 99.91 | 75.77 | 0.10 | 37.93 |
 | FedProx | 95.42 | 71.41 | 0.12 | 35.76 |
+| FedAvg (reference) | 90.56 | 70.65 | 0.02 | 35.33 |
 | Lossless federated XGBoost | 99.92 | 90.50 | 19.57 | 55.03 |
 | Pooled CatBoost | 99.87 | 91.48 | 20.36 | 55.92 |
 | Pooled XGBoost | 99.91 | 90.52 | 17.86 | 54.19 |
@@ -73,3 +76,13 @@ sharing (CatBoost), trained on testbed rows.** H1 (lossless at least 2 points ab
    detector (v6 campaign); the detector's job there is the standard attacks.
 
 The held-out univ2 test (UH) was not recorded. The baselines are not yet retrained on these rows.
+
+## Amendment 1 (after these results, before the deployment check)
+
+The supervisor requires the deployed detector to come from round-based federated learning, so
+one-shot sharing is no longer deployed; FedAvg was added as an offline reference (above). The
+deployment check runs Flower XGBoost bagging (fever-fl-bag, threshold 0.7376) and lossless federated
+XGBoost (fever-fl-ll, threshold 0.4953) against v6 on the testbed; the rule that picks between them
+is in docs/testbed_training_plan.md. Both are exported for the controller as TreeJSON
+(loftbench/tbfl_export.py, export.json: largest difference from XGBoost 5e-7; 300 trees each, 0.23 s
+to score a full 3,500-entry table in the testbed's Python, against 0.09 s for v6).

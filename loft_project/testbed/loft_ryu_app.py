@@ -87,7 +87,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
-            "ftodefender", "ensguard-v6", "fever", "fever-fl")
+            "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll")
 
 
 def ip2int(s):
@@ -160,7 +160,8 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
             return FloRa(CatBoostJSON(os.path.join(model_dir, f"flora_rule_{domain}.json")), **b["flora"])
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
-    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6", "fever", "fever-fl"):
+    if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6", "fever", "fever-fl",
+                "fever-fl-bag", "fever-fl-ll"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
@@ -169,7 +170,10 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
         cfile = {"ensguard": "ens_config.json", "ensguard-v4lite": "ens_config_v4lite.json",
                  "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json",
                  "ensguard-v6": "ens_config_v6.json", "fever": "ens_config_v6.json",
-                 "fever-fl": "ens_config_fl.json"}[name]   # fever-fl: the federated XGBoost detector
+                 "fever-fl": "ens_config_fl.json", "fever-fl-bag": "ens_config_fl_bag.json",
+                 "fever-fl-ll": "ens_config_fl_ll.json"}[name]
+        # fever-fl*: detectors trained on testbed rows (docs/testbed_training_plan.md): one-shot
+        # CatBoost, Flower XGBoost bagging, lossless federated XGBoost.
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)
@@ -180,7 +184,7 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                         score_changed_only=bool(ec.get("score_changed_only", False)),
                         vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch),
                         permanent=bool(b.get("permanent", False)))
-        if name in ("fever", "fever-fl"):
+        if name in ("fever", "fever-fl", "fever-fl-bag", "fever-fl-ll"):
             # FEVER without PortGuard: in the v6 testbed runs the table reached 90 % (where PortGuard
             # acts) only in the poll where the volume rule blocked the attackers, so it was dropped.
             return eb

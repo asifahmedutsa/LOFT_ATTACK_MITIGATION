@@ -1,0 +1,14 @@
+{
+ "bag": {
+  "model": "fedxgb.json",
+  "tau_T1B": 0.7375608692632446,
+  "parity_max_abs_diff": 4.5174186169560926e-07,
+  "trees": 300
+ },
+ "ll": {
+  "model": "fedxgb_hist.json",
+  "tau_T1B": 0.4952896545396576,
+  "parity_max_abs_diff": 5.04862588568411e-07,
+  "trees": 300
+ }
+}

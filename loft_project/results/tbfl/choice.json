@@ -8,7 +8,8 @@
   "Pooled (XGBoost)": 54.19,
   "Federated XGBoost bagging (Flower)": 37.93,
   "Lossless federated XGBoost": 55.03,
-  "FedProx (Flower)": 35.76
+  "FedProx (Flower)": 35.76,
+  "FedAvg (Flower, reference)": 35.33
  },
  "eligible": [
   "One-shot sharing (CatBoost)",

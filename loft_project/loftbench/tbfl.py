@@ -119,12 +119,15 @@ def detectors():
              "Pooled (CatBoost)": models["pooled CatBoost"], "Pooled (XGBoost)": models["pooled XGBoost"],
              "Federated XGBoost bagging (Flower)": Booster(f"{OUT}/fedxgb.json"),
              "Lossless federated XGBoost": Booster(f"{OUT}/fedxgb_hist.json")}
-    z = np.load(f"{OUT}/fedprox.npz")
-    w = [z[f"arr_{i}"] for i in range(4)]
-    m = MLP(w[0].shape[0], w[0].shape[1])
-    m.set_weights(w)
-    m.scaler = Standardizer(z["mean"], z["std"])
-    named["FedProx (Flower)"] = m
+    for f, name in (("fedprox", "FedProx (Flower)"), ("fedavg", "FedAvg (Flower, reference)")):
+        if not os.path.exists(f"{OUT}/{f}.npz"):
+            continue
+        z = np.load(f"{OUT}/{f}.npz")
+        w = [z[f"arr_{i}"] for i in range(4)]
+        m = MLP(w[0].shape[0], w[0].shape[1])
+        m.set_weights(w)
+        m.scaler = Standardizer(z["mean"], z["std"])
+        named[name] = m
     return named
 
 
