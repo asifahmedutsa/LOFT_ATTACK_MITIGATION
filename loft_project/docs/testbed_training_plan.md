@@ -123,3 +123,11 @@ controller identifies hosts (rather than switch ports, which at the core carry a
 with benign hosts) only for defenses named ensguard*, so fever and fever-fl* blocked per port.
 testbed/loft_ryu_app.py now gives fever* the same host identity as ensguard-v6. These two runs are
 set aside (~/loft-runs/_invalid_flc_nohostid); the check reruns in full with unchanged conditions.
+
+**Note, 8 November, 17:30 (result).** The laptop lost mains power and suspended from 17:01 to
+17:12, during the last run (benign, fever-fl-ll, seed 4182); matrix_e5.sh found the gap in the
+controller log and set the run aside (~/loft-runs/_failed). It was rerun at 17:14, and run 1 (A2,
+fever, seed 4181, which overlapped the 14:51 reinstall) was redone at 17:20; the first copy is in
+~/loft-runs/_invalid_flc_overlapped_install. With all 24 runs (results/tbfl/flcheck.md):
+fever-fl-bag fails (E9P attack occupancy 32.22 % against fever 29.06 % + 2); fever-fl-ll passes every
+condition. **FEVER's deployed detector: lossless federated XGBoost** (amendment 1).

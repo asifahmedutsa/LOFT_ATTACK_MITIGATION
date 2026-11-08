@@ -86,3 +86,8 @@ XGBoost (fever-fl-ll, threshold 0.4953) against v6 on the testbed; the rule that
 is in docs/testbed_training_plan.md. Both are exported for the controller as TreeJSON
 (loftbench/tbfl_export.py, export.json: largest difference from XGBoost 5e-7; 300 trees each, 0.23 s
 to score a full 3,500-entry table in the testbed's Python, against 0.09 s for v6).
+
+Deployment check (24 testbed runs, results/tbfl/flcheck.md): bagging fails on Aware (attack
+occupancy 32.22 % against 29.06 % for v6, limit + 2); lossless passes every condition (harm at most
+v6's, occupancy 23.9-26.4 % on Mimic and Aware, no benign host blocked, benign-only harm 0 %).
+FEVER's deployed detector is lossless federated XGBoost.
