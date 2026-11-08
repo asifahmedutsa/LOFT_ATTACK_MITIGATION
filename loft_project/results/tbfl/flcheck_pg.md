@@ -18,3 +18,21 @@ federated XGBoost (testbed rows, deployed). Occupancy: attack share of the table
 | benign | all three | 0.000 | 0 | 0 | 0 | 0 | 0.14-0.17 | 100.0 |
 
 Every arm blocked both attackers and no benign host in every attack run.
+
+## Fifth arm: lossless federated XGBoost with PortGuard (fever-fl-ll-pg)
+
+Same traffic and seeds; means of 2 runs. Both blocked both attackers and no benign host in every
+attack run; benign-only runs: harm 0 %, probe success 100 % in both.
+
+| Traffic | Method | Harm % | Occupancy (3 switches) | s11 | s12 | s13 | Lost first packets % | Probe success % | First attack block (s, two seeds) |
+|---|---|---|---|---|---|---|---|---|---|
+| A2 | fever-fl-ll | 0.005 | 24.83 | 5.7 | 34.9 | 33.9 | 0.71 | 73.9 | 67.7, 74.7 |
+| A2 | fever-fl-ll-pg | 0.005 | 23.02 | 6.7 | 30.9 | 31.5 | 8.90 | 24.5 | 77.7, 76.1 |
+| A4 | fever-fl-ll | 0.000 | 23.93 | 6.1 | 32.7 | 33.0 | 1.10 | 64.6 | 74.7, 79.9 |
+| A4 | fever-fl-ll-pg | 0.000 | 20.75 | 7.9 | 25.9 | 28.5 | 9.52 | 25.5 | 99.0, 83.6 |
+| E9P | fever-fl-ll | 0.005 | 26.44 | 12.4 | 33.2 | 33.7 | 20.44 | 12.8 | 74.8, 81.3 |
+| E9P | fever-fl-ll-pg | 0.015 | 38.68 | 49.8 | 31.7 | 34.6 | 59.75 | 9.3 | 142.9, 130.4 |
+
+With PortGuard the attackers are blocked later (on Aware by about 55 s), the core switch carries
+half the table on Aware, and new connections fail more often on every attack (probe success
+9-26 % against 13-74 %). FEVER stays without PortGuard.
