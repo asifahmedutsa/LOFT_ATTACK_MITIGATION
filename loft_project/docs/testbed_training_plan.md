@@ -131,3 +131,8 @@ fever, seed 4181, which overlapped the 14:51 reinstall) was redone at 17:20; the
 ~/loft-runs/_invalid_flc_overlapped_install. With all 24 runs (results/tbfl/flcheck.md):
 fever-fl-bag fails (E9P attack occupancy 32.22 % against fever 29.06 % + 2); fever-fl-ll passes every
 condition. **FEVER's deployed detector: lossless federated XGBoost** (amendment 1).
+
+**Addition, 8 November, 17:55 (after the check, descriptive only).** A fourth arm, ensguard-v6 (v6
+with PortGuard, as in the v6 campaign), on the same traffic and seeds (8 runs), to measure what
+PortGuard adds on the tree (attack share at the access switches s12, s13). It does not enter the
+pass conditions or the choice above.
