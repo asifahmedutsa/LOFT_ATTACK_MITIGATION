@@ -116,3 +116,10 @@ alone) blocked hosts without drop rules (no host_block logged, 32 % lost first p
 arm). testbed/loft_ryu_app.py now gives the layer alone the same drop rules. The v6 campaign
 (ensguard-v6, with PortGuard) is not affected. The check is rerun in full with unchanged
 conditions.
+
+**Note, 8 November, 14:50 (second fix, before any valid deployment-check result).** After the
+drop-rule fix, the first rerun (A2, fever, seeds 4181-4182) still blocked no host: on the tree the
+controller identifies hosts (rather than switch ports, which at the core carry an attacker together
+with benign hosts) only for defenses named ensguard*, so fever and fever-fl* blocked per port.
+testbed/loft_ryu_app.py now gives fever* the same host identity as ensguard-v6. These two runs are
+set aside (~/loft-runs/_invalid_flc_nohostid); the check reruns in full with unchanged conditions.

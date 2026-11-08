@@ -299,7 +299,8 @@ class LoftController(app_manager.RyuApp):
         # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
         # and access switches pin each host port to the first MAC seen on it (port security),
         # so a host cannot rotate MACs to get more quotas.
-        self.hostid = self.defense_name.endswith("+hostid") or self.defense_name.startswith("ensguard")
+        self.hostid = (self.defense_name.endswith("+hostid")
+                       or self.defense_name.startswith(("ensguard", "fever")))
         self.host_of, self.port_mac = {}, {}
         self.t0 = time.time()
         log = os.environ.get("LOFT_LOG", "loft_controller_log.csv")
