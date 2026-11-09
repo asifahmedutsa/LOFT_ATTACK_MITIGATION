@@ -77,3 +77,12 @@ FTMaster on E9P installed no source drop rule: it blocks a source only after 0.5
 source's rules are deleted, and with spoofed sources (and 19 deletions in all) no source came near
 it. Its in-switch block is therefore not exercised by this check; the code path was tested only
 offline (unit tests).
+
+FTMaster on A2 (seed 4181, one extra run, ing_T1B_A2_ftmaster_s4181) does exercise it: its s11
+instance blocked both attack sources 86.9 s after onset and sent one drop rule each, with no
+TABLE_FULL error. After the rules, s11 sent no Packet-In from either source. The controller still
+logged 2,591 refusals at s11 for them, but each of the 1,500 flows behind them was a downstream install
+asked for by a Packet-In from s12 or s13, which installed the flow themselves. FTMaster blocks only at
+the switch that detects (s12 and s13 never reached its 70 % monitoring level), so the access switches
+kept 32-34 % attack entries: the same leak that ingress blocking removes from FEVER, here left as
+FTMaster's paper describes it. Probe success 26.6 %, harm 0.01 %.
