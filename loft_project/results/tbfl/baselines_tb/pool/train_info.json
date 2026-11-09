@@ -1,0 +1,36 @@
+{
+ "arm": "pool",
+ "controllers": [
+  "C1",
+  "C2",
+  "C3"
+ ],
+ "rule_rows": 1215642,
+ "rule_attack": 903735,
+ "table_rows": 24111,
+ "table_active": 11242,
+ "table_after_overflow": 1479,
+ "ftod_weights": [
+  0.48106683215734813,
+  0.3542525792254323,
+  0.16468058861721946
+ ],
+ "parity_max_abs_diff": {
+  "ftmaster_state": 2.7297511973056743e-07,
+  "ftmaster_rule": 3.886922325113673e-07,
+  "ftop_state": 0.0,
+  "ftop_rule": 4.440892098500626e-16,
+  "flora_rule": 0.0,
+  "dmsB_state": 2.220446049250313e-16,
+  "dmsB_flow": 0.0,
+  "ftod_rule": 4.440892098500626e-16
+ },
+ "seconds": {
+  "ftmaster": 20,
+  "ftop": 104,
+  "flora": 59,
+  "dms-btt": 51,
+  "ftodefender": 44
+ },
+ "total_s": 278
+}

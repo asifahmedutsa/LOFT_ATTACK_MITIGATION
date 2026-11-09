@@ -53,9 +53,11 @@ def export(lgbm, lr, path, X_check):
 
 def onehot(L, width):
     from scipy.sparse import csr_matrix
+    # Built as CSR directly (one entry per tree in each row, int32 indices): the same matrix as the
+    # COO form, without its int64 row and column arrays (about 3 GB on 1.2 M rows).
     n, t = L.shape
-    cols = (np.arange(t)[None, :] * width + L).ravel()
-    return csr_matrix((np.ones(n * t), (np.repeat(np.arange(n), t), cols)), shape=(n, t * width))
+    cols = (np.arange(t, dtype=np.int32)[None, :] * width + L.astype(np.int32)).ravel()
+    return csr_matrix((np.ones(n * t), cols, np.arange(0, n * t + 1, t, dtype=np.int64)), shape=(n, t * width))
 
 
 class LGBMLRJSON:

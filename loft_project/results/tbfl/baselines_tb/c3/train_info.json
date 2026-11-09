@@ -1,0 +1,34 @@
+{
+ "arm": "c3",
+ "controllers": [
+  "C3"
+ ],
+ "rule_rows": 461811,
+ "rule_attack": 241927,
+ "table_rows": 8028,
+ "table_active": 3084,
+ "table_after_overflow": 312,
+ "ftod_weights": [
+  0.5163707986360416,
+  0.33754681736448355,
+  0.14608238399947465
+ ],
+ "parity_max_abs_diff": {
+  "ftmaster_state": 1.1847546155241417e-07,
+  "ftmaster_rule": 7.481846440726692e-07,
+  "ftop_state": 0.0,
+  "ftop_rule": 5.551115123125783e-16,
+  "flora_rule": 0.0,
+  "dmsB_state": 2.220446049250313e-16,
+  "dmsB_flow": 0.0,
+  "ftod_rule": 2.220446049250313e-16
+ },
+ "seconds": {
+  "ftmaster": 9,
+  "ftop": 22,
+  "flora": 21,
+  "dms-btt": 21,
+  "ftodefender": 9
+ },
+ "total_s": 83
+}
