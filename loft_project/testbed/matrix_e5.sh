@@ -11,7 +11,8 @@
 # Skips runs that already have summary.txt. E5_TAG (default e5) prefixes run names; E5_DEFS
 # E5_TOPO=tree3 runs the three-switch tree (run_testbed.py --topo). E5_DEFS
 # overrides the defense list of the full matrix, E5_VARS the attacks (default A2 A4) and E5_DOM the
-# domain (default T1). E5_EXTRA adds run_testbed options (e.g. --entry-log). A lock stops
+# domain (default T1). E5_DUR sets the run length in s (default 300). E5_EXTRA adds run_testbed options
+# (e.g. --entry-log). A lock stops
 # two matrices from running at once (each run starts with mn -c, which tears down any other run).
 set -u
 cd "$(dirname "$0")/.."
@@ -28,7 +29,7 @@ if [ "${1:-}" = "--smoke" ]; then
 else
     for v in ${E5_VARS:-A2 A4}; do
         for def in ${E5_DEFS:-none dms-btt ftmaster ftop rdefender dualguard}; do
-            for s in ${E5_SEEDS:-4100 4101 4102}; do specs+=("${E5_DOM:-T1} $v $def $s 300 $TAG"); done
+            for s in ${E5_SEEDS:-4100 4101 4102}; do specs+=("${E5_DOM:-T1} $v $def $s ${E5_DUR:-300} $TAG"); done
         done
     done
 fi

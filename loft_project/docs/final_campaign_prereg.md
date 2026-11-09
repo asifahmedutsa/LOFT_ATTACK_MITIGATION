@@ -1,10 +1,19 @@
 # Final testbed campaign: preregistration
 
-*Draft 2, 8 November 2026. Not yet fixed: it is fixed (hashed, results/testbed_prereg_final/
+*Draft 3, 9 November 2026. Not yet fixed: it is fixed (hashed, results/testbed_prereg_final/
 preregistration.json) after the user's approval and before any run on seeds 4160-4164. No run on
-these seeds exists (checked in ~/loft-runs, 8 November). Draft 2 revises draft 1 (commit c9ac300)
+these seeds exists (checked in ~/loft-runs, 9 November). Draft 2 revised draft 1 (commit c9ac300)
 after a critical review: data-matched baselines, held-out cells, a service hypothesis, per-attack
 results with Holm over all tests, and the scope of the federated claim.*
+
+*Changes in draft 3, all made before any campaign run: FEVER blocks at the ingress (amendment 2,
+docs/ingress_plan.md, adopted by its development check) and fever-fl-ll-noing is a fourth ablation,
+so the ablation block is 52 runs and the campaign 474 (section 5); the baselines' source blocks are
+switch drop rules (section 4); the retrained baselines and the fidelity rule's decisions (FTMaster
+and FTOP keep their simulator models; FTODefender's detector per switch; docs/baselines_fidelity_plan.md);
+the UHt thresholds (section 5, docs/uht_calibration.md); the C3-only detector's threshold (section 3);
+the benign-deletion measure (section 6); testbed/analyze_final.py and testbed/campaign_final.sh
+(section 10).*
 
 ## 1. The system under test
 
@@ -109,12 +118,12 @@ held-out attacks), three (4160-4162) elsewhere.
 | Main | T1B | A4 (Mimic), E9P (Aware) | 8 | 5 | 80 |
 | Held out | T1B | A6 (Slow), EVX (volume-evading) | 8 | 5 | 80 |
 | Data-matched | T1B | A4, E9P, A6, EVX | 5 pooled baselines | 5 | 100 |
-| Ablations | T1B | A2 (3 seeds), A4, E9P (5 seeds) | 3 | 3 / 5 | 39 |
+| Ablations | T1B | A2 (3 seeds), A4, E9P (5 seeds) | 4 | 3 / 5 | 52 |
 | Held-out trace | UHt | A2, A4, E9P, benign | none, FTMaster, DMS-BTT, rDefender, FEVER | 3 | 60 |
 | 600 s check | T1B | A4, E9P | FEVER, DMS-BTT, FTMaster | 4160 | 6 |
-| | | | | | **461** |
+| | | | | | **474** |
 
-About 42 h (5.4 min per 300 s run, 10.5 min per 600 s run), one at a time, over five or six nights. Priority if time runs
+About 44 h (5.4 min per 300 s run, about 7.7 min for the pooled FTOP's, 10.5 min per 600 s run), one at a time, over five or six nights. Priority if time runs
 short, fixed now: cut UHt benign, then the UHt block, then the ablations without the volume rule
 and without the detector (their v5 counterparts exist); Main, Held out and Data-matched are never
 cut.
@@ -129,7 +138,9 @@ cut.
 - UHt: univ2 part 6, a part of univ2 that no controller trained on (C1 and C2 trained on parts 0
   and 3, so the capture is not new; stated as such). Every method whose paper sets a threshold on
   benign traffic, FEVER included (tau and the volume limit), recalibrates it on the benign UHt
-  recording tbt_UHt_benign_none_s4190 by its own rule; nothing is retrained.
+  recording tbt_UHt_benign_none_s4190 by its own rule; nothing is retrained. Done 9 November
+  (docs/uht_calibration.md): only FEVER sets thresholds on benign traffic; its UHt threshold is
+  0.5192 and its volume limits 394.5, 271.5 and 394.5 entries (s11, s12, s13).
 
 Before the campaign, one smoke run per new or retrained defense and for EVX on development seed
 4183 (A2, or EVX), which checks that it loads, blocks and logs; not results.
@@ -234,3 +245,15 @@ as it is.
 5. testbed/analyze_final.py written and committed; this document fixed: SHA-256 of this file and
    of the analysis script in results/testbed_prereg_final/preregistration.json, committed before
    run 1.
+
+Status, 10 November 00:00: items 1-4 done (docs/baselines_fidelity_plan.md, docs/uht_calibration.md,
+results/testbed_baselines_tb/fidelity.md and fidelity_papers.md). Smoke runs (14, seed 4183,
+results/testbed_prereg_final/smoke.md): every new or retrained defense, EVX and FEVER on UHt loaded,
+acted and logged with no controller error. Seen there, as the methods behave, not changed: the pooled
+FloRa and FTODefender blocked two and one benign sources; the pooled FTOP deleted about 1,150 benign
+entries per minute on A2 and took 7.7 min of wall time (5.4 min on Aware, within the 510 s validity
+limit); DMS-BTT's 0.51 % harm on A2 came from TABLE_FULL refusals after s11 overflowed at 255 s; EVX
+kept each attacker at 628 entries and the table below 70 %, so FEVER never acted (as designed for H5).
+testbed/analyze_final.py was checked on synthetic runs with known outcomes (all-win pairs, a planted
+contradiction, non-inferiority, missing runs) and testbed/campaign_final.sh lists exactly its 474 runs.
+Item 5 waits for the user's approval of this draft.
