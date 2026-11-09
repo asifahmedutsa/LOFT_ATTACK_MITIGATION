@@ -39,8 +39,8 @@ bigFlows T1B at 600 pps (benign scale 0.5) and univ2 part 6 (UHt) at 1,000 pps. 
 | Name | Defense | Detector training |
 |---|---|---|
 | none | no defense | - |
-| FTMaster | ftmaster | C3's rows (section 4) |
-| FTOP | ftop | C3's rows |
+| FTMaster | ftmaster | simulator T1A rows (kept by the fidelity rule, section 4) |
+| FTOP | ftop | simulator T1A rows (kept by the fidelity rule) |
 | FTODefender | ftodefender | C3's rows |
 | FloRa | flora | C3's rows |
 | DMS-BTT | dms-btt (as published) | C3's rows |
@@ -58,7 +58,7 @@ would give, so these runs compare methods on equal data.
 
 | Name | Defense | Change |
 |---|---|---|
-| FEVER without sharing | fever-ll-local | XGBoost on C3's rows only, the lossless model's settings (300 trees, same parameters), threshold by the same rule |
+| FEVER without sharing | fever-ll-local | XGBoost on C3's rows only, the lossless model's settings (300 trees, same parameters), threshold by the same rule (loftbench/tbfl_local.py: T1B threshold 0.0019) |
 | FEVER without the volume rule | fever-ll-novol | volume rule off |
 | FEVER without the detector | fever-noml | no detector: volume rule only |
 | FEVER without ingress blocking | fever-fl-ll-noing | blocks kept by the blocking switch's renewed 2 s drop rule, as before 9 November |
@@ -92,6 +92,11 @@ Fidelity, before the campaign, in results/testbed_baselines_tb/fidelity.md:
   recall on the standard attacks (G1-G3, Spoof, Pulse) is at least that model's minus 5 points, at
   false alarms at most 1 %; otherwise the earlier model is kept and the reason reported. This
   keeps the better of two models for each baseline, which favours the baselines, and is stated.
+- Done 9 November (docs/baselines_fidelity_plan.md, results/testbed_baselines_tb/fidelity.md):
+  FloRa, DMS-BTT and FTODefender run their C3-retrained models; FTMaster and FTOP keep their
+  simulator models (their retrained state models flag 27.7 % and 13.9 % of benign polls). The
+  pooled arm runs its pooled models (results/v21/exported/pool_T1B/). FTODefender's detector runs
+  on each switch with that switch's benchmark window (amendment in the same document).
 
 ## 5. Runs
 
@@ -146,9 +151,11 @@ Per run, from testbed/summarize_run.py:
   (attack_share_avg_pct_s11-s13); also each switch, and the maximum (the papers' Pa).
 - **Service**: probe success (probe_post_success_pct) and lost first packets
   (benign_packet_in_lost_pct). Primary measures, tested in H3.
-- **Detector false alarms in deployment**: benign entries evicted by the detector per minute,
-  from the controller's flow log and the ground truth (added to summarize_run.py before the
-  campaign), beside the offline rate (FEVER's detector: 0.72 % on T1B test rows).
+- **Detector false alarms in deployment**: benign entries deleted by the defense per minute
+  (benign_deleted_per_min; also benign_deleted_entries and benign_deleted_flows_pct), from the
+  controller's flow log and the ground truth (testbed/summarize_run.py, added 9 November; deletes
+  of a blocked host's entries included), beside the offline rate (FEVER's detector: 0.72 % on T1B
+  test rows).
 - Hosts blocked (attack, benign), first attacker block (s), decision time, controller CPU and
   memory, Packet-In, Table-Full.
 

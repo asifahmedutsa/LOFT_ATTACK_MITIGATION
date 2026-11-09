@@ -147,6 +147,9 @@ def summarize(d, attack_start, capacity=3500):
             info[f"overflow_s_post{tag}"] = sum(1 for x in post_r if x["entries"] >= 0.99 * cap)
             if tag:
                 info[f"table_full{tag}"] = int(rr[-1]["table_full"]) if rr else 0
+        # Entries the defense deleted (one per flow and switch), for the benign ones below: the
+        # detector's false alarms in deployment (docs/final_campaign_prereg.md, section 6).
+        info["_deleted"] = [(key(e), float(e["t"])) for e in ev if e["event"] == "delete"]
         info["_refused"], info["_installed"] = refused, keys
         info["_blocked"], info["_back"], info["_drops"], info["_t0"] = blocked, back, drops, t0
         info["drop_rules"] = len(drops)
@@ -224,6 +227,14 @@ def summarize(d, attack_start, capacity=3500):
         info["benign_dropped_by_rule_pct"] = round(100 * len(by_rule) / max(len(b), 1), 2)
         info["benign_packet_in_lost_pct"] = round(100 * len(never - by_rule) / max(len(b), 1), 2)
         info.pop("_ref_b")
+        # Benign entries deleted by the defense: entries (a flow on two switches counts twice),
+        # per minute of the run, and the share of benign flows that lost an entry this way.
+        # Deletes of a blocked host's entries are included (benign hosts blocked are reported).
+        dl = [(kk, t) for kk, t in info.pop("_deleted") if kk in b]
+        mins = max(info["seconds"], 1) / 60.0
+        info["benign_deleted_entries"] = len(dl)
+        info["benign_deleted_per_min"] = round(len(dl) / mins, 2)
+        info["benign_deleted_flows_pct"] = round(100 * len({kk for kk, _ in dl}) / max(len(b), 1), 2)
         info["benign_harmed_pct"] = round(100 * len(harmed) / max(len(b), 1), 2)
         info["benign_impact_pct"] = round(100 * len(harmed | never) / max(len(b), 1), 2)
     return out, hosts

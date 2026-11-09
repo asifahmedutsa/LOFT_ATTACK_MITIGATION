@@ -122,13 +122,19 @@ def gap_variant(g):
 
 
 def attack_variant(key):
-    """A1-A7, X<gap> for the fast-refresh sweep (for example X0.25, X1, X9), or E9P: E9's best
-    response to six of seven defenses (t2-3_p1-3_benign_pool_M1700 in loftbench.e9_adaptive)."""
+    """A1-A7, X<gap> for the fast-refresh sweep (for example X0.25, X1, X9), E9P: E9's best
+    response to six of seven defenses (t2-3_p1-3_benign_pool_M1700 in loftbench.e9_adaptive), or
+    EVX (volume-evading)."""
     if key in VARIANTS:
         return VARIANTS[key]
     if key == "E9P":
         return AttackVariant("t2-3_p1-3_benign_pool_M1700", 100, (2.0, 3.0), max_flows=1700,
                              pkts_per_refresh=(1, 3), size_mode="benign", src_mode="pool")
+    if key == "EVX":
+        # Volume-evading (docs/final_campaign_prereg.md, held out): A2, but each attacker keeps at
+        # most 628 live flows, 0.8 x FEVER's lowest per-switch volume limit on T1B (s12, 784.5),
+        # refreshed before the idle timeout as A2 does (t1 <= 9 s against 10 s).
+        return AttackVariant("EVX-volume-evading-M628", 100, (5.5, 9.0), max_flows=628, src_mode="host")
     if key.startswith("X"):
         return gap_variant(float(key[1:]))
     # rDefender's attacks (loftbench.e2_repro.ATTACKS, repeated here so the testbed driver need

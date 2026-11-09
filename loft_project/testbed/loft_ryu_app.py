@@ -94,7 +94,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
             "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
-            "fever-fl-ll-noing", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool", "dms-btt-pool")
+            "fever-fl-ll-noing", "fever-ll-local", "fever-ll-novol", "fever-noml", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool", "dms-btt-pool")
 
 
 def ip2int(s):
@@ -181,7 +181,8 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
     if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6", "fever", "fever-fl",
-                "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg", "fever-fl-ll-noing"):
+                "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg", "fever-fl-ll-noing", "fever-ll-local", "fever-ll-novol",
+                "fever-noml"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
@@ -192,22 +193,27 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                  "ensguard-v6": "ens_config_v6.json", "fever": "ens_config_v6.json",
                  "fever-fl": "ens_config_fl.json", "fever-fl-bag": "ens_config_fl_bag.json",
                  "fever-fl-ll": "ens_config_fl_ll.json", "fever-fl-ll-pg": "ens_config_fl_ll.json",
-                 "fever-fl-ll-noing": "ens_config_fl_ll.json"}[name]
+                 "fever-fl-ll-noing": "ens_config_fl_ll.json", "fever-ll-local": "ens_config_ll_local.json",
+                 "fever-ll-novol": "ens_config_fl_ll.json", "fever-noml": "ens_config_fl_ll.json"}[name]
         # fever-fl*: detectors trained on testbed rows (docs/testbed_training_plan.md): one-shot
         # CatBoost, Flower XGBoost bagging, lossless federated XGBoost; fever-fl-ll-pg: the last
         # inside PortGuard, as ensguard-v6 is v6 inside PortGuard; fever-fl-ll-noing: the last with
         # its blocks kept by the blocking switch's renewed drop rule, not at the ingress (ablation).
+        # The preregistered ablations of fever-fl-ll (docs/final_campaign_prereg.md, section 3):
+        # fever-ll-local, its detector's settings trained on C3's rows only (loftbench.tbfl_local);
+        # fever-ll-novol, the volume rule off; fever-noml, no detector (the volume rule only).
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
-        model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)
+        model = None if name in ("ensguard-v5-noml", "fever-noml") else EnsembleJSON(model_dir, ec)
         eb = EvictBlock(model, ec["tau"][domain], name="evictblock",
                         rho=ec["rho"][domain], window_s=b["window_s"], n_min=b["n_min"],
                         f_min=b["k"], block_s=b["block_s"], exempt=(OTHER_PORT,),
                         m0=b.get("m0", 1.0), frac_min=b.get("frac_min", 0.0),
                         score_changed_only=bool(ec.get("score_changed_only", False)),
-                        vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch),
+                        vol_x=None if name == "fever-ll-novol" else (b.get("vol_x") or {}).get(domain, {}).get(switch),
                         permanent=bool(b.get("permanent", False)))
-        if name in ("fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-noing"):
+        if name in ("fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-noing", "fever-ll-local",
+                    "fever-ll-novol", "fever-noml"):
             # FEVER without PortGuard: in the v6 testbed runs the table reached 90 % (where PortGuard
             # acts) only in the poll where the volume rule blocked the attackers, so it was dropped.
             return eb

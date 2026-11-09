@@ -79,7 +79,7 @@ def main():
     ap.add_argument("--topo", default="dumbbell", choices=["dumbbell", "tree3"],
                     help="dumbbell: monitored switch + access switch (DMS-BTT); tree3: core and "
                          "two access switches, all monitored (build_tree)")
-    ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, E9P (adaptive), benign (no attack) or F2/F4 (flash "
+    ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, E9P (adaptive), EVX (volume-evading), benign (no attack) or F2/F4 (flash "
                          "crowd, no attack)")
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--defense", default="none",
@@ -89,7 +89,7 @@ def main():
                              "dualguard+portguard+hostid", "portguard+hostid",
                              "dualguard+fairevict", "dualguard+fairevictq", "ensguard",
                              "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
-                             "fever-fl-ll-noing", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool",
+                             "fever-fl-ll-noing", "fever-ll-local", "fever-ll-novol", "fever-noml", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool",
                              "dms-btt-pool"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
