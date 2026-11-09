@@ -30,3 +30,13 @@ those of build_traffic for UHt at benign scale 1.0 (1,000 pps), seed 4190.
 
 Written to results/v21/exported/ens_config_fl_ll.json (keys "UHt"; the T1B values untouched) by
 loftbench/uht_calibrate.py, with results/tbfl/uht_calibration.json.
+
+## Result (9 November 2026)
+
+results/tbfl/uht_calibration.json. tau_UHt 0.5192 (T1B 0.4953), from 5,167 benign rows, so about five
+rows set the 99.9th percentile: a coarse estimate, stated. Volume limits s11 394.5, s12 271.5, s13
+394.5 entries (busiest benign host 263, 181, 263; tables at most 632, 286 and 346 entries in the
+recording; T1B: 799.5, 784.5, 796.5). Open loop, no host of the recording is blocked. The T1B values
+and every other setting of ens_config_fl_ll.json are unchanged (the file before: results/v21/exported/
+sim_T1B/ens_config_fl_ll.before_uht.json). FTMaster's and DMS-BTT's T1B model files copied as _UHt.
+The testbed's controller builds fever-fl-ll, ftmaster, dms-btt, rdefender and none for UHt on s11-s13.

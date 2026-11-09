@@ -1,0 +1,30 @@
+{
+ "benign_rows": 5167,
+ "tau_UHt": 0.5192313402560801,
+ "tau_T1B": 0.4952896545396576,
+ "vol_x_UHt": {
+  "s11": 394.5,
+  "s12": 271.5,
+  "s13": 394.5
+ },
+ "vol_x_T1B": {
+  "s11": 799.5,
+  "s12": 784.5,
+  "s13": 796.5
+ },
+ "busiest_benign_host": {
+  "s11": 263,
+  "s11_table_max": 632,
+  "s12": 181,
+  "s12_table_max": 286,
+  "s13": 263,
+  "s13_table_max": 346
+ },
+ "hosts_blocked_open_loop": 0,
+ "copied": [
+  "ftmaster_state_UHt.json",
+  "ftmaster_rule_UHt.json",
+  "dmsB_state_UHt.json",
+  "dmsB_flow_UHt.json"
+ ]
+}
