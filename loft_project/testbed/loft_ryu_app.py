@@ -91,7 +91,8 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
-            "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg")
+            "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
+            "fever-fl-ll-noing")
 
 
 def ip2int(s):
@@ -169,7 +170,7 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
         return RDefender(**b["rdefender"])
     pg = cfg.get("portguard", {})
     if name in ("ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ensguard-v6", "fever", "fever-fl",
-                "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg"):
+                "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg", "fever-fl-ll-noing"):
         # Selected in the simulator (loftbench.evictblock, results/evictblock/selected.json):
         # PortGuard's knobs but mode "full", so detection and blocking run while it enforces.
         # ensguard-v4lite (docs/v4lite_plan.md, results/v4lite): CatBoost only and the floored
@@ -179,10 +180,12 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                  "ensguard-v5": "ens_config_v5.json", "ensguard-v5-noml": "ens_config_v5.json",
                  "ensguard-v6": "ens_config_v6.json", "fever": "ens_config_v6.json",
                  "fever-fl": "ens_config_fl.json", "fever-fl-bag": "ens_config_fl_bag.json",
-                 "fever-fl-ll": "ens_config_fl_ll.json", "fever-fl-ll-pg": "ens_config_fl_ll.json"}[name]
+                 "fever-fl-ll": "ens_config_fl_ll.json", "fever-fl-ll-pg": "ens_config_fl_ll.json",
+                 "fever-fl-ll-noing": "ens_config_fl_ll.json"}[name]
         # fever-fl*: detectors trained on testbed rows (docs/testbed_training_plan.md): one-shot
         # CatBoost, Flower XGBoost bagging, lossless federated XGBoost; fever-fl-ll-pg: the last
-        # inside PortGuard, as ensguard-v6 is v6 inside PortGuard.
+        # inside PortGuard, as ensguard-v6 is v6 inside PortGuard; fever-fl-ll-noing: the last with
+        # its blocks kept by the blocking switch's renewed drop rule, not at the ingress (ablation).
         ec = json.load(open(os.path.join(model_dir, cfile)))
         b = ec["block"]
         model = None if name == "ensguard-v5-noml" else EnsembleJSON(model_dir, ec)
@@ -193,7 +196,7 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                         score_changed_only=bool(ec.get("score_changed_only", False)),
                         vol_x=(b.get("vol_x") or {}).get(domain, {}).get(switch),
                         permanent=bool(b.get("permanent", False)))
-        if name in ("fever", "fever-fl", "fever-fl-bag", "fever-fl-ll"):
+        if name in ("fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-noing"):
             # FEVER without PortGuard: in the v6 testbed runs the table reached 90 % (where PortGuard
             # acts) only in the poll where the volume rule blocked the attackers, so it was dropped.
             return eb
@@ -311,6 +314,17 @@ class LoftController(app_manager.RyuApp):
         self.evict_mode = "evict" in self.defense_name
         self.install_clock = os.environ.get("LOFT_INSTALL_CLOCK", "controller")
         self.xid_key, self.drop_xids, self.src_drop_xid = {}, set(), {}
+        # Ingress blocking (FEVER's permanent blocks, from 9 November 2026): a blocked host is
+        # dropped at its own access port by one permanent rule above the per-flow rules, so its
+        # packets reach no switch table and no controller. Before, the blocking switch kept a
+        # 2 s drop rule on the host's MAC, renewed at every poll; under Aware the renewals came
+        # late from the backlogged controller and the attack's packets leaked past it, while the
+        # access switches kept installing the attack's flows. That rule stays as the fallback
+        # until the ingress rule is in place (no TABLE_FULL error for 1.5 s) or if the host's
+        # port is unknown. fever-fl-ll-noing (or LOFT_INGRESS_BLOCK=0) restores the old behaviour.
+        self.ingress_block = (os.environ.get("LOFT_INGRESS_BLOCK", "1") == "1"
+                              and not self.defense_name.endswith("-noing"))
+        self.ingress_sent, self.ingress_xid, self.dps = {}, {}, {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
         # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
         # and access switches pin each host port to the first MAC seen on it (port security),
@@ -362,6 +376,7 @@ class LoftController(app_manager.RyuApp):
         p, o = dp.ofproto_parser, dp.ofproto
         self._send_flow(dp, p.OFPMatch(), [p.OFPActionOutput(o.OFPP_CONTROLLER, o.OFPCML_NO_BUFFER)],
                         0, priority=0)
+        self.dps[dp.id] = dp
         if dp.id in self.sw:
             self.sw[dp.id].dp = dp
 
@@ -557,9 +572,42 @@ class LoftController(app_manager.RyuApp):
         S.cnt["drop_rules"] += 1
         self.fw.writerow([round(now - self.t0, 3), "src_drop", ip, "", "", "", "", S.name])
 
+    def _ingress_of(self, mac):
+        """A host's access switch and port: the host port port security pinned to its MAC."""
+        for (d, q), m in self.port_mac.items():
+            if m == mac:
+                return d, q
+        return None
+
+    def _ingress_drop(self, mac, now):
+        """Permanent drop of everything from mac's access port. True once the rule is in place
+        (sent at least 1.5 s ago with no TABLE_FULL error); False while the caller should still
+        keep its own drop rule."""
+        if mac in self.ingress_sent:
+            return now - self.ingress_sent[mac] >= 1.5
+        where = self._ingress_of(mac)
+        dp = self.dps.get(where[0]) if where else None
+        if dp is None:
+            return False
+        p, o = dp.ofproto_parser, dp.ofproto
+        msg = p.OFPFlowMod(datapath=dp, priority=SRC_BLOCK_PRIO, match=p.OFPMatch(in_port=where[1]),
+                           instructions=[], command=o.OFPFC_ADD)
+        dp.send_msg(msg)
+        self.ingress_sent[mac] = now
+        self.ingress_xid[(dp.id, msg.xid)] = mac
+        name = self.sw[dp.id].name if dp.id in self.sw else f"s{dp.id:x}"
+        self.fw.writerow([round(now - self.t0, 3), "ingress_drop", mac, "", "", "", where[1], name])
+        return False
+
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
         o = ev.msg.datapath.ofproto
+        xi = (ev.msg.datapath.id, ev.msg.xid)
+        if xi in self.ingress_xid:
+            # The ingress rule did not fit: forgotten, so it is sent again at the next poll and
+            # the blocking switch keeps its own drop rule meanwhile.
+            self.ingress_sent.pop(self.ingress_xid.pop(xi), None)
+            return
         S = self.sw.get(ev.msg.datapath.id)
         if S is None:
             return
@@ -720,6 +768,8 @@ class LoftController(app_manager.RyuApp):
                 for q in np.flatnonzero(S.eb.blocked_until > t):
                     if q != OTHER_PORT:
                         for mac in self._macs_on(S, int(q)):
+                            if self.ingress_block and S.eb.permanent and self._ingress_drop(mac, now):
+                                continue          # dropped at its access port: nothing reaches S
                             self._drop_rule(S, mac, now, refresh=True)
         if S.drop_rules and S.pg is not None:
             # Ports whose quota is full refuse every new flow until the next poll. In the tree

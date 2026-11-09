@@ -75,10 +75,12 @@ def summarize(d, attack_start, capacity=3500):
                 back.add(key(e))
         drops = [(float(e["t"]), e["src"]) for e in ev if e["event"] == "drop_rule"]
         # Baselines' source blocks (permanent drop rules on a source IP): first time per address.
-        src_drops = {}
+        src_drops, ingress = {}, {}
         for e in ev:
             if e["event"] == "src_drop":
                 src_drops.setdefault(e["src"], float(e["t"]))
+            elif e["event"] == "ingress_drop":      # FEVER's block at the host's access port
+                ingress.setdefault(e["src"], float(e["t"]))
         t0f = log.replace(".csv", "_t0.txt")
         t0 = float(open(t0f).read()) if os.path.exists(t0f) else None
         info = dict(seconds=round(last.get("t", 0)), entries_before_attack=_stats(pre),
@@ -148,7 +150,9 @@ def summarize(d, attack_start, capacity=3500):
         info["_refused"], info["_installed"] = refused, keys
         info["_blocked"], info["_back"], info["_drops"], info["_t0"] = blocked, back, drops, t0
         info["drop_rules"] = len(drops)
-        info["_src_drops"] = src_drops
+        info["_src_drops"], info["_ingress"] = src_drops, ingress
+        if ingress:
+            info["ingress_drops"] = len(ingress)
         # ensguard: hosts the evict-block layer blocked (a host counts once, on any switch).
         # Attackers are the hosts ending :05 and :06 (h5, h6), benign hosts :01-:04.
         hb = {e["src"] for e in ev if e["event"] == "host_block"}
@@ -198,11 +202,15 @@ def summarize(d, attack_start, capacity=3500):
                     tf -= t0
                     if any(tr <= tf < tr + 2.05 for v in (kk[0], mac) for tr in win.get(v, ())):
                         by_rule.add(kk)
-        # A baseline's source block is permanent: every later benign flow from that address.
-        src_drops = info.pop("_src_drops")
-        if src_drops and t0 is not None:
+        # Baselines' source blocks and FEVER's ingress blocks are permanent: every later benign
+        # flow from that address or host.
+        src_drops, ingress = info.pop("_src_drops"), info.pop("_ingress")
+        if (src_drops or ingress) and t0 is not None:
             for kk in never:
-                if kk[0] in src_drops and kk in first and first[kk][0] - t0 >= src_drops[kk[0]]:
+                if kk not in first:
+                    continue
+                tf, mac = first[kk][0] - t0, first[kk][1]
+                if (kk[0] in src_drops and tf >= src_drops[kk[0]]) or (mac in ingress and tf >= ingress[mac]):
                     by_rule.add(kk)
         if src_drops:
             ben_src = {kk[0] for kk in b}

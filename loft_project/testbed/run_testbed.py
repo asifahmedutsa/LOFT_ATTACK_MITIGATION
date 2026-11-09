@@ -88,7 +88,8 @@ def main():
                              "dualguard+hold", "dualguard+portguard+hold", "dualguard+evict",
                              "dualguard+portguard+hostid", "portguard+hostid",
                              "dualguard+fairevict", "dualguard+fairevictq", "ensguard",
-                             "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg"])
+                             "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml", "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
+                             "fever-fl-ll-noing"])
     ap.add_argument("--model-dir", default=os.path.join(ROOT, "results", "v21", "exported"))
     ap.add_argument("--model-prefix", default="v21",
                     help="model file prefix: v21 (federated) or local (this controller only), both in "
