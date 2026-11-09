@@ -74,6 +74,11 @@ def summarize(d, attack_start, capacity=3500):
             if e["event"] in ("delete", "evict") and last_seen.get(key(e), -1.0) > float(e["t"]):
                 back.add(key(e))
         drops = [(float(e["t"]), e["src"]) for e in ev if e["event"] == "drop_rule"]
+        # Baselines' source blocks (permanent drop rules on a source IP): first time per address.
+        src_drops = {}
+        for e in ev:
+            if e["event"] == "src_drop":
+                src_drops.setdefault(e["src"], float(e["t"]))
         t0f = log.replace(".csv", "_t0.txt")
         t0 = float(open(t0f).read()) if os.path.exists(t0f) else None
         info = dict(seconds=round(last.get("t", 0)), entries_before_attack=_stats(pre),
@@ -143,6 +148,7 @@ def summarize(d, attack_start, capacity=3500):
         info["_refused"], info["_installed"] = refused, keys
         info["_blocked"], info["_back"], info["_drops"], info["_t0"] = blocked, back, drops, t0
         info["drop_rules"] = len(drops)
+        info["_src_drops"] = src_drops
         # ensguard: hosts the evict-block layer blocked (a host counts once, on any switch).
         # Attackers are the hosts ending :05 and :06 (h5, h6), benign hosts :01-:04.
         hb = {e["src"] for e in ev if e["event"] == "host_block"}
@@ -192,6 +198,18 @@ def summarize(d, attack_start, capacity=3500):
                     tf -= t0
                     if any(tr <= tf < tr + 2.05 for v in (kk[0], mac) for tr in win.get(v, ())):
                         by_rule.add(kk)
+        # A baseline's source block is permanent: every later benign flow from that address.
+        src_drops = info.pop("_src_drops")
+        if src_drops and t0 is not None:
+            for kk in never:
+                if kk[0] in src_drops and kk in first and first[kk][0] - t0 >= src_drops[kk[0]]:
+                    by_rule.add(kk)
+        if src_drops:
+            ben_src = {kk[0] for kk in b}
+            info["sources_blocked_benign"] = sum(a in ben_src for a in src_drops)
+            info["sources_blocked_attack"] = sum(a not in ben_src for a in src_drops)
+            t_att = [tr for a, tr in src_drops.items() if a not in ben_src]
+            info["first_source_block_s"] = round(min(t_att) - attack_start, 1) if t_att else "none"
         # The simulator's harm: refused an entry (TABLE_FULL, the defense, or its drop rule),
         # or evicted while still active.
         harmed = (b & (info.pop("_blocked") | info.pop("_back"))) | by_rule | info["_ref_b"]

@@ -69,6 +69,19 @@ entry logs: on C3's network (T1A, seeds 4170-4172) for the main arm, on C1-C3 po
 set on the T1A benign recordings of seeds 4173-4175. Features the entry logs do not carry are
 listed per baseline in results/testbed_baselines_tb/gaps.md, with the deviation from the paper.
 
+**Source blocks in the switch (fixed 9 November 2026).** FTMaster, FloRa and FTODefender block a
+source IP by installing a drop rule ("add-flows <src-dst tuple> action = drop" in FTMaster; an
+ovs-ofctl flow rule in FTODefender; FloRa's controller "blocks the corresponding IPs"). Until 9
+November our testbed versions refused a blocked source in the controller only, so each of its
+packets still reached the controller as a Packet-In; this was weaker than the papers and cost the
+baselines most under Aware, where the controller is the bottleneck. From now on (LOFT_DROP_RULES=1,
+the default) each switch whose baseline blocks a source installs a permanent drop rule on that
+source IP, above the per-flow rules, re-sent at the next poll if the switch refuses it as table
+full. The papers give neither a timeout nor a switch; ours is permanent and on the switch that
+decided, as FEVER's blocks. Earlier baseline runs (v5 campaign, results/tbfl/compare_baselines_dev.md)
+used the controller-only refusal and are not compared with the campaign's. DMS-BTT's per-flow
+blocklist is ours, not the paper's, and stays in the controller; FTOP and rDefender do not block.
+
 Fidelity, before the campaign, in results/testbed_baselines_tb/fidelity.md:
 - Against the paper: each baseline's headline result under its paper's own setting (attack share,
   recall or Packet-In loss, as the paper reports it) beside the published number, from the T1B test

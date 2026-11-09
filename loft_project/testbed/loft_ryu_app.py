@@ -34,6 +34,8 @@ Environment variables:
                     port's quota is full, a drop rule for that port's host (by source MAC,
                     priority DROP_PRIO, hard timeout DROP_S) keeps its new flows from reaching
                     the controller; refreshed at every poll and on every refused Packet-In.
+                    The same switch applies FTMaster's, FloRa's and FTODefender's source
+                    blocks as permanent drop rules on the source IP (priority SRC_BLOCK_PRIO).
                     0 = refuse in the controller only. The DMS-BTT blocklist and the flow hold
                     are per flow (a drop rule would take the entry it frees, and a per-host
                     rule would block the host's other flows), so they always refuse in the
@@ -67,6 +69,7 @@ from ryu.ofproto import ofproto_v1_3
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from loftbench.baselines import FloRa, FTMaster, FTODDetector, FTODefender, FTOP, RDefender, SIFT, TableGuard  # noqa: E402
+from loftbench.baselines import _SourceBlock  # noqa: E402
 from loftbench.cbjson import CatBoostJSON  # noqa: E402
 from loftbench.defenses import DMSBTT, DualGuard, EvictBlock, FloodGuard, PortGuard  # noqa: E402
 from loftbench.ensjson import EnsembleJSON  # noqa: E402
@@ -82,6 +85,7 @@ OTHER_PORT = N_PORTS - 1
 PRIO = 10
 DROP_PRIO = 5         # below the per-flow rules, above the non-IP L2 rules and the table miss
 DROP_S = 2            # drop-rule hard timeout; refreshed at every 1 s poll while the quota is full
+SRC_BLOCK_PRIO = 20   # baselines' source blocks: above the per-flow rules, so the block is complete
 DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "portguard", "dualguard+portguard",
             "dualguard+floodguard", "ftmaster", "ftop", "flora", "rdefender", "dualguard+hold",
             "dualguard+portguard+hold", "dualguard+evict", "dualguard+fairevict",
@@ -93,6 +97,10 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
 def ip2int(s):
     a, b, c, d = (int(x) for x in s.split("."))
     return (a << 24) | (b << 16) | (c << 8) | d
+
+
+def int2ip(a):
+    return ".".join(str((int(a) >> s) & 255) for s in (24, 16, 8, 0))
 
 
 class ExportedMLP:
@@ -250,6 +258,13 @@ class Switch:
         self.feq = self.defense if isinstance(self.defense, QuarantineFairEvict) else None
         self.drop_rules = os.environ.get("LOFT_DROP_RULES", "1") == "1" and (
             self.pg is not None or self.feq is not None or self.eb is not None)
+        # Source blocks of FTMaster, FloRa and FTODefender: a permanent drop rule on the source
+        # IP in this switch, as their papers install one (FTMaster "add-flows <src-dst tuple>
+        # action = drop", FTODefender with ovs-ofctl), so a blocked source's packets stop
+        # reaching the controller. Until 9 November 2026 they were refused in the controller only.
+        self.srcblock = (os.environ.get("LOFT_DROP_RULES", "1") == "1"
+                         and isinstance(self.defense, _SourceBlock))
+        self.src_dropped = set()
         self.drop_until, self.drop_pk, self.ref_mac = {}, {}, {}
         self.last_install, self.refused_until = {}, {}
         self._installs_seen = self._tf_last = 0
@@ -295,7 +310,7 @@ class LoftController(app_manager.RyuApp):
         # OpenFlow 1.3 controller, so the 1 s polls infer them (_evictions).
         self.evict_mode = "evict" in self.defense_name
         self.install_clock = os.environ.get("LOFT_INSTALL_CLOCK", "controller")
-        self.xid_key, self.drop_xids = {}, set()
+        self.xid_key, self.drop_xids, self.src_drop_xid = {}, set(), {}
         self.lean = os.environ.get("LOFT_LEAN", "1") == "1"
         # Host identity (+hostid, tree only): a flow's "port" for PortGuard is its source host,
         # and access switches pin each host port to the first MAC seen on it (port security),
@@ -431,6 +446,8 @@ class LoftController(app_manager.RyuApp):
                     and (held is None or held[fid] <= t)):
                 S.ref_mac.setdefault(int(S.port_of[fid]), {})[mac] = now
                 self._drop_rule(S, mac, now)
+            if S.srcblock:
+                self._src_drop(S, int(S.src_of[fid]), now)
             return "refused"
         idle = int(round(float(S.defense.admit_timeouts(np.array([fid]), t, self.idle)[0])))
         fm = self._send_flow(dp, self._match(p, k), [p.OFPActionOutput(out)], max(idle, 1))
@@ -521,6 +538,25 @@ class LoftController(app_manager.RyuApp):
         S.cnt["drop_rules"] += 1
         self.fw.writerow([round(now - self.t0, 3), "drop_rule", mac, "", "", "", "", S.name])
 
+    def _src_drop(self, S, src, now):
+        """Permanent drop rule on a blocked source IP in switch S (FTMaster, FloRa, FTODefender),
+        sent once; sent again only if the switch refused it with TABLE_FULL."""
+        if src in S.src_dropped or S.dp is None:
+            return
+        S.src_dropped.add(src)
+        dp = S.dp
+        p, o = dp.ofproto_parser, dp.ofproto
+        ip = int2ip(src)
+        msg = p.OFPFlowMod(datapath=dp, priority=SRC_BLOCK_PRIO,
+                           match=p.OFPMatch(eth_type=0x0800, ipv4_src=ip), instructions=[],
+                           command=o.OFPFC_ADD)
+        dp.send_msg(msg)
+        if len(self.src_drop_xid) > 4096:
+            self.src_drop_xid.clear()
+        self.src_drop_xid[(S.dpid, msg.xid)] = src
+        S.cnt["drop_rules"] += 1
+        self.fw.writerow([round(now - self.t0, 3), "src_drop", ip, "", "", "", "", S.name])
+
     @set_ev_cls(ofp_event.EventOFPErrorMsg, MAIN_DISPATCHER)
     def error(self, ev):
         o = ev.msg.datapath.ofproto
@@ -529,6 +565,11 @@ class LoftController(app_manager.RyuApp):
             return
         if ev.msg.type == o.OFPET_FLOW_MOD_FAILED and ev.msg.code == o.OFPFMFC_TABLE_FULL:
             x = (S.dpid, ev.msg.xid)
+            if x in self.src_drop_xid:
+                # A source block did not fit: sent again at the next poll.
+                S.src_dropped.discard(self.src_drop_xid.pop(x))
+                S.cnt["drop_rule_full"] += 1
+                return
             if x in self.drop_xids:
                 # A drop rule did not fit: the refusal stays controller-only this second.
                 self.drop_xids.discard(x)
@@ -637,6 +678,10 @@ class LoftController(app_manager.RyuApp):
                    pkts=pk, bytes=by, install_t=inst, X=X, dms=dms, state=state)
         S._tf_last = S.cnt["table_full"]
         dels, dems = S.defense.on_poll(t, obs) if n else (None, None)
+        if S.srcblock and len(S.defense._blocked_arr) > len(S.src_dropped):
+            now = time.time()
+            for a in S.defense._blocked_arr.tolist():
+                self._src_drop(S, a, now)
         qmacs = []
         if S.feq is not None:
             qp = S.feq.q_until > t

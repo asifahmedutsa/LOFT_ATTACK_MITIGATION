@@ -5,7 +5,7 @@ campaign. Same testbed and summarizer for every row (T1B at 600 pps, tree, 300 s
 testbed/summarize_run.py unchanged since 6 November 08:38), but different seeds: baselines, none
 and v6+PG from the v5 campaign (seeds 4140-4144; rDefender 4140-4142; FTOP and FloRa one run,
 4140), v6 and FEVER from the deployment check (4181-4182). The baselines' detectors were trained on
-simulator rows; FEVER's on testbed rows. FTODefender has no testbed run. FEVER blocked no benign host in any run; the field
+simulator rows; FEVER's on testbed rows. FTODefender has no testbed run. The baselines' source blocks in these runs were refused in the controller only (each packet of a blocked source still a Packet-In), weaker than FTMaster's and FTODefender's papers, which install switch drop rules; fixed for the final campaign on 9 November (docs/final_campaign_prereg.md, section 4). FEVER blocked no benign host in any run; the field
 is not written for the baselines' own blocking, so it is left out.
 Harm: mean (min-max). Occ.: attack share after onset, mean over s11-s13.
 
