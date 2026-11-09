@@ -56,3 +56,24 @@ results/tbfl/ingress_check.md.
 If adopted, the final campaign's FEVER (fever-fl-ll) and its ablations block at the ingress, and
 "FEVER without ingress blocking" (fever-fl-ll-noing) is added to the ablations of the
 preregistration draft before it is fixed.
+
+## Result (9 November 2026)
+
+All 18 runs completed (results/tbfl/ingress_check.md). Every condition of the rule held, so
+ingress blocking is adopted: fever-fl-ll blocks at the ingress, and fever-fl-ll-noing is an ablation.
+
+| Traffic | Attack occupancy %, old / ingress | Harm %, old / ingress | Probe success %, old / ingress |
+|---|---|---|---|
+| A2 | 22.2 / 4.2 | 0.015 / 0.005 | 50.9 / 96.1 |
+| A4 | 23.7 / 4.3 | 0.000 / 0.000 | 61.0 / 99.6 |
+| E9P | 23.2 / 11.8 | 0.000 / 0.000 | 13.6 / 51.9 |
+| benign | 0.0 / 0.0 | 0.000 / 0.000 | 100.0 / 100.0 |
+
+No benign host was blocked in any run. Each ingress run sent 2 ingress rules (h5, h6). Under E9P the
+first block still came 75-87 s after onset, and s11 kept 13-16 % attack entries (entries installed
+before the block, until they expire); the probe columns are two seeds and descriptive only.
+
+FTMaster on E9P installed no source drop rule: it blocks a source only after 0.5 x 3,500 of that
+source's rules are deleted, and with spoofed sources (and 19 deletions in all) no source came near
+it. Its in-switch block is therefore not exercised by this check; the code path was tested only
+offline (unit tests).

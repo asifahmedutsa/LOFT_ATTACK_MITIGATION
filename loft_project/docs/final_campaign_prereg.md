@@ -17,8 +17,8 @@ results/tbfl/flcheck.md):
   of seeds 4173-4175).
 - Response: v6's evict-block layer (rule A: n_min 50, frac_min 0.2, k 3; volume rule at 1.5 times
   the busiest benign host per switch, calibrated on T1A benign runs; permanent blocks), host
-  identity on the tree, drop rules for blocked hosts; from amendment 2 (docs/ingress_plan.md, if
-  adopted), a blocked host is dropped at its own access port by one permanent rule.
+  identity on the tree, drop rules for blocked hosts; from amendment 2 (docs/ingress_plan.md,
+  adopted 9 November 2026 by its development check), a blocked host is dropped at its own access port by one permanent rule.
 - No PortGuard (results/tbfl/flcheck_pg.md).
 - Controller defense name: fever-fl-ll. Nothing in it is changed after this document is fixed.
 
@@ -61,7 +61,7 @@ would give, so these runs compare methods on equal data.
 | FEVER without sharing | fever-ll-local | XGBoost on C3's rows only, the lossless model's settings (300 trees, same parameters), threshold by the same rule |
 | FEVER without the volume rule | fever-ll-novol | volume rule off |
 | FEVER without the detector | fever-noml | no detector: volume rule only |
-| FEVER without ingress blocking | fever-fl-ll-noing | blocks kept by the blocking switch's renewed 2 s drop rule, as before 9 November (only if docs/ingress_plan.md adopts ingress blocking) |
+| FEVER without ingress blocking | fever-fl-ll-noing | blocks kept by the blocking switch's renewed 2 s drop rule, as before 9 November |
 
 ## 4. Baselines retrained on the testbed (before the campaign)
 
