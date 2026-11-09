@@ -1,8 +1,9 @@
 # Final testbed campaign: preregistration
 
-*Draft 3, 9 November 2026. Not yet fixed: it is fixed (hashed, results/testbed_prereg_final/
-preregistration.json) after the user's approval and before any run on seeds 4160-4164. No run on
-these seeds exists (checked in ~/loft-runs, 9 November). Draft 2 revised draft 1 (commit c9ac300)
+*Draft 3, fixed 10 November 2026 on the user's approval, before any run on seeds 4160-4164 (none
+exists, checked in ~/loft-runs on 10 November): SHA-256 of this file and of testbed/analyze_final.py
+and testbed/campaign_final.sh in results/testbed_prereg_final/preregistration.json. Any later change
+is an amendment, recorded with its date and reason. Draft 2 revised draft 1 (commit c9ac300)
 after a critical review: data-matched baselines, held-out cells, a service hypothesis, per-attack
 results with Holm over all tests, and the scope of the federated claim.*
 
@@ -256,4 +257,4 @@ limit); DMS-BTT's 0.51 % harm on A2 came from TABLE_FULL refusals after s11 over
 kept each attacker at 628 entries and the table below 70 %, so FEVER never acted (as designed for H5).
 testbed/analyze_final.py was checked on synthetic runs with known outcomes (all-win pairs, a planted
 contradiction, non-inferiority, missing runs) and testbed/campaign_final.sh lists exactly its 474 runs.
-Item 5 waits for the user's approval of this draft.
+Item 5 done on 10 November: approved by the user and fixed.
