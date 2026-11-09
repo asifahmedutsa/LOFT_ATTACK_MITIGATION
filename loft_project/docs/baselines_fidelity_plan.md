@@ -84,3 +84,14 @@ the data-matched defenses ftmaster-pool, ftop-pool, ftodefender-pool, flora-pool
 (same knobs, baselines.json and defenses.json copied). Checked before installation: each of the ten
 defenses builds in the testbed's controller on s11-s13, each loads its own arm's files, and
 FTODefender loads each switch's config. FTOP's pooled forest takes 2.3 s to load per switch.
+
+## Against the papers (9 November 2026)
+
+results/testbed_baselines_tb/fidelity_papers.md (loftbench/tbfl_paper_fidelity.py). Detection of the
+deployed per-entry models on the T1B test recordings is at or above each paper's published figure:
+accuracy 97.6 % (FTMaster, paper 98 % or higher), 97.9 % (FTOP, up to 98 %), 99.8 % (FloRa, 99.49 %;
+our false-positive rate 0.26 % against its 0.01 %), 99.9 % (DMS-BTT, above 92 %) and 99.8 %
+(FTODefender, 97 %). Mitigation is not yet comparable: the published attack shares (DMS-BTT 5.25 %
+on average, FTOP's Pm 20.66 %, FTODefender's 22.23 %) beside our earlier testbed runs on A2 (s11:
+DMS-BTT 18.7 %, FTOP 33.9 %, FloRa 39.1 %, FTMaster 10.0 %), which used the simulator models and
+controller-only blocks. The campaign's runs give the comparison; a gap that remains is reported with it.
