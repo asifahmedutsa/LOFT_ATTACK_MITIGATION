@@ -150,8 +150,13 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
                       blocklist_s=b["blocklist_s"])
     if name == "ftodefender":
         # FTODefender (loftbench.ftodefender): CRITIC detector and LightGBM-LR mitigator trained on
-        # T1A, ftod_config_<D>.json and ftod_rule_<D>.json.
-        c = json.load(open(os.path.join(model_dir, f"ftod_config_{domain}.json")))
+        # T1A, ftod_config_<D>.json and ftod_rule_<D>.json. A per-switch config
+        # (ftod_config_<D>_<switch>.json: the switch's own benchmark window and CRITIC weights,
+        # docs/baselines_fidelity_plan.md) is used when present.
+        cp = os.path.join(model_dir, f"ftod_config_{domain}_{switch}.json")
+        if switch is None or not os.path.exists(cp):
+            cp = os.path.join(model_dir, f"ftod_config_{domain}.json")
+        c = json.load(open(cp))
         return FTODefender(LGBMLRJSON(os.path.join(model_dir, f"ftod_rule_{domain}.json")),
                            FTODDetector(c["benchmark"], c["eps"], c["window"]), c["weights"], c["fmax"],
                            c["fmin"], th1=c["th1"], th2=c["th2"], min_evict=c["min_evict"])

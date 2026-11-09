@@ -22,5 +22,5 @@ DMS-BTT,flow,entry,"retrained, C3",0.321,99.883,99.93,99.911,99.869,99.85,99.859
 DMS-BTT,flow,entry,"retrained, C1-C3 pooled",1.895,99.883,99.932,99.91,99.869,99.851,99.856,84.067,72.267,7.801
 FTODefender,rule,entry,"retrained, C3",0.321,99.883,99.932,99.909,99.866,99.855,99.855,0.066,0.098,0.046
 FTODefender,rule,entry,"retrained, C1-C3 pooled",3.34,99.883,99.932,99.91,99.866,99.852,99.854,88.28,83.911,19.755
-FTODefender,detector,poll,"retrained, C3",90.361,94.166,94.079,91.334,96.0,100.0,87.872,94.728,95.979,98.79
-FTODefender,detector,poll,"retrained, C1-C3 pooled",86.859,91.774,92.05,90.377,93.886,96.425,84.301,92.933,84.932,98.089
+FTODefender,detector,poll,"retrained, C3",49.386,95.804,95.45,94.992,96.971,98.212,92.634,97.813,90.504,98.917
+FTODefender,detector,poll,"retrained, C1-C3 pooled",34.043,94.437,94.243,93.979,95.829,96.425,90.848,96.298,87.355,97.962

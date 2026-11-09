@@ -5,6 +5,7 @@ A3 and A7) for the main arm, C1-C3 pooled for the data-matched arm.
 
     PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.tbfl_train_baselines table   # per-poll table rows
     PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.tbfl_train_baselines train   # models and exports
+    PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.tbfl_train_baselines ftod    # FTODefender's detector only
 
 Entry rows (the rule classifiers, DMS-BTT's flow model): results/tbfl/rows.pkl, as FEVER's detector.
 Table rows (FTMaster's and FTOP's state models, DMS-BTT's state model, FTODefender's detector): one per
@@ -15,8 +16,11 @@ clock by the offset between the attacker's first packets there and in the truth 
 offset is the same for every flow of an attacker, spread 0.000 s on the four recordings checked, and
 the schedule does not depend on the benign scale). DMS-BTT's state 2 (active after overflow) as in loftbench.data: from the first
 active poll with the table >= 99 % full or a new TABLE_FULL error, until the attack is inactive.
-FTODefender's benchmark window: 10 polls of s11 from 60 s of the T1A benign recording of seed 4173
-(validation, where the preregistration sets knobs); th1, th2 and min_evict as before.
+FTODefender, as its paper on one switch, runs on each switch with that switch's own benchmark window
+(10 polls from 60 s of the switch in the T1A benign recording of seed 4173: validation, where the
+preregistration sets knobs) and CRITIC weights from that switch's training polls (amendment of
+9 November, docs/baselines_fidelity_plan.md: one window from s11 made s12 and s13 always "attack");
+th1, th2 and min_evict as before.
 Exports: results/tbfl/baselines_tb/{c3,pool}/, under the T1B file names the controller loads. Nothing in
 results/v21/exported is replaced here; that is decided by the fidelity rule (section 4).
 """
@@ -145,6 +149,35 @@ def _ftod_seq(a):
     return a[:, [T, CNT, ENT, NEW, ON]]
 
 
+def _ftod_configs(tab, arm, out):
+    """FTODefender's detector per switch: benchmark window and CRITIC weights (module docstring)."""
+    from .ftodefender import EPS_FRAC, WINDOW, _features
+    ws = {}
+    for sw in SWITCHES:
+        vb = tab[(CTRL["C3"][0], None, VAL[0])][sw]
+        k = int(np.searchsorted(vb[:, T], 60.0))
+        bench = vb[k:k + WINDOW, CNT]
+        F = np.concatenate([_features(_ftod_seq(tab[key][sw]), bench, EPS_FRAC * CAP) for key in _keys(ARMS[arm])])
+        w, fmax, fmin = critic_weights(F[:, :3])
+        ws[sw] = w.tolist()
+        json.dump(dict(weights=w.tolist(), fmax=fmax.tolist(), fmin=fmin.tolist(), benchmark=bench.tolist(),
+                       eps=EPS_FRAC * CAP, window=WINDOW, th1=0.65, th2=0.5, min_evict=20),
+                  open(f"{out}/ftod_config_T1B_{sw}.json", "w"), indent=1)
+    return ws
+
+
+def stage_ftod(arms):
+    """FTODefender's per-switch detector configs only (the other models unchanged)."""
+    tab = pickle.load(open(f"{OUT}/table_rows.pkl", "rb"))
+    for arm in arms:
+        out = f"{DST}/{arm}"
+        ws = _ftod_configs(tab, arm, out)
+        info = json.load(open(f"{out}/train_info.json"))
+        info["ftod_weights"] = ws
+        json.dump(info, open(f"{out}/train_info.json", "w"), indent=1)
+        print(arm, json.dumps(ws))
+
+
 def stage_train(arms):
     import lightgbm as lgb
     from catboost import CatBoostClassifier
@@ -155,7 +188,6 @@ def stage_train(arms):
     from .cbjson import CatBoostJSON
     from .cbjson import export as cb_export
     from .experiment import _train_dms
-    from .ftodefender import EPS_FRAC, WINDOW, _features
     from .lgbjson import export as lgb_export
     from .lgbjson import leaves, onehot
     from .treejson import export as tree_export
@@ -165,9 +197,6 @@ def stage_train(arms):
     rule = {a: Dataset.concat([train_rows(runs, c) for c in ARMS[a]]) for a in arms}
     del runs
     gc.collect()
-    vb = tab[(CTRL["C3"][0], None, VAL[0])]["s11"]
-    k = int(np.searchsorted(vb[:, T], 60.0))
-    benchmark = vb[k:k + WINDOW, CNT]
     for arm in arms:
         t_arm = time.time()
         out = f"{DST}/{arm}"
@@ -225,23 +254,19 @@ def stage_train(arms):
         done("dms-btt", t1)
 
         t1 = time.time()
-        F = np.concatenate([_features(_ftod_seq(a), benchmark, EPS_FRAC * CAP) for a in parts])
-        w, fmax, fmin = critic_weights(F[:, :3])
+        ftod_w = _ftod_configs(tab, arm, out)
         Z = ftod_rule_features(R.X)
         gbm = lgb.LGBMClassifier(n_estimators=100, random_state=0, n_jobs=4, verbose=-1).fit(Z, R.y)
         width = int(max(t["num_leaves"] for t in gbm.booster_.dump_model()["tree_info"]))
         lr = LogisticRegression(max_iter=2000).fit(onehot(leaves(gbm.booster_, Z), width), R.y)
         del Z
         err["ftod_rule"] = lgb_export(gbm, lr, f"{out}/ftod_rule_T1B.json", ftod_rule_features(Xz))
-        json.dump(dict(weights=w.tolist(), fmax=fmax.tolist(), fmin=fmin.tolist(), benchmark=benchmark.tolist(),
-                       eps=EPS_FRAC * CAP, window=WINDOW, th1=0.65, th2=0.5, min_evict=20),
-                  open(f"{out}/ftod_config_T1B.json", "w"), indent=1)
         del gbm, lr
         done("ftodefender", t1)
 
         info = dict(arm=arm, controllers=ARMS[arm], rule_rows=int(len(R.y)), rule_attack=int(R.y.sum()),
                     table_rows=int(len(Tb)), table_active=int(Tb[:, ON].sum()),
-                    table_after_overflow=int((Tb[:, ST] == 2).sum()), ftod_weights=w.tolist(),
+                    table_after_overflow=int((Tb[:, ST] == 2).sum()), ftod_weights=ftod_w,
                     parity_max_abs_diff=err, seconds=secs, total_s=round(time.time() - t_arm))
         json.dump(info, open(f"{out}/train_info.json", "w"), indent=1)
         print(json.dumps(info, indent=1), flush=True)
@@ -255,6 +280,8 @@ if __name__ == "__main__":
     st = sys.argv[1]
     if st == "table":
         stage_table()
+    elif st == "ftod":
+        stage_ftod(sys.argv[2:] or list(ARMS))
     elif st == "train":
         stage_train(sys.argv[2:] or list(ARMS))
     else:

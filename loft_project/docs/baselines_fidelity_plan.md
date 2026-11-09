@@ -60,4 +60,16 @@ benchmark window is s11's benign flow count (about 980 entries) and the controll
 three switches, while s12 and s13 hold about 510 and 260 benign entries; their edit distance to the
 benchmark is then at its maximum, and the detection score is below th1 at 98-100 % of their benign
 polls (s11: 72 % on T1B, 45 % on T1A). The simulator had one switch, so this did not arise there.
-Not yet corrected.
+
+**Amendment (9 November 2026, after the result above).** FTODefender's paper protects one switch with
+that switch's benchmark, so each switch now has its own: 10 polls from 60 s of the switch in the T1A
+benign recording of seed 4173 (s11 968, s12 585, s13 381 entries on average), and CRITIC weights from
+that switch's training polls (ftod_config_T1B_<switch>.json; the controller loads the switch's file).
+Its other models are unchanged, and the rerun of the scoring reproduced every other row exactly. The
+detector then flags 49.4 % of benign polls (C3; pooled 34.0 %), at 95.8 % recall on the standard
+attacks (was 90.4 % and 94.2 %). Per switch on a T1B benign recording: s11 68.8 %, s12 29.0 %, s13
+52.1 %; on a T1A benign recording other than the benchmark's (seed 4174): 37.0 %, 27.6 %, 13.6 %. What
+remains is the method on this traffic, not the port: T1B's benign tables are smaller than T1A's (s11
+about 800 against 1,014 entries), and the edit distance matches polls only within eps = 5 % of the
+table (175 entries) over a 10-poll window. Kept as is; FTODefender acts on its rule model's flags
+(0.32 % of benign entries) whenever the detector fires, so its harm in the campaign shows the cost.

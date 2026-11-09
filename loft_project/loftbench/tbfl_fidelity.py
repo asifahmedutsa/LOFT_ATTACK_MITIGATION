@@ -62,13 +62,17 @@ def _load(path, name):
     return TreeJSON(path)
 
 
-def _ftod_flags(path, polls):
-    """FTODefender's detector on each run's polls: DS below th1 (its paper's detection)."""
+def _ftod_flags(d, polls):
+    """FTODefender's detector on each run's polls, each switch with its own config: DS below th1
+    (its paper's detection). polls: per recording, s11, s12, s13 in turn."""
     from .ftodefender import _features
-    c = json.load(open(path))
-    sc = FTODefender(None, None, np.array(c["weights"]), np.array(c["fmax"]), np.array(c["fmin"])).score
-    return np.concatenate([np.array([sc(f) for f in _features(TT._ftod_seq(a), np.array(c["benchmark"]),
-                                                               c["eps"])[:, :3]]) < c["th1"] for a in polls])
+    out = []
+    for i, a in enumerate(polls):
+        c = json.load(open(os.path.join(d, f"ftod_config_T1B_{TT.SWITCHES[i % len(TT.SWITCHES)]}.json")))
+        sc = FTODefender(None, None, np.array(c["weights"]), np.array(c["fmax"]), np.array(c["fmin"])).score
+        F = _features(TT._ftod_seq(a), np.array(c["benchmark"]), c["eps"])[:, :3]
+        out.append(np.array([sc(f) for f in F]) < c["th1"])
+    return np.concatenate(out)
 
 
 def main():
@@ -87,12 +91,12 @@ def main():
     rows = []
     for base, model, unit, fname, feat, decide in MODELS:
         for src, d in SOURCES.items():
-            path = os.path.join(d, f"{fname}_T1B.json")
+            path = os.path.join(d, f"{fname}_T1B{'_s11' if fname == 'ftod_config' else ''}.json")
             if not os.path.exists(path):
                 continue
             r = dict(baseline=base, model=model, unit=unit, source=src)
             if fname == "ftod_config":
-                f = {v: _ftod_flags(path, polls[v]) for v in vs}
+                f = {v: _ftod_flags(d, polls[v]) for v in vs}
                 lab = {v: np.concatenate([a[:, TT.ON] for a in polls[v]]) == 1 for v in vs}
             else:
                 m = _load(path, fname)

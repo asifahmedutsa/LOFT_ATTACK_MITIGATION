@@ -30,8 +30,8 @@ gates (so poll false alarms are an upper bound). Percentages.
 | DMS-BTT | flow | entry | retrained, C1-C3 pooled | 1.90 | 99.88 | 99.93 | 99.91 | 99.87 | 99.85 | 99.86 | 84.07 | 72.27 | 7.80 |
 | FTODefender | rule | entry | retrained, C3 | 0.32 | 99.88 | 99.93 | 99.91 | 99.87 | 99.86 | 99.86 | 0.07 | 0.10 | 0.05 |
 | FTODefender | rule | entry | retrained, C1-C3 pooled | 3.34 | 99.88 | 99.93 | 99.91 | 99.87 | 99.85 | 99.85 | 88.28 | 83.91 | 19.76 |
-| FTODefender | detector | poll | retrained, C3 | 90.36 | 94.17 | 94.08 | 91.33 | 96.00 | 100.00 | 87.87 | 94.73 | 95.98 | 98.79 |
-| FTODefender | detector | poll | retrained, C1-C3 pooled | 86.86 | 91.77 | 92.05 | 90.38 | 93.89 | 96.42 | 84.30 | 92.93 | 84.93 | 98.09 |
+| FTODefender | detector | poll | retrained, C3 | 49.39 | 95.80 | 95.45 | 94.99 | 96.97 | 98.21 | 92.63 | 97.81 | 90.50 | 98.92 |
+| FTODefender | detector | poll | retrained, C1-C3 pooled | 34.04 | 94.44 | 94.24 | 93.98 | 95.83 | 96.42 | 90.85 | 96.30 | 87.35 | 97.96 |
 
 ## Replacement rule (main arm)
 
@@ -49,7 +49,7 @@ gates (so poll false alarms are an upper bound). Percentages.
 
 ## Data-matched arm (pooled)
 
-Not replaced (docs/baselines_fidelity_plan.md). Models above 1 % false alarms: FTMaster state (6.35 %), FTMaster rule (3.09 %), FTOP state (45.70 %), FTOP rule (3.65 %), FloRa rule (2.58 %), DMS-BTT state (15.16 %), DMS-BTT flow (1.90 %), FTODefender rule (3.34 %), FTODefender detector (86.86 %).
+Not replaced (docs/baselines_fidelity_plan.md). Models above 1 % false alarms: FTMaster state (6.35 %), FTMaster rule (3.09 %), FTOP state (45.70 %), FTOP rule (3.65 %), FloRa rule (2.58 %), DMS-BTT state (15.16 %), DMS-BTT flow (1.90 %), FTODefender rule (3.34 %), FTODefender detector (34.04 %).
 
 ## Rows
 
