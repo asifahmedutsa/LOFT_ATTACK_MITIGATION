@@ -73,3 +73,14 @@ remains is the method on this traffic, not the port: T1B's benign tables are sma
 about 800 against 1,014 entries), and the edit distance matches polls only within eps = 5 % of the
 table (175 entries) over a 10-poll window. Kept as is; FTODefender acts on its rule model's flags
 (0.32 % of benign entries) whenever the detector fires, so its harm in the campaign shows the cost.
+
+## Deployed (9 November 2026)
+
+results/v21/exported (the main arm, what the controller loads for ftmaster, ftop, flora, dms-btt,
+ftodefender): flora_rule, dmsB_state, dmsB_flow (T1B) replaced by the C3-retrained models, the
+simulator ones kept in results/v21/exported/sim_T1B/; ftod_rule_T1B and ftod_config_T1B_<switch> added;
+FTMaster's and FTOP's T1B files unchanged. results/v21/exported/pool_T1B/: the pooled models, loaded by
+the data-matched defenses ftmaster-pool, ftop-pool, ftodefender-pool, flora-pool and dms-btt-pool
+(same knobs, baselines.json and defenses.json copied). Checked before installation: each of the ten
+defenses builds in the testbed's controller on s11-s13, each loads its own arm's files, and
+FTODefender loads each switch's config. FTOP's pooled forest takes 2.3 s to load per switch.

@@ -22,6 +22,8 @@ Environment variables:
                     and defenses.json (see loftbench.export_testbed); for the published
                     baselines also {ftmaster,ftop}_{state,rule}_<D>.json, flora_rule_<D>.json
                     and baselines.json (see loftbench.testbed_baselines)
+                    <name>-pool (ftmaster, ftop, ftodefender, flora, dms-btt): the baseline trained
+                    on C1-C3 pooled, from LOFT_MODEL_DIR/pool_<D>/ (loftbench.tbfl_train_baselines)
   LOFT_DOMAIN       domain name for the model files (D1, D2, D3)
   LOFT_MODEL        explicit path to the v2.1 model JSON (overrides LOFT_MODEL_DIR)
   LOFT_LOG          CSV path for the per-second controller log
@@ -92,7 +94,7 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
             "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
-            "fever-fl-ll-noing")
+            "fever-fl-ll-noing", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool", "dms-btt-pool")
 
 
 def ip2int(s):
@@ -130,6 +132,10 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
     # +hostid: PortGuard's quota per host (source MAC) instead of per ingress port; the
     # controller handles the identity and port security (LoftController._port).
     name = name[:-len("+hostid")] if name.endswith("+hostid") else name
+    if name.endswith("-pool"):
+        # Data-matched arm (preregistration, fix 1): the baseline trained on C1-C3 pooled, its files
+        # under the same names in <model_dir>/pool_<D>/ (with the same knobs).
+        name, model_dir = name[:-len("-pool")], os.path.join(model_dir, f"pool_{domain}")
     if name in ("sift", "tableguard"):
         # Settings selected on validation seeds by gate G1 (loftbench.gate_g1), copied next to
         # the exported models.

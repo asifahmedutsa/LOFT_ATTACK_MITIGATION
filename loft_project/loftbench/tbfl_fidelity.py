@@ -92,6 +92,11 @@ def main():
     for base, model, unit, fname, feat, decide in MODELS:
         for src, d in SOURCES.items():
             path = os.path.join(d, f"{fname}_T1B{'_s11' if fname == 'ftod_config' else ''}.json")
+            if src.startswith("earlier") and os.path.exists(os.path.join(d, "sim_T1B", os.path.basename(path))):
+                # Replaced in exported by the retrained model (fidelity decision); the simulator one is kept here.
+                path = os.path.join(d, "sim_T1B", os.path.basename(path))
+            if src.startswith("earlier") and fname.startswith("ftod"):
+                continue                     # FTODefender's exports there are the retrained ones (no earlier model)
             if not os.path.exists(path):
                 continue
             r = dict(baseline=base, model=model, unit=unit, source=src)
