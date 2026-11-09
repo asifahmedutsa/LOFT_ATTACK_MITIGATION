@@ -1,0 +1,26 @@
+baseline,model,unit,source,false_alarms,recall_standard,G1,G2,G3,Spoof,Pulse,Mimic,Slow,Aware
+FTMaster,state,poll,earlier (simulator T1A),14.043,65.728,80.921,26.956,86.229,90.782,36.31,83.006,81.347,93.822
+FTMaster,state,poll,"retrained, C3",27.653,68.568,87.171,20.653,89.771,91.061,49.107,84.857,85.078,31.401
+FTMaster,state,poll,"retrained, C1-C3 pooled",6.354,87.578,91.886,81.035,92.914,94.246,74.554,92.372,89.244,81.019
+FTMaster,rule,entry,earlier (simulator T1A),0.111,96.597,96.705,97.826,97.421,97.132,93.537,0.012,0.024,0.004
+FTMaster,rule,entry,"retrained, C3",0.329,99.855,99.855,99.911,99.847,99.797,99.867,0.069,0.094,0.055
+FTMaster,rule,entry,"retrained, C1-C3 pooled",3.087,99.883,99.935,99.912,99.863,99.852,99.857,88.183,83.168,24.895
+FTOP,state,poll,earlier (simulator T1A),0.0,33.494,31.798,36.747,36.686,32.291,28.943,28.379,17.442,31.146
+FTOP,state,poll,"retrained, C3",13.935,73.412,77.357,81.148,77.371,79.665,44.345,71.397,60.998,23.312
+FTOP,state,poll,"retrained, C1-C3 pooled",45.704,78.138,84.594,85.2,82.457,84.693,45.685,83.006,77.519,86.879
+FTOP,rule,entry,earlier (simulator T1A),0.112,96.923,97.202,98.177,97.736,97.495,93.628,0.011,0.024,0.004
+FTOP,rule,entry,"retrained, C3",0.323,99.873,99.918,99.908,99.852,99.833,99.856,0.056,0.091,0.041
+FTOP,rule,entry,"retrained, C1-C3 pooled",3.654,99.876,99.921,99.909,99.853,99.84,99.858,88.802,84.962,19.401
+FloRa,rule,entry,earlier (simulator T1A),0.111,96.749,97.175,98.071,97.474,97.576,93.018,0.011,0.024,0.004
+FloRa,rule,entry,"retrained, C3",0.324,99.886,99.934,99.912,99.874,99.855,99.859,0.059,0.088,0.044
+FloRa,rule,entry,"retrained, C1-C3 pooled",2.583,99.885,99.932,99.912,99.865,99.853,99.862,87.089,77.794,7.319
+DMS-BTT,state,poll,earlier (simulator T1A),0.036,84.219,81.689,85.594,87.2,85.922,79.688,69.658,66.57,69.936
+DMS-BTT,state,poll,"retrained, C3",0.108,80.483,80.647,83.793,78.514,79.441,79.836,76.893,72.19,77.261
+DMS-BTT,state,poll,"retrained, C1-C3 pooled",15.162,84.266,84.375,86.494,82.686,83.855,83.78,81.492,80.184,65.669
+DMS-BTT,flow,entry,earlier (simulator T1A),0.102,96.961,97.37,98.224,97.769,97.643,93.394,0.01,0.024,0.004
+DMS-BTT,flow,entry,"retrained, C3",0.321,99.883,99.93,99.911,99.869,99.85,99.859,0.055,0.085,0.042
+DMS-BTT,flow,entry,"retrained, C1-C3 pooled",1.895,99.883,99.932,99.91,99.869,99.851,99.856,84.067,72.267,7.801
+FTODefender,rule,entry,"retrained, C3",0.321,99.883,99.932,99.909,99.866,99.855,99.855,0.066,0.098,0.046
+FTODefender,rule,entry,"retrained, C1-C3 pooled",3.34,99.883,99.932,99.91,99.866,99.852,99.854,88.28,83.911,19.755
+FTODefender,detector,poll,"retrained, C3",90.361,94.166,94.079,91.334,96.0,100.0,87.872,94.728,95.979,98.79
+FTODefender,detector,poll,"retrained, C1-C3 pooled",86.859,91.774,92.05,90.377,93.886,96.425,84.301,92.933,84.932,98.089

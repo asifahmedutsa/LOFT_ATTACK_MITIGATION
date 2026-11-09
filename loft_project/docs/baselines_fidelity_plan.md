@@ -44,3 +44,20 @@ and a model with false alarms above 1 % is named.
 Reported beside the rule, not part of it: recall on Mimic, Slow and Aware, and each attack's recall.
 Written by loftbench/tbfl_fidelity.py to results/testbed_baselines_tb/fidelity.md. The comparison with
 each paper's headline result (the other half of section 4's fidelity report) is separate.
+
+## Result (9 November 2026)
+
+results/testbed_baselines_tb/fidelity.md. Main arm, by the rule above: FloRa, DMS-BTT and FTODefender
+use their C3-retrained models; FTMaster and FTOP keep their simulator models, because their retrained
+state models flag 27.7 % and 13.9 % of benign polls (the simulator ones 14.0 % and 0.0 %; FTOP's at
+33.5 % recall). The retrained rule models pass everywhere (recall on the standard attacks 99.9 %
+against 96.6-97.0 %, false alarms 0.32-0.33 % against 0.10-0.11 %). In the pooled arm every model
+is above 1 % false alarms (rule models 1.9-3.7 %, state models 6.4-45.7 %); its rule models detect
+Mimic and Slow (78-89 %) where the C3 and simulator models do not (under 0.1 %).
+
+FTODefender's detector flags 90.4 % of benign polls (C3) because of our port, not the method: its
+benchmark window is s11's benign flow count (about 980 entries) and the controller applies it to all
+three switches, while s12 and s13 hold about 510 and 260 benign entries; their edit distance to the
+benchmark is then at its maximum, and the detection score is below th1 at 98-100 % of their benign
+polls (s11: 72 % on T1B, 45 % on T1A). The simulator had one switch, so this did not arise there.
+Not yet corrected.
