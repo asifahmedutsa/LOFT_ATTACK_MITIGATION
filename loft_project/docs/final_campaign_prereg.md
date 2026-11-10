@@ -264,7 +264,9 @@ Item 5 done on 10 November: approved by the user and fixed.
 
 ### Amendment 1, 10 November 2026 (during the campaign, before any result was read)
 
-Approved by the user on 10 November 2026, about 19:30, after 163 of 474 runs.
+Approved by the user on 10 November 2026, about 19:30, after 163 of 474 runs. The validity rule was
+approved first; the window of two measures (below) was found while making it and approved separately
+the same evening, also before any result was read.
 
 **Validity rule.** By 19:10, four first-pass runs on seed 4161 had been moved to _failed for wall time
 alone (574, 545, 647 and 550 s against the limit of 510 s): FTODefender on Spoof, and no defense,

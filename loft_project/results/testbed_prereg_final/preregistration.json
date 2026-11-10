@@ -60,10 +60,11 @@
    "before_any_result_read": true,
    "summary": "runs moved to _failed for wall time only are valid if the controller log reaches 90 % of the duration, the testbed finished normally and no suspend is in the kernel log; occupancy and benign deletions per minute over the traffic only; sensitivity under the original rule and as first preregistered",
    "sha256": {
-    "docs/final_campaign_prereg.md": "e744698565a197c1c540e3ed0e9f290dc917383955e2d651196445a6f45a4342",
+    "docs/final_campaign_prereg.md": "da758c8f0f176d74fcc173280be48ce049585274403fd043b4c297ae3d81999c",
     "testbed/analyze_final.py": "7bb18c905a6d672bfa43139383f448760bfca2e6e44ce40dd2e59e29258c59d4",
     "testbed/campaign_final.sh": "d31ee2b8a7b210d41520a3891abf61c4d1bd5b2d0b06602f3e56c8251ce629d7"
-   }
+   },
+   "window_approved": "2026-11-10T19:54:35"
   }
  ]
 }
