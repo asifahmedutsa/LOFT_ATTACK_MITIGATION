@@ -50,5 +50,20 @@
   "pool_T1B/ftop_rule_T1B.json": "9f9951dc09122cdfdec28132f7edfe2ba71f4d82dca8ed033749f23f41188d1a",
   "pool_T1B/ftop_state_T1B.json": "bffefb089d07e966a6abe0856bb66483f923fdf1ff4c4719ba38c3ae20440560"
  },
- "note": "model files as installed in /opt/loft-testbed (checked equal at fixing)"
+ "note": "model files as installed in /opt/loft-testbed (checked equal at fixing)",
+ "amendments": [
+  {
+   "n": 1,
+   "date": "2026-11-10T19:52:35",
+   "approved_by": "user (asifahmedutsa), 10 November 2026",
+   "after_runs": 163,
+   "before_any_result_read": true,
+   "summary": "runs moved to _failed for wall time only are valid if the controller log reaches 90 % of the duration, the testbed finished normally and no suspend is in the kernel log; occupancy and benign deletions per minute over the traffic only; sensitivity under the original rule and as first preregistered",
+   "sha256": {
+    "docs/final_campaign_prereg.md": "e744698565a197c1c540e3ed0e9f290dc917383955e2d651196445a6f45a4342",
+    "testbed/analyze_final.py": "7bb18c905a6d672bfa43139383f448760bfca2e6e44ce40dd2e59e29258c59d4",
+    "testbed/campaign_final.sh": "d31ee2b8a7b210d41520a3891abf61c4d1bd5b2d0b06602f3e56c8251ce629d7"
+   }
+  }
+ ]
 }

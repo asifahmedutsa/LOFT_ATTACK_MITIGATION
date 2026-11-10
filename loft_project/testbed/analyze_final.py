@@ -9,13 +9,22 @@ H7 and section 8 are reported, not tested. A missing run drops its pairs, which 
 
     python3 testbed/analyze_final.py      # writes results/testbed_prereg_final/{runs.csv, tests.csv, report.md}
 
+Amendment 1 (10 November 2026, docs/final_campaign_prereg.md, before any result was read): a run that
+matrix_e5.sh moved to _failed only for its wall time is valid if its controller log reaches 90 % of
+the duration, the testbed finished normally and the kernel log shows no suspend during it; the first
+such run is used. Attack occupancy and benign deletions per minute are taken over the traffic only
+(from the probe's start to the end of the duration), not to the end of the controller log. The
+report also gives the tests under the original rule and under the original rule and measure.
+
 FIN_RUNS, FIN_TAG and FIN_OUT override the run directory, the run-name prefix and the output (for a
 dry run on renamed development summaries; never for the campaign).
 """
 import csv
+import glob
 import os
 import random
 import re
+import subprocess
 from math import comb
 from statistics import mean
 
@@ -56,11 +65,49 @@ ZERO = ("hosts_blocked_attack", "hosts_blocked_benign", "sources_blocked_attack"
         "ingress_drops")
 
 
+def num(x):
+    return isinstance(x, float)
+
+
 def name(trace, v, d, s, long=False):
     return f"{TAG}{'600' if long else ''}_{trace}_{v}_{d}_s{s}"
 
 
-def summary(d):
+def traffic_window(d, dur):
+    """Controller time of the traffic's start and end: the probe starts with the traffic drivers and
+    runs for the duration (amendment 1)."""
+    t0 = glob.glob(os.path.join(d, "controller_*_t0.txt"))
+    pr = glob.glob(os.path.join(d, "probe_*.csv"))
+    if not t0 or not pr:
+        return None
+    with open(pr[0]) as f:
+        first = next(csv.DictReader(f), None)
+    if first is None:
+        return None
+    start = float(first["t_wall"]) - float(open(t0[0]).read())
+    return start, start + dur
+
+
+def occupancy_window(d, end, attack_start=50.0, cap=3500):
+    """attack_share_avg_pct per switch as testbed/summarize_run.py computes it (attacker hosts 5 and 6,
+    capacity 3500, polls from 50 s), over the polls up to the traffic's end only."""
+    att = {"00:00:00:00:01:05", "00:00:00:00:01:06"}
+    out = {}
+    for sl in sorted(glob.glob(os.path.join(d, "switch_*_s1?.csv"))):
+        pa = {}
+        with open(sl.replace(".csv", "_macs.csv")) as f:
+            for x in csv.DictReader(f):
+                if x["mac"] in att:
+                    pa[float(x["t"])] = pa.get(float(x["t"]), 0) + int(x["entries"])
+        with open(sl) as f:
+            ts = [float(x["t"]) for x in csv.DictReader(f)]
+        pas = [pa.get(t, 0) / cap for t in ts if attack_start <= t <= end]
+        out[f"attack_share_avg_pct_{os.path.basename(sl)[:-4].rsplit('_', 1)[1]}"] = (
+            round(100 * mean(pas), 2) if pas else None)
+    return out
+
+
+def summary(d, dur=300, window=True):
     p = os.path.join(d, "summary.txt")
     if not os.path.exists(p):
         return None
@@ -81,6 +128,13 @@ def summary(d):
         return None
     for k in ZERO:
         r.setdefault(k, 0.0)            # written only when non-zero
+    if window:                          # amendment 1: over the traffic only
+        w = traffic_window(d, dur)
+        if w is None:
+            return None
+        r.update(occupancy_window(d, w[1]))
+        if num(r.get("benign_deleted_entries")) and num(r.get("seconds")):
+            r["benign_deleted_per_min"] = round(r["benign_deleted_entries"] / (min(r["seconds"], w[1]) / 60), 2)
     sh = [r.get(f"attack_share_avg_pct_s1{i}") for i in (1, 2, 3)]
     r[OCC] = mean(sh) if all(isinstance(x, float) for x in sh) else None
     cpu, rss = [], []
@@ -112,21 +166,68 @@ def holm(ps):
     return adj
 
 
-def num(x):
-    return isinstance(x, float)
+def suspended(t_from, t_to):
+    """Whether the kernel log shows a suspend between the two times (epoch seconds)."""
+    p = subprocess.run(["journalctl", "-k", "-q", "--no-pager", "--since", f"@{int(t_from)}",
+                        "--until", f"@{int(t_to) + 1}"], capture_output=True, text=True)
+    if p.returncode:
+        raise SystemExit("journalctl failed; suspends cannot be checked: " + p.stderr.strip())
+    return "PM: suspend entry" in p.stdout
 
 
-runs = {}
-for (tr, v), (ms, seeds) in CELLS.items():
-    for d in ms:
-        for s in seeds:
-            runs[(tr, v, d, s)] = summary(os.path.join(RUNS, name(tr, v, d, s)))
-long_runs = {(tr, v, d, s): summary(os.path.join(RUNS, name(tr, v, d, s, True)))
-             for (tr, v), (ms, seeds) in LONG.items() for d in ms for s in seeds}
+def rescuable(c, dur):
+    """Amendment 1: a run moved to _failed counts if only its wall time failed: its controller log reaches
+    90 % of the duration, the testbed finished normally and no suspend fell in it."""
+    ctl = [x for x in glob.glob(os.path.join(c, "controller_*.csv")) if not x.endswith("_flows.csv")]
+    t0 = glob.glob(os.path.join(c, "controller_*_t0.txt"))
+    log = os.path.join(c, "runner.log")
+    if len(ctl) != 1 or not t0 or not os.path.exists(log) or "[testbed] artifacts in" not in open(log).read():
+        return False
+    with open(ctl[0]) as f:
+        last = float(f.readlines()[-1].split(",")[0])
+    if last < 0.9 * dur:
+        return False
+    moved = int(c.rsplit(".", 1)[1])                      # matrix_e5.sh appends the time it moved the run
+    if suspended(float(open(t0[0]).read()) - 60, moved):
+        return False
+    if not os.path.exists(os.path.join(c, "summary.txt")):
+        with open(os.path.join(c, "summary.txt"), "w") as f:
+            subprocess.run(["python3", os.path.join(os.path.dirname(os.path.abspath(__file__)), "summarize_run.py"), c],
+                           stdout=f, check=True)
+    return True
+
+
+rescued = []
+
+
+def first_valid(n, dur):
+    """The first valid run under amendment 1: the earliest rescuable copy in _failed, else the run itself."""
+    for c in sorted(glob.glob(os.path.join(RUNS, "_failed", n + ".*")), key=lambda x: int(x.rsplit(".", 1)[1])):
+        if rescuable(c, dur):
+            rescued.append(os.path.basename(c))
+            return summary(c, dur)
+    return summary(os.path.join(RUNS, n), dur)
+
+
+def collect(rule):
+    """rule: 'amended' (amendment 1), 'orig-rule' (original validity, traffic-only measure) or 'orig'
+    (as first preregistered)."""
+    def get(n, dur):
+        if rule == "amended":
+            return first_valid(n, dur)
+        return summary(os.path.join(RUNS, n), dur, window=rule == "orig-rule")
+    rs = {(tr, v, d, s): get(name(tr, v, d, s), 300)
+          for (tr, v), (ms, seeds) in CELLS.items() for d in ms for s in seeds}
+    ls = {(tr, v, d, s): get(name(tr, v, d, s, True), 600)
+          for (tr, v), (ms, seeds) in LONG.items() for d in ms for s in seeds}
+    return rs, ls
+
+
+runs, long_runs = collect("amended")
 missing = sorted(k for k, r in runs.items() if r is None) + sorted(("600 s",) + k for k, r in long_runs.items() if r is None)
 
 
-def pairs(key, comp, cells):
+def pairs(key, comp, cells, runs):
     """(attack, seed, FEVER's value, comparator's value) over the cells; missing runs counted."""
     out, lost = [], 0
     for tr, v, seeds in cells:
@@ -153,29 +254,36 @@ TESTS = ([("H1", "benign_harmed_pct", c, T1B_ATT) for c in SIX]
 assert len(TESTS) == 33
 MARGIN = {"benign_harmed_pct": 0.1, OCC: 2.0, "probe_post_success_pct": 5.0}
 
-rows = []
-for h, key, comp, cells in TESTS:
-    pr, lost = pairs(key, comp, cells)
-    if key == "probe_post_success_pct":       # H3, non-inferiority: FEVER > comparator - 5
-        win = [f > c - 5.0 for _, _, f, c in pr]
-        tie = [False] * len(pr)
-    else:                                     # lower is better; a tie counts against FEVER
-        win = [f < c for _, _, f, c in pr]
-        tie = [f == c for _, _, f, c in pr]
-    contra = []
-    for v in dict.fromkeys(p[0] for p in pr):
-        fm, cm = mean(p[2] for p in pr if p[0] == v), mean(p[3] for p in pr if p[0] == v)
-        worse = (cm - fm) if key == "probe_post_success_pct" else (fm - cm)
-        if worse > MARGIN[key]:
-            contra.append(NAMES[v])
-    rows.append(dict(hypothesis=h, measure=key, comparator=comp, trace=cells[0][0], n=len(pr), missing_pairs=lost,
-                     wins=sum(win), ties=sum(tie), fever_mean=mean(p[2] for p in pr) if pr else None,
-                     comp_mean=mean(p[3] for p in pr) if pr else None, p=sign_p(sum(win), len(pr)),
-                     contradicting=", ".join(contra)))
-for r, a in zip(rows, holm([r["p"] for r in rows])):
-    r["p_holm"] = a
-    r["test_passes"] = a < 0.05
-    r["supported"] = r["test_passes"] and not r["contradicting"]
+def tests(runs):
+    rows = []
+    for h, key, comp, cells in TESTS:
+        pr, lost = pairs(key, comp, cells, runs)
+        if key == "probe_post_success_pct":       # H3, non-inferiority: FEVER > comparator - 5
+            win = [f > c - 5.0 for _, _, f, c in pr]
+            tie = [False] * len(pr)
+        else:                                     # lower is better; a tie counts against FEVER
+            win = [f < c for _, _, f, c in pr]
+            tie = [f == c for _, _, f, c in pr]
+        contra = []
+        for v in dict.fromkeys(p[0] for p in pr):
+            fm, cm = mean(p[2] for p in pr if p[0] == v), mean(p[3] for p in pr if p[0] == v)
+            worse = (cm - fm) if key == "probe_post_success_pct" else (fm - cm)
+            if worse > MARGIN[key]:
+                contra.append(NAMES[v])
+        rows.append(dict(hypothesis=h, measure=key, comparator=comp, trace=cells[0][0], n=len(pr), missing_pairs=lost,
+                         wins=sum(win), ties=sum(tie), fever_mean=mean(p[2] for p in pr) if pr else None,
+                         comp_mean=mean(p[3] for p in pr) if pr else None, p=sign_p(sum(win), len(pr)),
+                         contradicting=", ".join(contra)))
+    for r, a in zip(rows, holm([r["p"] for r in rows])):
+        r["p_holm"] = a
+        r["test_passes"] = a < 0.05
+        r["supported"] = r["test_passes"] and not r["contradicting"]
+    return rows
+
+
+rows = tests(runs)
+# Sensitivity (amendment 1): the tests under the original validity rule, and as first preregistered.
+sens = {k: tests(collect(k)[0]) for k in ("orig-rule", "orig")}
 
 os.makedirs(OUT, exist_ok=True)
 allr = [(("300 s",) + k, r) for k, r in runs.items()] + [(("600 s",) + k, r) for k, r in long_runs.items()]
@@ -321,6 +429,17 @@ for (tr, v), (ms, seeds) in LONG.items():
     for d in ms:
         r = long_runs[(tr, v, d, seeds[0])]
         L.append(f"| {NAMES[v]} | {d} | " + " | ".join(fmt(r.get(k) if r else None, n) for k, _, n in MEASURES) + " |")
+L += ["", "## Sensitivity (amendment 1)", "", "Tests with the original validity rule (runs moved to _failed for "
+      "wall time left out; pass-2 reruns used where valid), with the traffic-only measure; and as first "
+      "preregistered (original rule, occupancy to the end of the controller log).", "",
+      "| H | Measure | Comparator | Trace | Amended: pairs, wins, p (Holm), supported | Original rule | "
+      "As first preregistered |", "|---|---|---|---|---|---|---|"]
+for i, r in enumerate(rows):
+    c = [f"{x['n']}, {x['wins']}, {x['p_holm']:.4f}, {'yes' if x['supported'] else 'no'}"
+         for x in (r, sens["orig-rule"][i], sens["orig"][i])]
+    L.append(f"| {r['hypothesis']} | {r['measure']} | {r['comparator']} | {r['trace']} | " + " | ".join(c) + " |")
+L += ["", f"## Runs counted under amendment 1 ({len(rescued)}; moved to _failed for wall time only)", ""] + \
+     [f"- {n}" for n in sorted(set(rescued))]
 L += ["", f"## Missing runs ({len(missing)})", ""] + [f"- {' '.join(map(str, k))}" for k in missing]
 open(os.path.join(OUT, "report.md"), "w").write("\n".join(L) + "\n")
 print("\n".join(L[:50]))

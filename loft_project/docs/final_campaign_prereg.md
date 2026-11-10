@@ -151,6 +151,7 @@ matrix_e5.sh moves it to _failed (no summary, or a gap in the controller log suc
 or if it overlapped an install. It is rerun once with the same seed and listed in
 results/testbed_prereg_final/reruns.md. A run invalid twice is reported as missing; its pairs are
 left out and counted.
+Changed by amendment 1 (section 11).
 
 ## 6. Measures
 
@@ -258,3 +259,44 @@ kept each attacker at 628 entries and the table below 70 %, so FEVER never acted
 testbed/analyze_final.py was checked on synthetic runs with known outcomes (all-win pairs, a planted
 contradiction, non-inferiority, missing runs) and testbed/campaign_final.sh lists exactly its 474 runs.
 Item 5 done on 10 November: approved by the user and fixed.
+
+## 11. Amendments
+
+### Amendment 1, 10 November 2026 (during the campaign, before any result was read)
+
+Approved by the user on 10 November 2026, about 19:30, after 163 of 474 runs.
+
+**Validity rule.** By 19:10, four first-pass runs on seed 4161 had been moved to _failed for wall time
+alone (574, 545, 647 and 550 s against the limit of 510 s): FTODefender on Spoof, and no defense,
+FloRa and DMS-BTT on Aware. In each, the four benign drivers stopped at 310 s, the controller logged
+to the end without a suspend, and the testbed finished normally. The time went to the service ping
+(ping -c 300): after its last echo it waits for late replies up to twice the largest round trip it
+saw, here 167-207 s, because the attack had overflowed the tables. The limit was meant to catch a
+suspend. Instead it removes the runs in which the attack did most harm, which are baseline and
+no-defense runs, and the reruns (same seed) were expected to fail the same way. The rule is
+therefore changed: a run moved to _failed for wall time only is valid if its controller log reaches
+90 % of the duration (270 s; 540 s for the 600 s check), the testbed finished normally ("artifacts
+in" in its log) and the kernel log shows no suspend from the run's start to the time it was moved.
+The first valid run of a name is used; pass 2 still reruns it (campaign_final.sh is not changed while
+it runs).
+
+**Window of two measures.** Checking the flagged runs showed that attack occupancy
+(attack_share_avg_pct per switch, section 6) and benign deletions per minute were averaged to the end
+of the controller log, which runs on after the traffic while the ping waits. Valid runs were affected
+as well (by then baseline and no-defense runs had ended as late as 394-476 s; FEVER's at 310-313 s,
+one at 361 s), which dilutes the
+occupancy of the runs most attacked. Both are now taken over the traffic only: polls from 50 s to the
+probe's start plus the duration (about 310 s), with the same per-switch formula as
+testbed/summarize_run.py (checked equal on the smoke runs when no end is set). Controller CPU and
+decision time stay over the whole run (reported, not tested). Harm, probe success and lost first
+packets are per flow or per probe and do not change.
+
+**Sensitivity.** testbed/analyze_final.py also reports every test under the original validity rule
+(traffic-only measure) and as first preregistered (original rule and measure), and lists the runs
+counted under this amendment.
+
+**What had been seen.** Run lengths, ping round trips, driver end times and controller logs of the
+flagged runs, and the campaign log's progress lines, which print each run's harm, probe success and
+decision time as it ends; some of those lines were seen while checking progress. No mean, table,
+paired difference or test was computed or looked at. The code change was checked on the smoke runs
+and on a synthetic run set, not on campaign results.
