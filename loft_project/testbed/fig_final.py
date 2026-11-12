@@ -29,10 +29,11 @@ OUT = os.path.join(RES, "paper")
 os.makedirs(OUT, exist_ok=True)
 
 FEVER = "fever-fl-ll"
-BASE = ["ftmaster", "ftop", "ftodefender", "flora", "dms-btt", "rdefender"]
+DMS = "dms-btt-h1"     # DMS-BTT as its paper evicts above H1 (amendment 3), in place of the campaign's dms-btt
+BASE = ["ftmaster", "ftop", "ftodefender", "flora", DMS, "rdefender"]
 ABL = ["fever-ll-local", "fever-ll-novol", "fever-noml", "fever-fl-ll-noing"]
 LABEL = {"none": "No defense", "ftmaster": "FTMaster", "ftop": "FTOP", "ftodefender": "FTODefender",
-         "flora": "FloRa", "dms-btt": "DMS-BTT", "rdefender": "rDefender", FEVER: "FEVER",
+         "flora": "FloRa", DMS: "DMS-BTT", "rdefender": "rDefender", FEVER: "FEVER",
          "fever-ll-local": "w/o sharing", "fever-ll-novol": "w/o volume rule",
          "fever-noml": "w/o detector", "fever-fl-ll-noing": "w/o ingress blocking"}
 ATT = {"T1B": ["A2", "A4", "A5", "A6", "A7", "E9P", "EVX"], "UHt": ["A2", "A4", "E9P"]}
@@ -41,7 +42,7 @@ MEAS = [("benign_harmed_pct", "Benign flows harmed (%)", 2),
         ("occupancy", "Attack occupancy (%)", 1),
         ("probe_post_success_pct", "New-connection success (%)", 1)]
 COL = {"none": "#c8c7c2", "ftmaster": "#2a78d6", "ftop": "#1baf7a", "ftodefender": "#eda100",
-       "flora": "#e87ba4", "dms-btt": "#6250d6", "rdefender": "#52514e", FEVER: "#eb6834",
+       "flora": "#e87ba4", DMS: "#6250d6", "rdefender": "#52514e", FEVER: "#eb6834",
        "fever-ll-local": "#2a78d6", "fever-ll-novol": "#1baf7a", "fever-noml": "#eda100",
        "fever-fl-ll-noing": "#6250d6"}
 
@@ -173,7 +174,7 @@ fig.align_ylabels(axs)
 save(fig, "fig_t1b")
 
 # Figure: UHt.
-UM = ["none", "ftmaster", "dms-btt", "rdefender", FEVER]
+UM = ["none", "ftmaster", DMS, "rdefender", FEVER]
 fig, axs = plt.subplots(1, 3, figsize=(7.16, 2.4))
 for ax, (key, title, _) in zip(axs, MEAS):
     grouped(ax, "UHt", ATT["UHt"], UM, key)
@@ -187,7 +188,7 @@ save(fig, "fig_uht")
 # Figure: pooled training. Per attack, each baseline trained locally (plain) and on the pooled data
 # of all controllers (hatched), FEVER as the last bar.
 PA = ["A4", "E9P", "A6", "EVX"]
-PB = ["ftmaster", "ftop", "ftodefender", "flora", "dms-btt"]
+PB = ["ftmaster", "ftop", "ftodefender", "flora", DMS]
 fig, axs = plt.subplots(2, 4, figsize=(7.16, 3.9), sharey="row")
 for col, v in enumerate(PA):
     for row, (key, title, _) in enumerate(MEAS[1:]):
@@ -390,9 +391,9 @@ def occ_series(d, cap=3500):
     return np.mean(out, axis=0)
 
 
-TM = ["none", "ftmaster", "ftodefender", "dms-btt", FEVER]
+TM = ["none", "ftmaster", "ftodefender", DMS, FEVER]
 LS = {"none": (0, (1, 1.5)), "ftmaster": (0, (5, 2)), "ftodefender": (0, (3, 1.5, 1, 1.5)),
-      "dms-btt": (0, (8, 2, 2, 2)), FEVER: "-"}
+      DMS: (0, (8, 2, 2, 2)), FEVER: "-"}
 fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.5), sharey=True)
 for ax, v in zip(axs, ["A4", "E9P"]):
     for m in TM:
