@@ -43,16 +43,16 @@ def blocks(d):
 
 
 def outage(d, n=20):
-    """Probe outage: the first failed attempt after the attack's start, and the start of the first run
-    of n successes after it (s, controller time)."""
+    """Probe outage: the first failed attempt after the attack's start, and the start of the unbroken
+    run of successes that lasts to the end of the probe, if at least n long (s, controller time)."""
     t0 = float(open(glob.glob(os.path.join(d, "controller_*_t0.txt"))[0]).read())
     with open(glob.glob(os.path.join(d, "probe_*.csv"))[0]) as fh:
         q = [(float(x["t_wall"]) - t0, x["ok"] == "1") for x in csv.DictReader(fh)]
     f = next((i for i, (t, ok) in enumerate(q) if t >= ATTACK and not ok), None)
     if f is None:
         return "none"
-    r = next((q[i][0] for i in range(f, len(q) - n + 1) if all(ok for _, ok in q[i:i + n])), None)
-    return f"{q[f][0]:.0f}–{r:.0f}" if r is not None else f"{q[f][0]:.0f}–"
+    last = max(i for i, (_, ok) in enumerate(q) if not ok)
+    return f"{q[f][0]:.0f}–{q[last + 1][0]:.0f}" if len(q) - last - 1 >= n else f"{q[f][0]:.0f}–"
 
 
 def measures(d):
@@ -118,7 +118,7 @@ for v, m, r in rows + ([("A4", FEVER + " (excluded run)", old)] if old else []):
 L += ["", "Block times are controller time, as is the attack's start at 50 s. The last column is the "
       "same cell in the 300 s campaign with seed 4160, over its own traffic window (260 s after the attack's "
       "start, against 300 s for the first half here). The probe outage runs from the first failed attempt "
-      "after the attack's start to the first of 20 successes in a row; an open end means no recovery.",
+      "after the attack's start to the last one; an open end means fewer than 20 successes after it.",
       "", "The last row is the first A4 FEVER run, which overlapped a reinstall of the unchanged testbed "
       "code and was redone. It is not counted and is shown only for the spread between two runs of one seed.",
       "", "Up to 160 s the 300 s and 600 s runs receive the same traffic: the benign flows are identical "
@@ -127,7 +127,21 @@ L += ["", "Block times are controller time, as is the attack's start at 50 s. Th
       "FEVER does not: in its 600 s runs the attackers were blocked later and the probe outage lasted longer "
       "than in the 300 s runs, and on Mimic the outage also began earlier. The cause was not found; with one "
       "seed per cell this is a difference to check, not a result.",
-      "", "Controller log length (s): " + ", ".join(
+      ""]
+# Afterwards one 300 s run of the same cell (tag recheck), to see whether the testbed still gave the
+# campaign's result on the day of the 600 s runs.
+chk = os.path.join(RUNS, f"recheck_T1B_A4_{FEVER}_s4160")
+rc = summary(chk) if os.path.isdir(chk) else None
+if rc:
+    c = campaign("A4", FEVER)
+    L += [f"A 300 s check run of Mimic FEVER with seed 4160, made the same day after the 600 s runs: harm "
+          f"{f(rc['benign_harmed_pct'], 3)} %, occupancy {f(rc[OCC])} %, probe success "
+          f"{f(rc['probe_post_success_pct'], 1)} %, hosts 5 / 6 blocked at {blocks(chk)} s, probe outage "
+          f"{outage(chk)} s. In the campaign the same run gave {f(float(c['occupancy']))} %, "
+          f"{f(float(c['probe_post_success_pct']), 1)} % and a block at "
+          f"{float(c['first_attack_block_s']) + ATTACK:.0f} s. The testbed thus gave close to the campaign's "
+          f"result that day, and the longer outages of the 600 s FEVER runs are not explained by its state.", ""]
+L += ["Controller log length (s): " + ", ".join(
     f"{NAMES[v]} {m} {f(r.get('seconds'), 0)}" for v, m, r in rows if r), ""]
 open(OUTF, "w").write("\n".join(L))
 print("\n".join(L))

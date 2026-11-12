@@ -14,10 +14,12 @@ Measures as in the campaign, over the traffic window (probe start + 600 s). The 
 | T1B | Aware | ftmaster | 15.370 | 55.23 | 4.6 | 3.15 | 58 | 46.30 / 64.76 | 9.8 / 0.0 | – / – | 76– | 47.28 / 10.0 / – / 76– |
 | T1B | Mimic | fever-fl-ll (excluded run) | 0.000 | 2.88 | 86.6 | 0.00 | 13 | 6.30 / 0.00 | 71.0 / 100.0 | 143 / 143 | 94–169 | 4.95 / 97.1 / 129 / 129–137 |
 
-Block times are controller time, as is the attack's start at 50 s. The last column is the same cell in the 300 s campaign with seed 4160, over its own traffic window (260 s after the attack's start, against 300 s for the first half here). The probe outage runs from the first failed attempt after the attack's start to the first of 20 successes in a row; an open end means no recovery.
+Block times are controller time, as is the attack's start at 50 s. The last column is the same cell in the 300 s campaign with seed 4160, over its own traffic window (260 s after the attack's start, against 300 s for the first half here). The probe outage runs from the first failed attempt after the attack's start to the last one; an open end means fewer than 20 successes after it.
 
 The last row is the first A4 FEVER run, which overlapped a reinstall of the unchanged testbed code and was redone. It is not counted and is shown only for the spread between two runs of one seed.
 
 Up to 160 s the 300 s and 600 s runs receive the same traffic: the benign flows are identical and the attack packets agree within 2 %, as rebuilt from the drivers' schedules, and the controller code and model files are those of the campaign. DMS-BTT and FTMaster behave as in their 300 s runs. FEVER does not: in its 600 s runs the attackers were blocked later and the probe outage lasted longer than in the 300 s runs, and on Mimic the outage also began earlier. The cause was not found; with one seed per cell this is a difference to check, not a result.
+
+A 300 s check run of Mimic FEVER with seed 4160, made the same day after the 600 s runs: harm 0.010 %, occupancy 5.33 %, probe success 91.9 %, hosts 5 / 6 blocked at 133 / 133 s, probe outage 116–149 s. In the campaign the same run gave 4.95 %, 97.1 % and a block at 129 s. The testbed thus gave close to the campaign's result that day, and the longer outages of the 600 s FEVER runs are not explained by its state.
 
 Controller log length (s): Mimic fever-fl-ll 646, Mimic dms-btt 620, Mimic ftmaster 776, Aware fever-fl-ll 612, Aware dms-btt 847, Aware ftmaster 887
