@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Controller overhead.}
+\label{tab:overhead}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\toprule
+Method & Decision (ms) & CPU (\%) & Memory (MB) & Packet-In ($10^3$) \\
+\midrule
+No defense & 19.4 (5.4) & 76.5 (12.1) & 199 (30) & 99.8 (16.5) \\
+FTMaster & 53.7 (46.3) & 78.3 (11.7) & 205 (33) & 96.0 (17.3) \\
+FTOP & 103.3 (81.4) & 77.8 (12.3) & 233 (41) & 98.4 (16.8) \\
+FTODefender & 55.8 (46.7) & 70.0 (16.6) & 191 (34) & 84.0 (13.5) \\
+FloRa & 35.2 (17.4) & 75.3 (13.3) & 200 (37) & 94.7 (15.4) \\
+DMS-BTT & 66.2 (40.5) & 78.2 (11.6) & 229 (37) & 113.1 (31.4) \\
+rDefender & 50.1 (38.9) & 77.1 (11.7) & 214 (50) & 103.1 (18.8) \\
+FEVER & 20.8 (15.5) & 62.2 (10.6) & 253 (19) & 87.7 (13.7) \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -2,10 +2,12 @@
 (the 300 s runs counted by testbed/analyze_final.py, amendment 1 measures).
 
   table_main.tex / .pdf   harm, occupancy and probe success per attack, every method (mean over seeds)
+  table_overhead.tex      decision time, controller CPU and memory, Packet-In (page 2 of table_main.pdf)
   fig_t1b                 the same three measures on T1B, grouped bars per attack, mean and s.d.
   fig_uht                 the same on UHt (the three baselines run there)
   fig_pooled              FEVER against each baseline trained locally and on pooled data
   fig_ablation            FEVER against its four ablations
+  fig_timeline            attack occupancy over time on Mimic and Aware (median over seeds)
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_final.py
 """
@@ -131,8 +133,8 @@ t = Table(data, colWidths=[13 * mm, 15 * mm] + [24 * mm] * len(METHODS), repeatR
 t.setStyle(TableStyle(style))
 doc = SimpleDocTemplate(os.path.join(OUT, "table_main.pdf"), pagesize=landscape(A4),
                         leftMargin=15 * mm, rightMargin=15 * mm, topMargin=14 * mm, bottomMargin=12 * mm)
-doc.build([Paragraph("Table 1. Comparative experiment results.",
-                     ParagraphStyle("c", fontName="LS", fontSize=10, leading=13, spaceAfter=6)), t])
+CAP = ParagraphStyle("c", fontName="LS", fontSize=10, leading=13, spaceAfter=6)
+story = [Paragraph("Table 1. Comparative experiment results.", CAP), t]
 
 
 def grouped(ax, trace, atts, methods, key, width=0.82, hatch=None):
@@ -157,6 +159,11 @@ fig, axs = plt.subplots(3, 1, figsize=(7.16, 6.6), sharex=True)
 for ax, (key, title, _) in zip(axs, MEAS):
     grouped(ax, "T1B", ATT["T1B"], METHODS, key)
     ax.set_ylabel(title)
+w = 0.82 / len(METHODS)
+for i, v in enumerate(ATT["T1B"]):       # FEVER's harm is too small to see as a bar
+    a, _ = ms("T1B", v, FEVER, "benign_harmed_pct")
+    axs[0].text(i + ((len(METHODS) - 1) / 2 + 0.3) * w, a + 0.3, f"{a:.2f}", rotation=90, ha="center", va="bottom",
+                fontsize=6.5)
 axs[2].set_ylim(0, 105)
 axs[0].legend(ncol=8, loc="lower center", bbox_to_anchor=(0.5, 1.02), handlelength=1.2, columnspacing=0.9)
 fig.align_ylabels(axs)
@@ -222,4 +229,87 @@ fig.tight_layout(w_pad=1.5)
 fig.legend(*axs[0].get_legend_handles_labels(), ncol=5, loc="lower center", bbox_to_anchor=(0.5, 0.98),
            handlelength=1.6, columnspacing=1.0)
 save(fig, "fig_ablation")
+# Table: controller overhead over all T1B runs (every attack and benign-only), mean (s.d.) per run.
+OV = [("decision_ms_mean", "Decision (ms)", 1, 1), ("ctrl_cpu_pct", "CPU (\\%)", 1, 1),
+      ("ctrl_rss_mb", "Memory (MB)", 0, 1), ("packet_in", "Packet-In ($10^3$)", 1, 1e3)]
+OVM = ["none"] + BASE + [FEVER]
+
+
+def ov(m, key, d, div):
+    x = [float(r[key]) / div for r in RUNS
+         if r["trace"] == "T1B" and r["method"] == m and r[key] not in ("", "None")]
+    return f"{mean(x):.{d}f} ({stdev(x):.{d}f})", len(x)
+
+
+tex = [r"\begin{table}[t]", r"\centering", r"\caption{Controller overhead.}", r"\label{tab:overhead}",
+       r"\small", r"\setlength{\tabcolsep}{4pt}", r"\begin{tabular}{l" + "r" * len(OV) + "}", r"\toprule",
+       "Method & " + " & ".join(h for _, h, _, _ in OV) + r" \\", r"\midrule"]
+data2 = [["Method"] + [h.replace("\\%", "%").replace("$10^3$", "thousands") for _, h, _, _ in OV]]
+for m in OVM:
+    c = [ov(m, k, d, div)[0] for k, _, d, div in OV]
+    tex.append(f"{LABEL[m]} & " + " & ".join(c) + r" \\")
+    data2.append([LABEL[m]] + c)
+tex += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+open(os.path.join(OUT, "table_overhead.tex"), "w").write("\n".join(tex))
+from reportlab.platypus import PageBreak  # noqa: E402
+t2 = Table(data2, colWidths=[30 * mm] + [38 * mm] * len(OV))
+t2.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+                        ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
+                        ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
+                        ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+                        ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]))
+story += [PageBreak(), Paragraph("Table 2. Controller overhead.", CAP), t2]
+doc.build(story)
+
+# Figure: attack occupancy over time (mean of the three switches' attack share, as in the tables),
+# median over the seeds at each second. A run counted under amendment 1 is read from its _failed copy.
+RUNDIR = os.path.expanduser("~/loft-runs")
+with open(os.path.join(RES, "report.md")) as f:
+    rep = f.read()
+COUNTED = {}
+for line in rep.split("## Runs counted under amendment 1", 1)[1].split("##", 1)[0].splitlines():
+    if line.startswith("- "):
+        n = line[2:].strip()
+        COUNTED[n.rsplit(".", 1)[0]] = os.path.join(RUNDIR, "_failed", n)
+ATT_MACS = {"00:00:00:00:01:05", "00:00:00:00:01:06"}
+GRID = np.arange(0, 311)
+
+
+def occ_series(d, cap=3500):
+    out = []
+    for sw in ("s11", "s12", "s13"):
+        with open(os.path.join(d, f"switch_T1B_{sw}.csv")) as fh:
+            ts = [float(x["t"]) for x in csv.DictReader(fh)]
+        pa = dict.fromkeys(ts, 0)
+        with open(os.path.join(d, f"switch_T1B_{sw}_macs.csv")) as fh:
+            for x in csv.DictReader(fh):
+                if x["mac"] in ATT_MACS and float(x["t"]) in pa:
+                    pa[float(x["t"])] += int(x["entries"])
+        out.append(np.interp(GRID, ts, [100 * pa[t] / cap for t in ts]))
+    return np.mean(out, axis=0)
+
+
+TM = ["none", "ftmaster", "ftodefender", "dms-btt", FEVER]
+LS = {"none": (0, (1, 1.5)), "ftmaster": (0, (5, 2)), "ftodefender": (0, (3, 1.5, 1, 1.5)),
+      "dms-btt": (0, (8, 2, 2, 2)), FEVER: "-"}
+fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.5), sharey=True)
+for ax, v in zip(axs, ["A4", "E9P"]):
+    for m in TM:
+        ys = []
+        for sd in range(4160, 4165):
+            n = f"fin_T1B_{v}_{m}_s{sd}"
+            ys.append(occ_series(COUNTED.get(n, os.path.join(RUNDIR, n))))
+        ax.plot(GRID, np.median(ys, axis=0), color=COL[m], ls=LS[m], lw=1.6 if m == FEVER else 1.1,
+                label=LABEL[m])
+    ax.axvline(50, color="black", lw=0.6, ls=":")
+    ax.set_title(ANAME[v])
+    ax.set_xlabel("Time (s)")
+    ax.set_xlim(0, 310)
+    ax.yaxis.grid(True, lw=0.4, color="#dddddd")
+axs[0].set_ylabel("Attack occupancy (%)")
+axs[0].set_ylim(0, None)
+fig.tight_layout(w_pad=1.2)
+fig.legend(*axs[0].get_legend_handles_labels(), ncol=5, loc="lower center", bbox_to_anchor=(0.5, 0.98),
+           handlelength=2.6)
+save(fig, "fig_timeline")
 print("written to", os.path.abspath(OUT))
