@@ -76,6 +76,10 @@ def main():
     a = ap.parse_args()
 
     prof, didx = profile_of(a.domain)
+    if hasattr(prof, "loop"):
+        # Trace domains loop the capture past one replay pass (the 600 s runs); up to one pass
+        # the schedule is unchanged.
+        prof = dataclasses.replace(prof, loop=True)
     if a.benign_scale != 1.0:
         # Synthetic domains scale their new-flow rate; trace domains (T1-T3) their replay rate,
         # which scales the trace's packets and new flows per second alike.

@@ -302,3 +302,21 @@ flagged runs, and the campaign log's progress lines, which print each run's harm
 decision time as it ends; some of those lines were seen while checking progress. No mean, table,
 paired difference or test was computed or looked at. The code change was checked on the smoke runs
 and on a synthetic run set, not on campaign results.
+
+### Amendment 2, 12 November 2026 (during pass 1's 600 s check, before any result was read)
+
+The 600 s check (section 5; reported, not tested) could not run: at the campaign's benign scale
+(T1B replayed at 600 packets per second) one pass of the recording lasts 343 s, and
+loftbench/trace.py refuses an episode longer than one pass, so the benign drivers of
+fin600_T1B_A4_fever-fl-ll_s4160 exited at once (09:12). The other five 600 s runs and their pass-2
+reruns fail the same way; campaign_final.sh is left to finish as it is, and the six runs are
+reported as missing. No hypothesis is affected. The check had been written without a run of that
+length (the smoke runs were 300 s).
+
+Approved by the user the same morning: the 600 s check is run afterwards as exploratory work,
+outside this preregistration, with the same six runs (A4 and E9P; FEVER, DMS-BTT and FTMaster;
+seed 4160) named exp600_*, after a reinstall that lets the replay continue with a second pass
+(loftbench/trace.py, loop; fresh flow ids, as the existing wrap within one pass). Schedules up to
+one pass are unchanged by it (checked identical for T1B and UHt, seeds 4160, 4161, 4164 and 4176,
+both rates, 50 and 300 s). Its results are reported as exploratory, beside the campaign's, not as
+part of it.

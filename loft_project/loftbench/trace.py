@@ -30,6 +30,7 @@ class TraceProfile:
     anchor: str = "src"        # which address ties a flow to a user host (ingress port):
                                # "private" = the RFC 1918 endpoint, else the source
     window: tuple = (0.0, 1.0)  # fraction of the capture's span replayed (docs/v5_plan.md)
+    loop: bool = False         # an episode longer than one pass replays further passes (fresh flows)
 
 
 TRACE_DOMAINS = {
@@ -131,29 +132,29 @@ def window(tr, lo, hi):
     return out
 
 
-def replay(tr, duration, rate_pps, rng, anchor="src"):
+def replay(tr, duration, rate_pps, rng, anchor="src", loop=False):
     """Window of a converted trace: benign packets (t, fid, size) and per flow
-    (source address, anchor address)."""
+    (source address, anchor address). With loop, an episode longer than one pass continues
+    with further passes; up to one pass the result is the same either way."""
     t0, fid0, size0, src0 = tr["pkt_t"], tr["pkt_fid"], tr["pkt_size"], tr["flow_src"]
     anc0 = anchors(tr, anchor) if "flow_dst" in tr else src0
     span = float(t0[-1]) + 1e-3
     stretch = (len(t0) / span) / rate_pps
     S = span * stretch                              # replayed length of one pass
-    if duration > S:
+    if duration > S and not loop:
         raise ValueError(f"episode of {duration} s exceeds one replay pass ({S:.0f} s)")
     off = rng.uniform(0, S)
     t = t0 * stretch - off
-    # Packets of the current pass after the offset, then the next pass (fresh flows).
-    a = t >= 0
-    b = (t + S) < duration
-    ts = np.concatenate([t[a], t[b] + S])
-    fl = np.concatenate([fid0[a], fid0[b] + len(src0)])
-    sz = np.concatenate([size0[a], size0[b]])
-    keep = ts < duration
-    ts, fl, sz = ts[keep], fl[keep], sz[keep]
+    # Packets of the current pass after the offset, then the following passes (fresh flows):
+    # two passes for an episode up to one pass long.
+    P = 1 + int(np.ceil(duration / S))
+    m = [(t + p * S >= 0) & (t + p * S < duration) for p in range(P)]
+    ts = np.concatenate([t[k] + p * S for p, k in enumerate(m)])
+    fl = np.concatenate([fid0[k] + p * len(src0) for p, k in enumerate(m)])
+    sz = np.concatenate([size0[k] for k in m])
     used, fid = np.unique(fl, return_inverse=True)
-    src = np.concatenate([src0, src0])[used]
-    anc = np.concatenate([anc0, anc0])[used]
+    src = np.tile(src0, P)[used]
+    anc = np.tile(anc0, P)[used]
     return ts, fid.astype(np.int64), sz.astype(np.int64), src.astype(np.int64), anc.astype(np.int64)
 
 
@@ -161,6 +162,6 @@ def generate_trace_benign(profile: TraceProfile, duration, rng):
     """Like traffic.generate_benign, (t, fid, size, srcs, kind_code), plus anchors."""
     from .traffic import TRACE_KIND
     t, fid, size, src, anc = replay(window(load(profile.file), *profile.window), duration,
-                                    profile.rate_pps, rng, profile.anchor)
+                                    profile.rate_pps, rng, profile.anchor, profile.loop)
     order = np.argsort(t, kind="stable")
     return (t[order], fid[order], size[order], src, np.full(len(src), TRACE_KIND, np.int8), anc)

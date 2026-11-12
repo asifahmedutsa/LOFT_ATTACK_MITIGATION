@@ -65,6 +65,18 @@
     "testbed/campaign_final.sh": "d31ee2b8a7b210d41520a3891abf61c4d1bd5b2d0b06602f3e56c8251ce629d7"
    },
    "window_approved": "2026-11-10T19:54:35"
+  },
+  {
+   "n": 2,
+   "date": "2026-11-12T10:19:43",
+   "approved_by": "user (asifahmedutsa), 12 November 2026",
+   "before_any_result_read": true,
+   "summary": "600 s check not run (one T1B replay pass is 343 s at the campaign's rate); reported missing; run afterwards as exploratory exp600_* with a looping replay",
+   "sha256": {
+    "docs/final_campaign_prereg.md": "75a13118eb26269d3adc8a011afaa7b19ebe276333f65e8b797c5c2a0075099b",
+    "testbed/analyze_final.py": "7bb18c905a6d672bfa43139383f448760bfca2e6e44ce40dd2e59e29258c59d4",
+    "testbed/campaign_final.sh": "d31ee2b8a7b210d41520a3891abf61c4d1bd5b2d0b06602f3e56c8251ce629d7"
+   }
   }
  ]
 }
