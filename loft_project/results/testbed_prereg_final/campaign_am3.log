@@ -1,0 +1,221 @@
+## pass 1 start 2026-11-12 21:39:23
+=== [1/1] fin_T1B_A2_dms-btt-h1_s4160 21:39:23
+ decision_ms mean 128, max 1251  probe_post_success_pct 29.67  probe_post_connect_ms_median 400.7  benign_harmed_pct 0.04
+matrix done 21:44:42
+=== [1/1] fin_T1B_A5_dms-btt-h1_s4160 21:44:42
+ decision_ms mean 64, max 930  probe_post_success_pct 31.41  probe_post_connect_ms_median 225.7  benign_harmed_pct 0.02
+matrix done 21:50:01
+=== [1/1] fin_T1B_A7_dms-btt-h1_s4160 21:50:01
+ decision_ms mean 29, max 941  probe_post_success_pct 10.6  probe_post_connect_ms_median 239.3  benign_harmed_pct 0.01
+matrix done 21:55:19
+=== [1/2] fin_T1B_A4_dms-btt-h1_s4160 21:55:19
+ decision_ms mean 109, max 1346  probe_post_success_pct 31.02  probe_post_connect_ms_median 255.2  benign_harmed_pct 1.86
+=== [2/2] fin_T1B_A4_dms-btt-h1-pool_s4160 22:00:37
+ decision_ms mean 64, max 1167  probe_post_success_pct 31.02  probe_post_connect_ms_median 246.2  benign_harmed_pct 0.58
+matrix done 22:05:57
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4160 22:05:57
+ decision_ms mean 129, max 1528  probe_post_success_pct 9.83  probe_post_connect_ms_median 239.4  benign_harmed_pct 1.84
+=== [2/2] fin_T1B_E9P_dms-btt-h1-pool_s4160 22:11:18
+ decision_ms mean 116, max 1320  probe_post_success_pct 10.02  probe_post_connect_ms_median 49.2  benign_harmed_pct 0.27
+matrix done 22:16:35
+=== [1/2] fin_T1B_A6_dms-btt-h1_s4160 22:16:35
+ decision_ms mean 40, max 124  probe_post_success_pct 63.01  probe_post_connect_ms_median 142.9  benign_harmed_pct 0.12
+=== [2/2] fin_T1B_A6_dms-btt-h1-pool_s4160 22:21:53
+ decision_ms mean 29, max 902  probe_post_success_pct 67.24  probe_post_connect_ms_median 153.8  benign_harmed_pct 0.06
+matrix done 22:27:11
+=== [1/2] fin_T1B_EVX_dms-btt-h1_s4160 22:27:12
+ decision_ms mean 19, max 944  probe_post_success_pct 99.04  probe_post_connect_ms_median 296.0  benign_harmed_pct 0.02
+=== [2/2] fin_T1B_EVX_dms-btt-h1-pool_s4160 22:32:28
+ decision_ms mean 22, max 1157  probe_post_success_pct 99.81  probe_post_connect_ms_median 291.9  benign_harmed_pct 0.07
+matrix done 22:37:45
+=== [1/1] fin_T1B_benign_dms-btt-h1_s4160 22:37:45
+ decision_ms mean 8, max 51  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.3  benign_harmed_pct 0.0
+matrix done 22:43:01
+=== [1/1] fin_UHt_A2_dms-btt-h1_s4160 22:43:01
+ decision_ms mean 32, max 1893  probe_post_success_pct 65.32  probe_post_connect_ms_median 93.9  benign_harmed_pct 0.0
+matrix done 22:48:34
+=== [1/1] fin_UHt_A4_dms-btt-h1_s4160 22:48:34
+ decision_ms mean 103, max 1280  probe_post_success_pct 48.55  probe_post_connect_ms_median 47.1  benign_harmed_pct 8.72
+matrix done 22:53:52
+=== [1/1] fin_UHt_E9P_dms-btt-h1_s4160 22:53:52
+ decision_ms mean 104, max 1140  probe_post_success_pct 17.73  probe_post_connect_ms_median 47.3  benign_harmed_pct 11.98
+matrix done 22:59:12
+=== [1/1] fin_UHt_benign_dms-btt-h1_s4160 22:59:12
+ decision_ms mean 3, max 38  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.2  benign_harmed_pct 0.0
+matrix done 23:04:29
+=== [1/1] fin_T1B_A2_dms-btt-h1_s4161 23:04:29
+ decision_ms mean 60, max 1388  probe_post_success_pct 34.68  probe_post_connect_ms_median 177.3  benign_harmed_pct 1.76
+matrix done 23:11:43
+=== [1/1] fin_T1B_A5_dms-btt-h1_s4161 23:11:43
+ decision_ms mean 47, max 961  probe_post_success_pct 33.33  probe_post_connect_ms_median 199.4  benign_harmed_pct 0.01
+matrix done 23:17:01
+=== [1/1] fin_T1B_A7_dms-btt-h1_s4161 23:17:01
+ decision_ms mean 31, max 1028  probe_post_success_pct 11.37  probe_post_connect_ms_median 268.5  benign_harmed_pct 0.0
+matrix done 23:22:19
+=== [1/2] fin_T1B_A4_dms-btt-h1_s4161 23:22:20
+ decision_ms mean 105, max 1489  probe_post_success_pct 28.9  probe_post_connect_ms_median 67.1  benign_harmed_pct 1.75
+=== [2/2] fin_T1B_A4_dms-btt-h1-pool_s4161 23:27:39
+ decision_ms mean 87, max 1253  probe_post_success_pct 34.49  probe_post_connect_ms_median 121.0  benign_harmed_pct 0.44
+matrix done 23:32:58
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4161 23:32:58
+ decision_ms mean 180, max 1598  probe_post_success_pct 12.14  probe_post_connect_ms_median 209.6  benign_harmed_pct 2.44
+=== [2/2] fin_T1B_E9P_dms-btt-h1-pool_s4161 23:38:18
+ decision_ms mean 128, max 1153  probe_post_success_pct 12.33  probe_post_connect_ms_median 57.8  benign_harmed_pct 0.2
+matrix done 23:43:36
+=== [1/2] fin_T1B_A6_dms-btt-h1_s4161 23:43:36
+ decision_ms mean 39, max 129  probe_post_success_pct 62.43  probe_post_connect_ms_median 119.4  benign_harmed_pct 0.12
+=== [2/2] fin_T1B_A6_dms-btt-h1-pool_s4161 23:48:54
+ decision_ms mean 23, max 655  probe_post_success_pct 63.2  probe_post_connect_ms_median 109.3  benign_harmed_pct 0.37
+matrix done 23:55:02
+=== [1/2] fin_T1B_EVX_dms-btt-h1_s4161 23:55:03
+ decision_ms mean 23, max 1219  probe_post_success_pct 96.92  probe_post_connect_ms_median 379.4  benign_harmed_pct 0.01
+=== [2/2] fin_T1B_EVX_dms-btt-h1-pool_s4161 00:00:19
+ decision_ms mean 22, max 1146  probe_post_success_pct 96.34  probe_post_connect_ms_median 340.6  benign_harmed_pct 0.07
+matrix done 00:05:36
+=== [1/1] fin_T1B_benign_dms-btt-h1_s4161 00:05:36
+ decision_ms mean 8, max 15  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.0  benign_harmed_pct 0.0
+matrix done 00:10:52
+=== [1/1] fin_UHt_A2_dms-btt-h1_s4161 00:10:52
+ decision_ms mean 27, max 1505  probe_post_success_pct 85.36  probe_post_connect_ms_median 64.1  benign_harmed_pct 0.0
+matrix done 00:16:11
+=== [1/1] fin_UHt_A4_dms-btt-h1_s4161 00:16:11
+ decision_ms mean 94, max 1551  probe_post_success_pct 49.52  probe_post_connect_ms_median 45.2  benign_harmed_pct 9.54
+matrix done 00:21:29
+=== [1/1] fin_UHt_E9P_dms-btt-h1_s4161 00:21:29
+ decision_ms mean 92, max 1199  probe_post_success_pct 17.15  probe_post_connect_ms_median 45.5  benign_harmed_pct 3.89
+matrix done 00:26:49
+=== [1/1] fin_UHt_benign_dms-btt-h1_s4161 00:26:49
+ decision_ms mean 3, max 9  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.2  benign_harmed_pct 0.0
+matrix done 00:32:06
+=== [1/1] fin_T1B_A2_dms-btt-h1_s4162 00:32:06
+ decision_ms mean 54, max 1266  probe_post_success_pct 21.58  probe_post_connect_ms_median 46.8  benign_harmed_pct 0.01
+matrix done 00:37:24
+=== [1/1] fin_T1B_A5_dms-btt-h1_s4162 00:37:24
+ decision_ms mean 43, max 1218  probe_post_success_pct 21.58  probe_post_connect_ms_median 81.6  benign_harmed_pct 0.26
+matrix done 00:42:43
+=== [1/1] fin_T1B_A7_dms-btt-h1_s4162 00:42:43
+ decision_ms mean 48, max 1145  probe_post_success_pct 11.75  probe_post_connect_ms_median 194.0  benign_harmed_pct 0.04
+matrix done 00:48:02
+=== [1/2] fin_T1B_A4_dms-btt-h1_s4162 00:48:02
+ decision_ms mean 91, max 1241  probe_post_success_pct 21.77  probe_post_connect_ms_median 48.2  benign_harmed_pct 1.53
+=== [2/2] fin_T1B_A4_dms-btt-h1-pool_s4162 00:53:18
+ decision_ms mean 56, max 962  probe_post_success_pct 21.97  probe_post_connect_ms_median 50.1  benign_harmed_pct 0.2
+matrix done 00:59:09
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4162 00:59:09
+ decision_ms mean 110, max 1272  probe_post_success_pct 12.52  probe_post_connect_ms_median 292.7  benign_harmed_pct 1.22
+=== [2/2] fin_T1B_E9P_dms-btt-h1-pool_s4162 01:04:30
+ decision_ms mean 68, max 916  probe_post_success_pct 12.52  probe_post_connect_ms_median 54.4  benign_harmed_pct 0.58
+matrix done 01:09:50
+=== [1/2] fin_T1B_A6_dms-btt-h1_s4162 01:09:50
+ decision_ms mean 43, max 146  probe_post_success_pct 56.65  probe_post_connect_ms_median 112.0  benign_harmed_pct 0.1
+=== [2/2] fin_T1B_A6_dms-btt-h1-pool_s4162 01:15:07
+ decision_ms mean 31, max 1183  probe_post_success_pct 65.9  probe_post_connect_ms_median 188.6  benign_harmed_pct 0.13
+matrix done 01:20:24
+=== [1/2] fin_T1B_EVX_dms-btt-h1_s4162 01:20:24
+ decision_ms mean 20, max 938  probe_post_success_pct 85.74  probe_post_connect_ms_median 209.4  benign_harmed_pct 0.05
+=== [2/2] fin_T1B_EVX_dms-btt-h1-pool_s4162 01:25:40
+ decision_ms mean 19, max 1041  probe_post_success_pct 91.33  probe_post_connect_ms_median 209.0  benign_harmed_pct 0.08
+matrix done 01:30:57
+=== [1/1] fin_T1B_benign_dms-btt-h1_s4162 01:30:57
+ decision_ms mean 8, max 16  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.7  benign_harmed_pct 0.0
+matrix done 01:36:13
+=== [1/1] fin_UHt_A2_dms-btt-h1_s4162 01:36:13
+ decision_ms mean 33, max 1436  probe_post_success_pct 74.57  probe_post_connect_ms_median 155.4  benign_harmed_pct 0.0
+matrix done 01:41:53
+=== [1/1] fin_UHt_A4_dms-btt-h1_s4162 01:41:53
+ decision_ms mean 95, max 1399  probe_post_success_pct 48.55  probe_post_connect_ms_median 46.0  benign_harmed_pct 9.45
+matrix done 01:48:49
+=== [1/1] fin_UHt_E9P_dms-btt-h1_s4162 01:48:49
+ decision_ms mean 118, max 1623  probe_post_success_pct 18.69  probe_post_connect_ms_median 45.7  benign_harmed_pct 11.8
+matrix done 01:54:09
+=== [1/1] fin_UHt_benign_dms-btt-h1_s4162 01:54:09
+ decision_ms mean 3, max 15  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.3  benign_harmed_pct 0.0
+matrix done 01:59:25
+=== [1/2] fin_T1B_A4_dms-btt-h1_s4163 01:59:26
+ decision_ms mean 58, max 767  probe_post_success_pct 29.29  probe_post_connect_ms_median 56.4  benign_harmed_pct 1.46
+=== [2/2] fin_T1B_A4_dms-btt-h1-pool_s4163 02:05:45
+ decision_ms mean 90, max 3541  probe_post_success_pct 30.83  probe_post_connect_ms_median 95.6  benign_harmed_pct 0.34
+matrix done 02:13:23
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4163 02:13:23
+ decision_ms mean 97, max 6217  probe_post_success_pct 8.48  probe_post_connect_ms_median 45.8  benign_harmed_pct 1.72
+=== [2/2] fin_T1B_E9P_dms-btt-h1-pool_s4163 02:20:49
+ decision_ms mean 149, max 1217  probe_post_success_pct 8.86  probe_post_connect_ms_median 161.6  benign_harmed_pct 1.57
+matrix done 02:26:06
+=== [1/2] fin_T1B_A6_dms-btt-h1_s4163 02:26:06
+ decision_ms mean 38, max 132  probe_post_success_pct 59.15  probe_post_connect_ms_median 54.8  benign_harmed_pct 0.04
+=== [2/2] fin_T1B_A6_dms-btt-h1-pool_s4163 02:31:24
+ decision_ms mean 26, max 814  probe_post_success_pct 58.77  probe_post_connect_ms_median 111.8  benign_harmed_pct 0.05
+matrix done 02:37:18
+=== [1/2] fin_T1B_EVX_dms-btt-h1_s4163 02:37:18
+ decision_ms mean 21, max 1154  probe_post_success_pct 97.3  probe_post_connect_ms_median 284.9  benign_harmed_pct 0.01
+=== [2/2] fin_T1B_EVX_dms-btt-h1-pool_s4163 02:42:35
+ decision_ms mean 19, max 1082  probe_post_success_pct 97.5  probe_post_connect_ms_median 192.8  benign_harmed_pct 0.06
+matrix done 02:47:51
+=== [1/2] fin_T1B_A4_dms-btt-h1_s4164 02:47:51
+ decision_ms mean 84, max 832  probe_post_success_pct 28.13  probe_post_connect_ms_median 146.9  benign_harmed_pct 1.1
+=== [2/2] fin_T1B_A4_dms-btt-h1-pool_s4164 02:53:08
+ decision_ms mean 67, max 1195  probe_post_success_pct 29.48  probe_post_connect_ms_median 117.3  benign_harmed_pct 0.19
+matrix done 03:00:26
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4164 03:00:26
+    INVALID (controller log ends at 506 s, 512 s wall); moved to _failed
+=== [2/2] fin_T1B_E9P_dms-btt-h1-pool_s4164 03:08:58
+ decision_ms mean 153, max 1209  probe_post_success_pct 11.56  probe_post_connect_ms_median 275.7  benign_harmed_pct 0.55
+matrix done 03:14:18
+=== [1/2] fin_T1B_A6_dms-btt-h1_s4164 03:14:18
+ decision_ms mean 40, max 119  probe_post_success_pct 68.21  probe_post_connect_ms_median 136.3  benign_harmed_pct 0.09
+=== [2/2] fin_T1B_A6_dms-btt-h1-pool_s4164 03:19:36
+ decision_ms mean 21, max 755  probe_post_success_pct 70.71  probe_post_connect_ms_median 70.7  benign_harmed_pct 0.06
+matrix done 03:24:54
+=== [1/2] fin_T1B_EVX_dms-btt-h1_s4164 03:24:54
+ decision_ms mean 19, max 1139  probe_post_success_pct 96.72  probe_post_connect_ms_median 250.7  benign_harmed_pct 0.0
+=== [2/2] fin_T1B_EVX_dms-btt-h1-pool_s4164 03:30:11
+ decision_ms mean 21, max 1084  probe_post_success_pct 89.21  probe_post_connect_ms_median 230.7  benign_harmed_pct 0.05
+matrix done 03:35:28
+## pass 2 start 2026-11-13 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:28
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:29
+matrix done 03:35:30
+matrix done 03:35:30
+matrix done 03:35:30
+matrix done 03:35:30
+matrix done 03:35:30
+=== [1/2] fin_T1B_E9P_dms-btt-h1_s4164 03:35:30
+ decision_ms mean 128, max 934  probe_post_success_pct 11.37  probe_post_connect_ms_median 87.7  benign_harmed_pct 0.82
+matrix done 03:40:50
+matrix done 03:40:50
+matrix done 03:40:50
+## amendment 3 done 2026-11-13 03:40:50
