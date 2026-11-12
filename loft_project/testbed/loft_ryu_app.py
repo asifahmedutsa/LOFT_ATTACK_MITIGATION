@@ -94,7 +94,8 @@ DEFENSES = ("none", "evict", "sift", "tableguard", "dualguard", "dms-btt", "port
             "dualguard+portguard+hostid", "portguard+hostid",
             "dualguard+fairevictq", "ensguard", "ensguard-v4lite", "ensguard-v5", "ensguard-v5-noml",
             "ftodefender", "ensguard-v6", "fever", "fever-fl", "fever-fl-bag", "fever-fl-ll", "fever-fl-ll-pg",
-            "fever-fl-ll-noing", "fever-ll-local", "fever-ll-novol", "fever-noml", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool", "dms-btt-pool")
+            "fever-fl-ll-noing", "fever-ll-local", "fever-ll-novol", "fever-noml", "ftmaster-pool", "ftop-pool", "ftodefender-pool", "flora-pool", "dms-btt-pool",
+            "dms-btt-h1", "dms-btt-h1-pool")
 
 
 def ip2int(s):
@@ -148,12 +149,13 @@ def build_defense(name, model_dir, domain, model_path=None, switch=None):
         d.name = name
         return d
     cfg = json.load(open(os.path.join(model_dir, "defenses.json"))) if model_dir else {}
-    if name == "dms-btt":
+    if name in ("dms-btt", "dms-btt-h1"):
+        # dms-btt-h1: evicts above H1 without the state classifier, as the paper does (amendment 3).
         b = cfg["dms_blocklist"]
         return DMSBTT(CatBoostJSON(os.path.join(model_dir, f"dmsB_state_{domain}.json")),
                       CatBoostJSON(os.path.join(model_dir, f"dmsB_flow_{domain}.json")),
                       h1=b["h1"], h2=b["h2"], p_thresh=b["p_thresh"], numb_mode=b["numb_mode"],
-                      blocklist_s=b["blocklist_s"])
+                      blocklist_s=b["blocklist_s"], gate_h1=name == "dms-btt")
     if name == "ftodefender":
         # FTODefender (loftbench.ftodefender): CRITIC detector and LightGBM-LR mitigator trained on
         # T1A, ftod_config_<D>.json and ftod_rule_<D>.json. A per-switch config

@@ -206,6 +206,48 @@ def test_blocklist_refuses_readmission_until_expiry():
     assert s["blocked_pkts"] >= 4 and s["benign_blocked_pkts"] == 0
 
 
+def test_dmsbtt_gate_h1():
+    """Amendment 3: with gate_h1=False DMS-BTT evicts above H1 although its state classifier says
+    normal; below H1, and with the default gate at every occupancy, the classifier still decides."""
+    from loftbench.defenses import DMSBTT
+
+    class State:
+        def __init__(self, st):
+            self.st = st
+
+        def predict(self, X):
+            return np.array([self.st])
+
+    class Flow:
+        def __init__(self, top):
+            self.top = top
+
+        def predict_proba(self, X):
+            return np.linspace(0.0, self.top, len(X))
+
+    def obs(n, cap=100):
+        rng = np.random.default_rng(0)
+        return dict(count=n, capacity=cap, fids=np.arange(n), bytes=rng.integers(100, 200, n),
+                    dms=np.zeros((n, 3), np.float32), state={"FN": n, "APIT": 1.0})
+
+    kw = dict(h1=0.9, h2=0.6, p_thresh=0.7)
+    for top in (0.9, 0.72):          # many flagged (back below H1), few flagged (still above H1)
+        for st in (0, 1):
+            for n in (50, 70, 95):
+                new = DMSBTT(State(st), Flow(top), gate_h1=False, **kw).on_poll(1.0, obs(n))[0]
+                old = DMSBTT(State(st), Flow(top), **kw).on_poll(1.0, obs(n))[0]
+                if n >= 90 and st == 0:
+                    assert old is None and len(new) > 0
+                    if top == 0.72:
+                        assert n - len(new) < 60      # still above H1: evicted to below H2
+                    ref = DMSBTT(State(1), Flow(top), **kw).on_poll(1.0, obs(n))[0]
+                    assert np.array_equal(new, ref)   # as when the classifier says attack
+                elif old is None:
+                    assert new is None
+                else:
+                    assert np.array_equal(old, new)
+
+
 def test_default_knobs_reproduce_stored_episodes():
     import json, pickle
     import pandas as pd

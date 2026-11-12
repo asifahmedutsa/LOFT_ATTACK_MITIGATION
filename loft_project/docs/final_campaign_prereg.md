@@ -320,3 +320,49 @@ seed 4160) named exp600_*, after a reinstall that lets the replay continue with 
 one pass are unchanged by it (checked identical for T1B and UHt, seeds 4160, 4161, 4164 and 4176,
 both rates, 50 and 300 s). Its results are reported as exploratory, beside the campaign's, not as
 part of it.
+
+### Amendment 3, 12 November 2026 (after the campaign, after all results were read)
+
+Approved by the user on 12 November 2026.
+
+**Reason.** A check of the six baselines against their papers, made after the campaign, found that our
+DMS-BTT does not follow its paper above the first-level threshold H1. The paper (Algorithm 1, lines
+15-17) evicts as soon as the flow count exceeds H1, without running the state detector: it enters the
+overflow prevention mode at once. loftbench/defenses.py (DMSBTT.on_poll) consulted the state
+classifier at every occupancy and did nothing when it returned "normal", above H1 as well. In the
+campaign this left polls of s11 above 90 % without any eviction: 5 of 5 (G2, seed 4160), 18 of 18
+(Spoof, seeds 4161-4162), 23 of 107 (Aware, seeds 4160-4162) and 2 of 69 (Mimic, seeds 4160-4162).
+The baseline was therefore weaker than its paper describes.
+
+**What had been seen.** Everything: the campaign's report (commit c804521), the paper tables and
+figures, and the per-poll logs used for the check above. The change concerns a baseline only, in the
+direction that can only help it. The same check found no other baseline that runs weaker than its
+paper; their deviations are reported, not rerun (FTODefender's block rule, read as a share of the
+eviction list, and FloRa's candidate rule, an "or" where the paper has "and", favour those baselines).
+
+**Change.** DMS-BTT above H1 evicts without consulting the state classifier, as the paper does. What it
+evicts is unchanged: the entries its flow classifier flags (p >= 0.7) and, if occupancy is still at
+or above H1, further non-elephant entries in decreasing probability until it is below H2 (our reading
+of the paper's proportion Pe, which it does not state), as the campaign's DMS-BTT did when its
+classifier reported an attack. Between H2 and H1 the state classifier decides, as before. The models
+and the settings selected before the campaign stay as deployed (H2 0.60, H1 0.90, p 0.7, 60 s
+blocklist; results/revision2/selected.json, variant B); the paper's H2 (0.75) and its absence of a
+blocklist are reported as deviations. The fixed defense has new names, dms-btt-h1 and
+dms-btt-h1-pool (DMSBTT(gate_h1=False)), so dms-btt and dms-btt-pool keep the campaign's behaviour.
+
+**Runs.** Every cell DMS-BTT ran in the campaign, with the same traces, attacks, seeds, topology and
+benign scale: dms-btt-h1 on T1B (A2, A5, A7 and benign with seeds 4160-4162; A4, E9P, A6 and EVX with
+4160-4164; 32 runs) and on UHt (A2, A4, E9P and benign, 4160-4162; 12 runs), and dms-btt-h1-pool on
+T1B (A4, E9P, A6 and EVX, 4160-4164; 20 runs): 64 runs, named fin_<trace>_<traffic>_<method>_s<seed>,
+in campaign_final.sh's order, with a second pass that reruns once every run that failed or was
+invalid (validity rule of amendment 1) (testbed/campaign_am3.sh). Before them, one smoke run (T1B Spoof,
+seed 4161, tag smoke) checks that every poll of s11 above 90 % evicts.
+
+**Analysis.** In every test with DMS-BTT as comparator (H1-H3 against dms-btt, H4 against
+dms-btt-pool, H5 on T1B and UHt) the comparator becomes dms-btt-h1 (-pool); these are the results
+reported. Holm stays over the same 33 tests. The campaign's dms-btt results are reported beside them
+as run in the campaign, and if any hypothesis changes outcome, both are stated in the paper. Added
+for every method, reported and not tested: attack occupancy on s11 alone, the switch that overflows
+(the access switches s12 and s13 each hold one attacker, at most 48.6 % of the table, below every
+occupancy-triggered defense's trigger), from the existing runs. The paper's tables and figures use
+dms-btt-h1.

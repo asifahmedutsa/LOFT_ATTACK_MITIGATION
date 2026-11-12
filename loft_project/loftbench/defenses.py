@@ -72,13 +72,17 @@ class DMSBTT(Defense):
     p_thresh is the flow-classifier decision threshold; numb_mode selects the
     Numb definition; blocklist_s > 0 refuses re-admission of flows deleted as
     malicious for that many seconds (their packets are dropped at the controller).
+    gate_h1=False follows the paper above H1 (Algorithm 1, lines 15-17): evict without
+    consulting the state classifier (amendment 3 of docs/final_campaign_prereg.md); the
+    default keeps the campaign's behaviour, where the classifier gates every occupancy.
     """
     name = "dms-btt"
     needs_features = True
 
     def __init__(self, state_model, flow_model, h1=0.90, h2=0.75, p_thresh=0.5,
-                 numb_mode="bytes", blocklist_s=0.0):
+                 numb_mode="bytes", blocklist_s=0.0, gate_h1=True):
         self.state_model, self.flow_model = state_model, flow_model
+        self.gate_h1 = gate_h1
         self.h1, self.h2 = h1, h2
         self.p_thresh, self.numb_mode, self.blocklist_s = p_thresh, numb_mode, blocklist_s
         if blocklist_s > 0:
@@ -94,11 +98,14 @@ class DMSBTT(Defense):
         cap, n = obs["capacity"], obs["count"]
         if n == 0:
             return None, None
-        st = int(np.ravel(self.state_model.predict(
-            np.array([[obs["state"]["FN"], obs["state"]["APIT"]]])))[0])
         occ = n / cap
-        if st == 0 or occ < self.h2:
+        if occ < self.h2:
             return None, None
+        if self.gate_h1 or occ < self.h1:
+            st = int(np.ravel(self.state_model.predict(
+                np.array([[obs["state"]["FN"], obs["state"]["APIT"]]])))[0])
+            if st == 0:
+                return None, None
         p = _proba(self.flow_model, dms_transform(obs["dms"], self.numb_mode))
         eleph = _elephants(obs["bytes"])
         dels = (p >= self.p_thresh) & ~eleph
