@@ -4,6 +4,7 @@
   table_main.tex / .pdf   harm, occupancy and probe success per attack, every method (mean over seeds)
   table_overhead.tex      decision time, controller CPU and memory, Packet-In (page 2 of table_main.pdf)
   table_fedcost.tex       bytes, rounds and time to train the detector, with its T1B accuracy (page 3)
+  table_ablation.tex      FEVER against its four ablations on G2, Mimic and Aware (page 4)
   fig_t1b                 the same three measures on T1B, grouped bars per attack, mean and s.d.
   fig_uht                 the same on UHt (the three baselines run there)
   fig_pooled              FEVER against each baseline trained locally and on pooled data
@@ -58,7 +59,7 @@ with open(os.path.join(RES, "runs.csv")) as f:
 
 def vals(trace, v, m, key):
     return [float(r[key]) for r in RUNS
-            if (r["trace"], r["traffic"], r["method"]) == (trace, v, m) and r[key] not in ("", "None")]
+            if (r["trace"], r["traffic"], r["method"]) == (trace, v, m) and r[key] not in ("", "None", "none")]
 
 
 def ms(trace, v, m, key):
@@ -321,6 +322,44 @@ t3.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (2, 0), (
                         ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
                         ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]))
 story += [PageBreak(), Paragraph("Table 3. Federation cost of the detector.", CAP), t3]
+
+# Table: FEVER against its four ablations on T1B, mean (s.d.) over seeds (3 on G2, 5 on Mimic and Aware).
+# First block: seconds from the attack's start to the first block of an attacker, over the runs with one.
+AB = [("benign_harmed_pct", "Harm (\\%)", 3), ("occupancy", "Occupancy (\\%)", 2),
+      ("probe_post_success_pct", "New-connection success (\\%)", 1),
+      ("benign_packet_in_lost_pct", "Lost first packets (\\%)", 2), ("first_attack_block_s", "First block (s)", 0)]
+
+
+def ab_cell(v, m, key, d):
+    a, b = ms("T1B", v, m, key)
+    if key != "first_attack_block_s":
+        return f"{a:.{d}f} ({b:.{d}f})"
+    n = sum(1 for r in RUNS if (r["trace"], r["traffic"], r["method"]) == ("T1B", v, m))
+    k = len(vals("T1B", v, m, key))
+    return f"{a:.0f} ({b:.0f})" + ("" if k == n else f", {k} of {n}")
+
+
+tex = [r"\begin{table*}[t]", r"\centering", r"\caption{Ablation study.}", r"\label{tab:ablation}",
+       r"\small", r"\begin{tabular}{ll" + "r" * len(AB) + "}", r"\toprule",
+       "Attack & Variant & " + " & ".join(h for _, h, _ in AB) + r" \\"]
+data4 = [["Attack", "Variant"] + [h.replace("\\%", "%") for _, h, _ in AB]]
+st4 = [("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
+       ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black), ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
+       ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+       ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]
+for v in ("A2", "A4", "E9P"):
+    tex.append(r"\midrule")
+    if len(data4) > 1:
+        st4.append(("LINEABOVE", (0, len(data4)), (-1, len(data4)), 0.5, colors.black))
+    for i, m in enumerate([FEVER] + ABL):
+        c = [ab_cell(v, m, k, d) for k, _, d in AB]
+        tex.append(f"{ANAME[v] if i == 0 else ''} & {LABEL[m]} & " + " & ".join(c) + r" \\")
+        data4.append([ANAME[v] if i == 0 else "", LABEL[m]] + c)
+tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
+open(os.path.join(OUT, "table_ablation.tex"), "w").write("\n".join(tex))
+t4 = Table(data4, colWidths=[16 * mm, 40 * mm, 30 * mm, 30 * mm, 46 * mm, 36 * mm, 34 * mm])
+t4.setStyle(TableStyle(st4))
+story += [PageBreak(), Paragraph("Table 4. Ablation study.", CAP), t4]
 doc.build(story)
 
 # Figure: attack occupancy over time (mean of the three switches' attack share, as in the tables),
