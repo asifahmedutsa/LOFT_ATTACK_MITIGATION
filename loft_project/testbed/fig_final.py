@@ -9,6 +9,7 @@
   fig_pooled              FEVER against each baseline trained locally and on pooled data
   fig_ablation            FEVER against its four ablations
   fig_timeline            attack occupancy over time on Mimic and Aware (median over seeds)
+  fig_fl_oneshot          detector recall on T1B rows: one-shot sharing against federated training
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_final.py
 """
@@ -373,4 +374,35 @@ fig.tight_layout(w_pad=1.2)
 fig.legend(*axs[0].get_legend_handles_labels(), ncol=5, loc="lower center", bbox_to_anchor=(0.5, 0.98),
            handlelength=2.6)
 save(fig, "fig_timeline")
+
+# Figure: the detector's recall on T1B rows (results/tbfl/exposure.csv) after one-shot sharing of
+# finished models and after round-based federated training, by where an attack was seen in training
+# and per attack.
+FT = [("Local only (C3)", "Local only", "#c8c7c2"), ("One-shot sharing (CatBoost)", "One-shot sharing", "#52514e"),
+      ("FedAvg (Flower, reference)", "FedAvg", "#1baf7a"), ("FedProx (Flower)", "FedProx", "#eda100"),
+      ("Federated XGBoost bagging (Flower)", "Federated XGBoost bagging", "#2a78d6"),
+      ("Lossless federated XGBoost", "Lossless federated XGBoost (FEVER)", COL[FEVER])]
+GRP = [("seen locally", "Local"), ("seen only by another controller", "Other\ncontroller"),
+       ("seen by no one", "No\ncontroller")]
+FA = [("A1", "G1"), ("A2", "G2"), ("A3", "G3"), ("A4", "Mimic"), ("A5", "Spoof"), ("A6", "Slow"),
+      ("A7", "Pulse"), ("E9P", "Aware")]
+fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.6), sharey=True, gridspec_kw=dict(width_ratios=[3.4, 8]))
+w = 0.84 / len(FT)
+for ax, cols, names in ((axs[0], [f"{g}: recall" for g, _ in GRP], [n for _, n in GRP]),
+                        (axs[1], [f"recall {a}" for a, _ in FA], [n for _, n in FA])):
+    x = np.arange(len(cols))
+    for i, (det, lab, c) in enumerate(FT):
+        y = [float(EXP[det][k]) for k in cols]
+        ax.bar(x + (i - (len(FT) - 1) / 2) * w, y, w, color=c, edgecolor="black", linewidth=0.3, label=lab)
+    ax.set_xticks(x, names)
+    ax.yaxis.grid(True, lw=0.4, color="#dddddd")
+    ax.set_axisbelow(True)
+    ax.set_ylim(0, 100)
+axs[0].set_xlabel("Attack seen in training by")
+axs[1].set_xlabel("Attack")
+axs[0].set_ylabel("Recall (%)")
+fig.tight_layout(w_pad=1.2)
+fig.legend(*axs[0].get_legend_handles_labels(), ncol=3, loc="lower center", bbox_to_anchor=(0.5, 0.98),
+           handlelength=1.4, columnspacing=1.2)
+save(fig, "fig_fl_oneshot")
 print("written to", os.path.abspath(OUT))
