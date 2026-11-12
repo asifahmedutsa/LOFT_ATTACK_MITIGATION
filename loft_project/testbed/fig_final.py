@@ -3,6 +3,7 @@
 
   table_main.tex / .pdf   harm, occupancy and probe success per attack, every method (mean over seeds)
   table_overhead.tex      decision time, controller CPU and memory, Packet-In (page 2 of table_main.pdf)
+  table_fedcost.tex       bytes, rounds and time to train the detector, with its T1B accuracy (page 3)
   fig_t1b                 the same three measures on T1B, grouped bars per attack, mean and s.d.
   fig_uht                 the same on UHt (the three baselines run there)
   fig_pooled              FEVER against each baseline trained locally and on pooled data
@@ -259,6 +260,66 @@ t2.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (1, 0), (
                         ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
                         ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]))
 story += [PageBreak(), Paragraph("Table 2. Controller overhead.", CAP), t2]
+
+# Table: cost of training the detector across the three controllers (results/tbfl: the deployed
+# detector's training on testbed rows, all processes on one machine), with its accuracy on T1B.
+# Flower runs: payload bytes from the round logs, clients' uploads plus the global model sent to each
+# client every round. Lossless: bytes on the loopback interface during training. Pooled: the three
+# controllers' rows and labels (compressed npz) sent to one place.
+import json  # noqa: E402
+TB = os.path.join(HERE, "..", "results", "tbfl")
+EXP = {r["detector"]: r for r in csv.DictReader(open(os.path.join(TB, "exposure.csv")))}
+
+
+def flower(name, up_key=None):
+    L = json.load(open(os.path.join(TB, name + "_log.json")))
+    nc = L[0]["clients"]
+    if up_key:                                  # bagging: each client uploads its new trees
+        up = sum(x[up_key] for x in L)
+        down = nc * sum(x["model_bytes"] for x in L[:-1])   # round 1 starts from an empty model
+    else:                                       # FedAvg / FedProx: fixed-size weights both ways
+        up = down = nc * sum(x["model_bytes"] for x in L)
+    return len(L), (up + down) / 1e6, L[-1]["time"]
+
+
+LL = json.load(open(os.path.join(TB, "fedxgb_hist_log.json")))
+POOL_MB = sum(os.path.getsize(os.path.join(TB, "fl_data", f"{c}.npz")) for c in ("C1", "C2", "C3")) / 1e6
+FC = [("Local only", "Local only (C3)", "nothing", None),
+      ("FedAvg", "FedAvg (Flower, reference)", "weights", flower("fedavg")),
+      ("FedProx", "FedProx (Flower)", "weights", flower("fedprox")),
+      ("Federated XGBoost bagging", "Federated XGBoost bagging (Flower)", "trees", flower("fedxgb", "sent_bytes")),
+      ("Lossless federated XGBoost (FEVER)", "Lossless federated XGBoost", "histograms",
+       (LL["workers"][0]["trees"], LL["loopback_bytes"] / 1e6, LL["seconds"])),
+      ("Pooled XGBoost", "Pooled (XGBoost)", "rows and labels", (1, POOL_MB, None))]
+FH = ["Training", "Shared", "Rounds", "Data sent (MB)", "Time (s)", "F1 (\\%)",
+      "Recall, other controllers (\\%)", "Recall, Mimic (\\%)"]
+
+
+def fc_row(lab, det, shared, cost):
+    e = EXP[det]
+    rounds, mb, secs = cost if cost else ("--", 0.0, None)
+    mbs = "0" if mb == 0 else (f"{mb:,.0f}" if mb >= 100 else f"{mb:.1f}")
+    return [lab, shared, str(rounds), mbs, "--" if secs is None else f"{secs:.0f}",
+            f"{float(e['all: f1']):.1f}", f"{float(e['seen only by another controller: recall']):.1f}",
+            f"{float(e['recall A4']):.1f}"]
+
+
+tex = [r"\begin{table*}[t]", r"\centering", r"\caption{Federation cost of the detector.}", r"\label{tab:fedcost}",
+       r"\small", r"\begin{tabular}{llrrrrrr}", r"\toprule", " & ".join(FH) + r" \\", r"\midrule"]
+data3 = [[h.replace("\\%", "%") for h in FH]]
+for x in FC:
+    c = fc_row(*x)
+    tex.append(" & ".join(c).replace(",", "{,}") + r" \\")
+    data3.append(c)
+tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
+open(os.path.join(OUT, "table_fedcost.tex"), "w").write("\n".join(tex))
+t3 = Table(data3, colWidths=[58 * mm, 28 * mm, 16 * mm, 28 * mm, 18 * mm, 16 * mm, 48 * mm, 30 * mm])
+t3.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
+                        ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
+                        ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
+                        ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+                        ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]))
+story += [PageBreak(), Paragraph("Table 3. Federation cost of the detector.", CAP), t3]
 doc.build(story)
 
 # Figure: attack occupancy over time (mean of the three switches' attack share, as in the tables),

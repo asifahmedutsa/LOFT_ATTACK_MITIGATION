@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\caption{Federation cost of the detector.}
+\label{tab:fedcost}
+\small
+\begin{tabular}{llrrrrrr}
+\toprule
+Training & Shared & Rounds & Data sent (MB) & Time (s) & F1 (\%) & Recall, other controllers (\%) & Recall, Mimic (\%) \\
+\midrule
+Local only & nothing & -- & 0 & -- & 78.4 & 75.8 & 0.2 \\
+FedAvg & weights & 30 & 0.4 & 32 & 74.7 & 70.7 & 0.1 \\
+FedProx & weights & 30 & 0.4 & 27 & 75.9 & 71.4 & 1.1 \\
+Federated XGBoost bagging & trees & 100 & 173 & 212 & 78.5 & 75.8 & 0.1 \\
+Lossless federated XGBoost (FEVER) & histograms & 300 & 2{,}601 & 38 & 86.8 & 90.5 & 60.9 \\
+Pooled XGBoost & rows and labels & 1 & 27.6 & -- & 86.5 & 90.5 & 61.1 \\
+\bottomrule
+\end{tabular}
+\end{table*}
