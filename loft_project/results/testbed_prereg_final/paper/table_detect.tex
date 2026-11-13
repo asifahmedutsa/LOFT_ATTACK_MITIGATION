@@ -1,0 +1,28 @@
+\begin{table*}[t]
+\centering
+\caption{Detection performance on T1B.}
+\label{tab:detect}
+\small
+\begin{tabular}{lllrrrrr}
+\toprule
+Method & Training & Threshold & Accuracy (\%) & Precision (\%) & Recall (\%) & F1 (\%) & False alarms (\%) \\
+\midrule
+FTMaster & C3 only & 0.5 (paper) & 75.32 & 99.80 & 64.66 & 78.48 & 0.33 \\
+FTOP & C3 only & 0.5 (paper) & 75.35 & 99.84 & 64.67 & 78.49 & 0.32 \\
+FloRa & C3 only & 0.5 (paper) & 75.34 & 99.82 & 64.68 & 78.50 & 0.32 \\
+DMS-BTT & C3 only & 0.5 (paper) & 75.35 & 99.82 & 64.68 & 78.50 & 0.32 \\
+\midrule
+FTMaster & C1--C3 pooled & 0.5 (paper) & 89.40 & 98.36 & 86.20 & 91.88 & 3.09 \\
+FTOP & C1--C3 pooled & 0.5 (paper) & 88.89 & 98.16 & 85.63 & 91.47 & 3.65 \\
+FloRa & C1--C3 pooled & 0.5 (paper) & 87.50 & 98.75 & 83.09 & 90.25 & 2.58 \\
+DMS-BTT & C1--C3 pooled & 0.5 (paper) & 87.85 & 98.31 & 83.98 & 90.58 & 3.25 \\
+\midrule
+FTMaster & C1--C3 pooled & 0.1\% benign & 80.95 & 99.83 & 72.74 & 84.16 & 0.22 \\
+FTOP & C1--C3 pooled & 0.1\% benign & -- & -- & -- & -- & -- \\
+FloRa & C1--C3 pooled & 0.1\% benign & 79.26 & 99.87 & 70.28 & 82.51 & 0.20 \\
+DMS-BTT & C1--C3 pooled & 0.1\% benign & 78.10 & 99.81 & 68.65 & 81.35 & 0.30 \\
+\midrule
+FEVER & C1--C3 federated & 0.1\% benign & 83.73 & 99.74 & 76.82 & 86.79 & 0.79 \\
+\bottomrule
+\end{tabular}
+\end{table*}

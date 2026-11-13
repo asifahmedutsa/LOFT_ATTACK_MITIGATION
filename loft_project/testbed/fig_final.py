@@ -5,6 +5,7 @@
   table_overhead.tex      decision time, controller CPU and memory, Packet-In (page 2 of table_main.pdf)
   table_fedcost.tex       bytes, rounds and time to train the detector, with its T1B accuracy (page 3)
   table_ablation.tex      FEVER against its four ablations on G2, Mimic and Aware (page 4)
+  table_detect.tex        accuracy, precision, recall, F1 of each classifier on T1B rows (page 5)
   fig_t1b                 the same three measures on T1B, grouped bars per attack, mean and s.d.
   fig_uht                 the same on UHt (the three baselines run there)
   fig_pooled              FEVER against each baseline trained locally and on pooled data
@@ -12,6 +13,7 @@
   fig_timeline            attack occupancy over time on Mimic and Aware (median over seeds)
   fig_fl_oneshot          detector recall on T1B rows: one-shot sharing against federated training
   fig_fl_effect           local against federated training: detector recall and the testbed outcome
+  fig_detect              the same four measures as bars, baselines trained on C3 only and pooled
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_final.py
 """
@@ -362,7 +364,79 @@ open(os.path.join(OUT, "table_ablation.tex"), "w").write("\n".join(tex))
 t4 = Table(data4, colWidths=[16 * mm, 40 * mm, 30 * mm, 30 * mm, 46 * mm, 36 * mm, 34 * mm])
 t4.setStyle(TableStyle(st4))
 story += [PageBreak(), Paragraph("Table 4. Ablation study.", CAP), t4]
+
+# Table: detection on the T1B test rows (results/tbfl/baselines_offline.csv, loftbench/tbfl_baselines.py):
+# each baseline's own classifier at its paper's threshold, trained on C3's rows (as the campaign ran it)
+# and on the three controllers' rows pooled, against FEVER's lossless federated detector. FTODefender's
+# scoring ran out of memory and rDefender has no classifier.
+OFF = list(csv.DictReader(open(os.path.join(TB, "baselines_offline.csv"))))
+DB = [("FTMaster", "ftmaster"), ("FTOP", "ftop"), ("FloRa", "flora"), ("DMS-BTT", DMS)]
+DTR = [("testbed, C3 only", "C3 only"), ("testbed, C1-C3 pooled", "C1--C3 pooled")]
+DMET = [("accuracy", "Accuracy"), ("precision", "Precision"), ("recall", "Recall"), ("f1", "F1")]
+# Blocks of the table: baselines at their paper's threshold (as on the testbed), then pooled at FEVER's
+# false-alarm rule (0.1 % of T1A benign rows). FTOP's forest scores 1.0 on more than 0.1 % of those
+# rows, so the rule flags nothing and its row is left empty.
+DBLK = [("testbed, C3 only", "C3 only", "0.5"), ("testbed, C1-C3 pooled", "C1--C3 pooled", "0.5"),
+        ("testbed, C1-C3 pooled", "C1--C3 pooled", "0.1")]
+THR = {"0.5": "0.5 (paper)", "0.1": "0.1\\% benign"}
+
+
+def off(meth, tr, thr="0.5"):
+    return next(r for r in OFF if r["method"] == meth and r["training"] == tr
+                and (meth.startswith("FEVER") or r["threshold"].startswith(thr)))
+
+
+FEV = next(r for r in OFF if r["method"].startswith("FEVER"))
+DK = DMET + [("false_alarms", "")]
+DH = ["Method", "Training", "Threshold"] + [h + " (\\%)" for _, h in DMET] + ["False alarms (\\%)"]
+drows = []
+for tr, lab, thr in DBLK:
+    for meth, m in DB:
+        r = off(meth, tr, thr)
+        empty = float(r["recall"]) == 0
+        drows.append([LABEL[m], lab, THR[thr]] + ["--" if empty else f"{float(r[k]):.2f}" for k, _ in DK])
+drows.append(["FEVER", "C1--C3 federated", THR["0.1"]] + [f"{float(FEV[k]):.2f}" for k, _ in DK])
+SEP = [len(DB) * i for i in range(1, len(DBLK) + 1)]
+tex = [r"\begin{table*}[t]", r"\centering", r"\caption{Detection performance on T1B.}", r"\label{tab:detect}",
+       r"\small", r"\begin{tabular}{lll" + "r" * len(DK) + "}", r"\toprule",
+       " & ".join(DH) + r" \\", r"\midrule"]
+for i, r in enumerate(drows):
+    if i in SEP:
+        tex.append(r"\midrule")
+    tex.append(" & ".join(r) + r" \\")
+tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
+open(os.path.join(OUT, "table_detect.tex"), "w").write("\n".join(tex))
+t5 = Table([[h.replace("\\%", "%") for h in DH]]
+           + [[c.replace("--", "–").replace("\\%", " %") for c in r] for r in drows],
+           colWidths=[24 * mm, 34 * mm, 28 * mm] + [24 * mm] * 4 + [30 * mm])
+t5.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (3, 0), (-1, -1), "RIGHT"),
+                        ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
+                        ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
+                        ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+                        ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]
+                       + [("LINEABOVE", (0, 1 + i), (-1, 1 + i), 0.5, colors.black) for i in SEP]))
+story += [PageBreak(), Paragraph("Table 5. Detection performance on T1B.", CAP), t5]
 doc.build(story)
+
+# Figure: the same, accuracy, precision, recall and F1, one panel per training of the baselines.
+fig, axs = plt.subplots(1, 2, figsize=(7.16, 2.5), sharey=True)
+w = 0.84 / (len(DB) + 1)
+x = np.arange(len(DMET))
+for ax, (tr, lab) in zip(axs, DTR):
+    for j, (meth, m) in enumerate(DB + [(None, FEVER)]):
+        r = FEV if m == FEVER else off(meth, tr)
+        ax.bar(x + (j - len(DB) / 2) * w, [float(r[k]) for k, _ in DMET], w, color=COL[m], edgecolor="black",
+               lw=0.4, label=LABEL[m] + (" (federated)" if m == FEVER else ""))
+    ax.set_xticks(x, [h for _, h in DMET])
+    ax.set_title("Baselines trained on " + ("C3's data only" if "C3 only" in tr else "C1–C3's data pooled"))
+    ax.yaxis.grid(True, lw=0.4, color="#dddddd")
+    ax.set_axisbelow(True)
+axs[0].set_ylim(0, 105)
+axs[0].set_ylabel("%")
+fig.tight_layout(w_pad=1.2)
+fig.legend(*axs[0].get_legend_handles_labels(), ncol=5, loc="lower center", bbox_to_anchor=(0.5, 0.98),
+           handlelength=1.4, columnspacing=1.2)
+save(fig, "fig_detect")
 
 # Figure: attack occupancy over time (mean of the three switches' attack share, as in the tables),
 # median over the seeds at each second. A run counted under amendment 1 is read from its _failed copy.
