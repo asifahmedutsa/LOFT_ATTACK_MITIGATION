@@ -11,6 +11,7 @@
   fig_ablation            FEVER against its four ablations
   fig_timeline            attack occupancy over time on Mimic and Aware (median over seeds)
   fig_fl_oneshot          detector recall on T1B rows: one-shot sharing against federated training
+  fig_fl_effect           local against federated training: detector recall and the testbed outcome
 
     PYTHONPATH=. ~/.venvs/loft/bin/python testbed/fig_final.py
 """
@@ -445,4 +446,35 @@ fig.tight_layout(w_pad=1.2)
 fig.legend(*axs[0].get_legend_handles_labels(), ncol=3, loc="lower center", bbox_to_anchor=(0.5, 0.98),
            handlelength=1.4, columnspacing=1.2)
 save(fig, "fig_fl_oneshot")
+
+# Figure: effect of federated training. The detector trained on C3's rows only against the lossless
+# federated one: its recall on T1B rows (exposure.csv), and on the testbed (fever-ll-local against
+# FEVER) attack occupancy, new-connection success and the first block, over the runs with one.
+FLM = [("fever-ll-local", "Local only (C3)", "Local training (C3 only)", "#c8c7c2"),
+       (FEVER, "Lossless federated XGBoost", "Federated training (FEVER)", COL[FEVER])]
+FV = ["A2", "A4", "E9P"]
+fig, axs = plt.subplots(1, 4, figsize=(7.16, 2.3))
+w = 0.36
+x = np.arange(len(FV))
+for i, (m, det, lab, c) in enumerate(FLM):
+    off = (i - 0.5) * w
+    axs[0].bar(x + off, [float(EXP[det][f"recall {v}"]) for v in FV], w, color=c, edgecolor="black", lw=0.4,
+               label=lab)
+    for ax, key in zip(axs[1:], ["occupancy", "probe_post_success_pct", "first_attack_block_s"]):
+        mm_ = [ms("T1B", v, m, key) for v in FV]
+        hi = 100.0 if key != "first_attack_block_s" else 1e9
+        ax.bar(x + off, [a for a, _ in mm_], w, yerr=np.hstack([err(a, b, hi) for a, b in mm_]), color=c,
+               edgecolor="black", lw=0.4, error_kw=dict(elinewidth=0.6, capsize=1.2, capthick=0.6))
+for ax, t in zip(axs, ["Detector recall (%)", "Attack occupancy (%)", "New-connection success (%)",
+                       "First block (s)"]):
+    ax.set_title(t)
+    ax.set_xticks(x, [ANAME[v] for v in FV])
+    ax.yaxis.grid(True, lw=0.4, color="#dddddd")
+    ax.set_axisbelow(True)
+axs[0].set_ylim(0, 105)
+axs[2].set_ylim(0, 105)
+fig.tight_layout(w_pad=1.0)
+fig.legend(*axs[0].get_legend_handles_labels(), ncol=2, loc="lower center", bbox_to_anchor=(0.5, 0.98),
+           handlelength=1.4, columnspacing=1.5)
+save(fig, "fig_fl_effect")
 print("written to", os.path.abspath(OUT))
