@@ -2,6 +2,7 @@
 on the testbed T1B test rows (seeds 4176-4178), beside FEVER's detector, as in results/tbfl/report.md.
 
     PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.tbfl_baselines   # writes results/tbfl/baselines_offline.*
+    PYTHONPATH=. ~/.venvs/loft/bin/python -m loftbench.tbfl_baselines seen   # baselines_offline_seen.csv
 
 Each baseline's per-rule classifier with its own features and model (loftbench.baselines, ftodefender),
 trained three ways: on simulator T1A rows (the models the testbed runs so far used), on C3's testbed
@@ -141,5 +142,34 @@ def main():
             gc.collect()
 
 
+def seen():
+    """As each paper tests: the attacks C3 trained on (CTRL["C3"]) and the benign-only runs, T1B test
+    seeds; each baseline trained on C3's rows at the paper's 0.5, FEVER at its threshold."""
+    import gc
+    runs = pickle.load(open(f"{OUT}/rows.pkl", "rb"))
+    cal = Dataset.concat([runs[("T1A", None, s)] for s in VAL])
+    cal = SimpleNamespace(X=cal.X[cal.y == 0], dms=cal.dms[cal.y == 0], y=cal.y[cal.y == 0])
+    att = CTRL["C3"][1]
+    test = Dataset.concat([runs[("T1B", v, s)] for v in [None] + att for s in TEST])
+    train = train_rows(runs, "C3")
+    del runs
+    gc.collect()
+    rows = []
+    fever = Booster(f"{OUT}/fedxgb_hist.json")
+    tau = float(threshold_at_fpr(p1(fever, cal.X), BUDGET))
+    rows.append(dict(method="FEVER (lossless federated XGBoost)", training="testbed, C1-C3 federated",
+                     threshold="0.1 % of T1A benign", tau=tau, attacks=" ".join(att),
+                     **metrics(p1(fever, test.X), test.y, tau)))
+    for n in ("FTMaster", "FTOP", "FloRa", "DMS-BTT"):
+        m = fit(n, train)
+        rows.append(dict(method=n, training="testbed, C3 only", threshold="0.5 (paper)", tau=0.5,
+                         attacks=" ".join(att), **metrics(p1(m, FEAT[n](test)), test.y, 0.5)))
+        print(rows[-1], flush=True)
+        del m
+        gc.collect()
+    pd.DataFrame(rows).round(4).to_csv(f"{OUT}/baselines_offline_seen.csv", index=False)
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    seen() if sys.argv[1:] == ["seen"] else main()

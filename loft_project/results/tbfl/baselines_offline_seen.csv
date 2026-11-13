@@ -1,0 +1,6 @@
+method,training,threshold,tau,attacks,accuracy,precision,recall,f1,fnr,mcc
+FEVER (lossless federated XGBoost),"testbed, C1-C3 federated",0.1 % of T1A benign,0.4953,A3 A7,99.7654,99.7036,99.9083,99.8058,0.0917,0.9951
+FTMaster,"testbed, C3 only",0.5 (paper),0.5,A3 A7,99.8056,99.8226,99.8552,99.8389,0.1448,0.9959
+FTOP,"testbed, C3 only",0.5 (paper),0.5,A3 A7,99.8181,99.8466,99.8521,99.8493,0.1479,0.9962
+FloRa,"testbed, C3 only",0.5 (paper),0.5,A3 A7,99.8193,99.8352,99.8654,99.8503,0.1346,0.9962
+DMS-BTT,"testbed, C3 only",0.5 (paper),0.5,A3 A7,99.8205,99.8356,99.867,99.8513,0.133,0.9962

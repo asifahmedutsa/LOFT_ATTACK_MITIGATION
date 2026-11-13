@@ -379,6 +379,9 @@ DMET = [("accuracy", "Accuracy"), ("precision", "Precision"), ("recall", "Recall
 DBLK = [("testbed, C3 only", "C3 only", "0.5"), ("testbed, C1-C3 pooled", "C1--C3 pooled", "0.5"),
         ("testbed, C1-C3 pooled", "C1--C3 pooled", "0.1")]
 THR = {"0.5": "0.5 (paper)", "0.1": "0.1\\% benign"}
+# Last block, as each paper tests: only the attacks C3 trained on (G3, Pulse) and the benign-only runs
+# (results/tbfl/baselines_offline_seen.csv, loftbench/tbfl_baselines.py seen).
+SEEN = list(csv.DictReader(open(os.path.join(TB, "baselines_offline_seen.csv"))))
 
 
 def off(meth, tr, thr="0.5"):
@@ -388,17 +391,24 @@ def off(meth, tr, thr="0.5"):
 
 FEV = next(r for r in OFF if r["method"].startswith("FEVER"))
 DK = DMET + [("false_alarms", "")]
-DH = ["Method", "Training", "Threshold"] + [h + " (\\%)" for _, h in DMET] + ["False alarms (\\%)"]
+DH = ["Method", "Training", "Threshold", "Test attacks"] + [h + " (\\%)" for _, h in DMET] + ["False alarms (\\%)"]
 drows = []
 for tr, lab, thr in DBLK:
     for meth, m in DB:
         r = off(meth, tr, thr)
         empty = float(r["recall"]) == 0
-        drows.append([LABEL[m], lab, THR[thr]] + ["--" if empty else f"{float(r[k]):.2f}" for k, _ in DK])
-drows.append(["FEVER", "C1--C3 federated", THR["0.1"]] + [f"{float(FEV[k]):.2f}" for k, _ in DK])
-SEP = [len(DB) * i for i in range(1, len(DBLK) + 1)]
+        drows.append([LABEL[m], lab, THR[thr], "All"] + ["--" if empty else f"{float(r[k]):.2f}" for k, _ in DK])
+drows.append(["FEVER", "C1--C3 federated", THR["0.1"], "All"] + [f"{float(FEV[k]):.2f}" for k, _ in DK])
+SEP = [len(DB) * i for i in range(1, len(DBLK) + 1)] + [len(drows)]
+SA = "G3, Pulse"
+for meth, m in DB + [("FEVER", FEVER)]:
+    r = next(x for x in SEEN if x["method"].startswith(meth))
+    tr = "C1--C3 federated" if m == FEVER else "C3 only"
+    fa = f"{float(FEV['false_alarms']):.2f}" if m == FEVER else f"{float(off(meth, 'testbed, C3 only')['false_alarms']):.2f}"
+    drows.append([LABEL[m], tr, THR["0.1" if m == FEVER else "0.5"], SA]
+                 + [f"{float(r[k]):.2f}" for k, _ in DMET] + [fa])
 tex = [r"\begin{table*}[t]", r"\centering", r"\caption{Detection performance on T1B.}", r"\label{tab:detect}",
-       r"\small", r"\begin{tabular}{lll" + "r" * len(DK) + "}", r"\toprule",
+       r"\small", r"\begin{tabular}{llll" + "r" * len(DK) + "}", r"\toprule",
        " & ".join(DH) + r" \\", r"\midrule"]
 for i, r in enumerate(drows):
     if i in SEP:
@@ -408,8 +418,8 @@ tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
 open(os.path.join(OUT, "table_detect.tex"), "w").write("\n".join(tex))
 t5 = Table([[h.replace("\\%", "%") for h in DH]]
            + [[c.replace("--", "–").replace("\\%", " %") for c in r] for r in drows],
-           colWidths=[24 * mm, 34 * mm, 28 * mm] + [24 * mm] * 4 + [30 * mm])
-t5.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (3, 0), (-1, -1), "RIGHT"),
+           colWidths=[22 * mm, 30 * mm, 26 * mm, 24 * mm] + [24 * mm] * 4 + [30 * mm])
+t5.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (4, 0), (-1, -1), "RIGHT"),
                         ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
                         ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
                         ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
