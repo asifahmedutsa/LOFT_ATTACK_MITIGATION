@@ -1,0 +1,73 @@
+waiting for install 2026-11-17 00:23:03
+install seen 2026-11-17 00:25:03
+=== [1/1] flsel_T1B_F4_none_s4165 00:26:33
+ decision_ms mean 11, max 43  probe_post_success_pct 71.57  probe_post_connect_ms_median 47.2  benign_harmed_pct 0.0
+matrix done 00:32:18
+selection F4: s11 largest poll 1867 entries (rule: >= 3150)
+=== [1/1] flsel_T1B_F6_none_s4165 00:32:18
+ decision_ms mean 12, max 40  probe_post_success_pct 49.9  probe_post_connect_ms_median 47.2  benign_harmed_pct 0.0
+matrix done 00:37:34
+selection F6: s11 largest poll 2434 entries (rule: >= 3150)
+=== [1/1] flsel_T1B_F8_none_s4165 00:37:34
+ decision_ms mean 12, max 35  probe_post_success_pct 61.85  probe_post_connect_ms_median 75.3  benign_harmed_pct 0.0
+matrix done 00:42:51
+selection F8: s11 largest poll 2625 entries (rule: >= 3150)
+F8 did not fill s11; the study runs at F8 (section 3)
+## flash crowds at F8
+## pass 1 start 2026-11-17 00:42:51
+=== [1/8] fc_T1B_F8_none_s4165 00:42:51
+ decision_ms mean 12, max 34  probe_post_success_pct 54.14  probe_post_connect_ms_median 54.9  benign_harmed_pct 0.0
+=== [2/8] fc_T1B_F8_ftmaster_s4165 00:48:27
+ decision_ms mean 12, max 52  probe_post_success_pct 60.89  probe_post_connect_ms_median 46.8  benign_harmed_pct 0.0
+=== [3/8] fc_T1B_F8_ftop_s4165 00:53:43
+ decision_ms mean 12, max 36  probe_post_success_pct 50.87  probe_post_connect_ms_median 93.5  benign_harmed_pct 0.0
+=== [4/8] fc_T1B_F8_ftodefender_s4165 00:58:59
+ decision_ms mean 39, max 189  probe_post_success_pct 0.0  probe_post_connect_ms_median n/a  benign_harmed_pct 0.15
+=== [5/8] fc_T1B_F8_flora_s4165 01:04:17
+ decision_ms mean 16, max 77  probe_post_success_pct 51.25  probe_post_connect_ms_median 46.6  benign_harmed_pct 0.01
+=== [6/8] fc_T1B_F8_dms-btt-h1_s4165 01:09:39
+ decision_ms mean 15, max 127  probe_post_success_pct 54.91  probe_post_connect_ms_median 46.7  benign_harmed_pct 0.01
+=== [7/8] fc_T1B_F8_rdefender_s4165 01:14:55
+ decision_ms mean 13, max 37  probe_post_success_pct 44.89  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.0
+=== [8/8] fc_T1B_F8_fever-fl-ll_s4165 01:20:11
+ decision_ms mean 12, max 285  probe_post_success_pct 58.57  probe_post_connect_ms_median 99.0  benign_harmed_pct 0.0
+matrix done 01:25:56
+=== [1/8] fc_T1B_F8_none_s4166 01:25:56
+ decision_ms mean 10, max 37  probe_post_success_pct 62.04  probe_post_connect_ms_median 46.1  benign_harmed_pct 0.0
+=== [2/8] fc_T1B_F8_ftmaster_s4166 01:31:28
+ decision_ms mean 11, max 47  probe_post_success_pct 61.85  probe_post_connect_ms_median 45.2  benign_harmed_pct 0.0
+=== [3/8] fc_T1B_F8_ftop_s4166 01:36:46
+ decision_ms mean 10, max 86  probe_post_success_pct 62.04  probe_post_connect_ms_median 48.8  benign_harmed_pct 0.0
+=== [4/8] fc_T1B_F8_ftodefender_s4166 01:42:49
+ decision_ms mean 32, max 111  probe_post_success_pct 61.85  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.12
+=== [5/8] fc_T1B_F8_flora_s4166 01:49:00
+ decision_ms mean 13, max 75  probe_post_success_pct 63.2  probe_post_connect_ms_median 46.3  benign_harmed_pct 0.02
+=== [6/8] fc_T1B_F8_dms-btt-h1_s4166 01:54:18
+ decision_ms mean 12, max 108  probe_post_success_pct 61.85  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.01
+=== [7/8] fc_T1B_F8_rdefender_s4166 01:59:35
+ decision_ms mean 11, max 36  probe_post_success_pct 61.85  probe_post_connect_ms_median 46.1  benign_harmed_pct 0.0
+=== [8/8] fc_T1B_F8_fever-fl-ll_s4166 02:04:53
+ decision_ms mean 11, max 249  probe_post_success_pct 62.04  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+matrix done 02:10:11
+=== [1/8] fc_T1B_F8_none_s4167 02:10:11
+ decision_ms mean 11, max 66  probe_post_success_pct 57.61  probe_post_connect_ms_median 45.5  benign_harmed_pct 0.0
+=== [2/8] fc_T1B_F8_ftmaster_s4167 02:15:51
+ decision_ms mean 12, max 27  probe_post_success_pct 51.64  probe_post_connect_ms_median 51.3  benign_harmed_pct 0.0
+=== [3/8] fc_T1B_F8_ftop_s4167 02:21:07
+ decision_ms mean 11, max 72  probe_post_success_pct 49.9  probe_post_connect_ms_median 45.7  benign_harmed_pct 0.0
+=== [4/8] fc_T1B_F8_ftodefender_s4167 02:27:16
+ decision_ms mean 37, max 83  probe_post_success_pct 0.0  probe_post_connect_ms_median n/a  benign_harmed_pct 0.23
+=== [5/8] fc_T1B_F8_flora_s4167 02:32:59
+ decision_ms mean 15, max 85  probe_post_success_pct 52.79  probe_post_connect_ms_median 45.3  benign_harmed_pct 0.01
+=== [6/8] fc_T1B_F8_dms-btt-h1_s4167 02:38:15
+ decision_ms mean 13, max 123  probe_post_success_pct 58.57  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.0
+=== [7/8] fc_T1B_F8_rdefender_s4167 02:43:31
+ decision_ms mean 12, max 36  probe_post_success_pct 50.87  probe_post_connect_ms_median 47.9  benign_harmed_pct 0.0
+=== [8/8] fc_T1B_F8_fever-fl-ll_s4167 02:48:47
+ decision_ms mean 13, max 246  probe_post_success_pct 51.06  probe_post_connect_ms_median 44.9  benign_harmed_pct 0.0
+matrix done 02:54:03
+## pass 2 start 2026-11-17 02:54:03
+matrix done 02:54:03
+matrix done 02:54:03
+matrix done 02:54:03
+## flash crowds done 2026-11-17 02:54:03

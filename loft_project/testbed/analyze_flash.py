@@ -40,7 +40,7 @@ def run_dir(m, s):
 def s11(d):
     with open(os.path.join(d, "switch_T1B_s11.csv")) as fh:
         n = [float(x["entries"]) for x in csv.DictReader(fh)]
-    return max(n), sum(x >= 0.9 * CAP for x in n)
+    return max(n), float(sum(x >= 0.9 * CAP for x in n))
 
 
 def blocks(d):

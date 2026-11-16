@@ -1,0 +1,4 @@
+selection F4: s11 largest poll 1867 entries (rule: >= 3150)
+selection F6: s11 largest poll 2434 entries (rule: >= 3150)
+selection F8: s11 largest poll 2625 entries (rule: >= 3150)
+F8 did not fill s11; the study runs at F8 (section 3)
