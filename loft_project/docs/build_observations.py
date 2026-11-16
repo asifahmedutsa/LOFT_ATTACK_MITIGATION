@@ -29,6 +29,7 @@ S = {
     "title": ParagraphStyle("title", fontName="LS-B", fontSize=15, leading=19, alignment=1, spaceAfter=4),
     "sub": ParagraphStyle("sub", fontName="LS", fontSize=10, leading=13, alignment=1, spaceAfter=14),
     "h1": ParagraphStyle("h1", fontName="LS-B", fontSize=11.5, leading=15, spaceBefore=8, spaceAfter=5),
+    "h2": ParagraphStyle("h2", fontName="LS-BI", fontSize=10.5, leading=14, spaceBefore=6, spaceAfter=4),
     "p": ParagraphStyle("p", fontName="LS", fontSize=10, leading=13.4, spaceAfter=5, alignment=4),
     "cap": ParagraphStyle("cap", fontName="LS", fontSize=9, leading=11.5, spaceBefore=3, spaceAfter=10),
     "cell": ParagraphStyle("cell", fontName="LS", fontSize=8.8, leading=10.8),
@@ -69,13 +70,20 @@ def table(rows, widths, caption, note=None):
     return KeepTogether(out)
 
 
-def figure(name, caption, width=W):
+def figure(name, caption, width=W, head=()):
     from PIL import Image as PI
     path = f"{FIG}/{name}.png"
     w, h = PI.open(path).size
     img = Image(path, width=width, height=width * h / w)
     img.hAlign = "CENTER"
-    return KeepTogether([img, P(caption, "cap")])
+    return KeepTogether(list(head) + [img, P(caption, "cap")])
+
+
+def explain(why, axes, marks, trends, exceptions, recap):
+    """The six points every plot is explained by."""
+    lab = [("Why this plot", why), ("Axes", axes), ("Bars and lines", marks), ("Trends", trends),
+           ("Exceptions", exceptions), ("Recap", recap)]
+    return [P(f"<i>{k}.</i> {v}") for k, v in lab]
 
 
 # Table 1 from tests.csv: one cell per hypothesis and comparator.
@@ -101,7 +109,7 @@ supported = sum(r["supported"] == "True" for r in T)
 
 story = [
     P("FEVER against LOFT attacks: summary of observations from the final testbed campaign", "title"),
-    P("14 November 2026", "sub"),
+    P("16 November 2026", "sub"),
 
     P("1. What was evaluated", "h1"),
     P("FEVER combines a detector trained by lossless (histogram-based) federated XGBoost across three SDN "
@@ -141,11 +149,118 @@ story = [
           "EVX's M is 0.8 times FEVER's lowest per-switch volume limit on T1B (784.5 flows on s12). "
           "Trained on by: the controller whose training data held the attack; none: no controller saw it."),
 
-    P("2. Main observations", "h1"),
+
+    figure("fig_t1b", "Fig. 1. Benign flows harmed, attack occupancy and new-connection success on T1B, "
+                      "per attack (mean and s.d. over seeds).", width=0.8 * W,
+           head=[P("2. Headline result: FEVER against six published defenses on T1B", "h1")]),
+    *explain(
+        "This is the paper's main comparison and the evidence for its central claim: under the same attacks, "
+        "on the same testbed, FEVER protects the flow table and its users better than the published "
+        "defenses. It covers H1 to H3, the preregistered tests on harm, occupancy and service, and the "
+        "results section starts with it.",
+        "The x-axis gives the seven attacks on the T1B trace. The y-axes, one panel each, give: the share of "
+        "benign flows harmed (deleted from the table or denied an entry, %); the attack occupancy, the share "
+        "of the flow table held by attack entries, averaged over the run's traffic window and over the three "
+        "switches (%); and new-connection success, the share of probe connections a benign host could open "
+        "during the attack (%).",
+        "Each bar is the mean over seeds (3 seeds for G2, Spoof and Pulse; 5 for Mimic, Aware, Slow and EVX), "
+        "and the error bar is one standard deviation. The eight bars per attack are no defense (grey), the "
+        "six baselines and FEVER (orange, rightmost). FEVER's harm is too small to show as a bar, so its "
+        "value is printed above its place.",
+        "FEVER harms almost no benign flows (0.00–0.02 % on every attack), while the baselines harm up to "
+        "12 % under Aware. On G2, Mimic, Spoof, Pulse and Aware, FEVER holds the attacker to 2–14 % of the "
+        "table, against 18–50 % for most baselines. FEVER keeps new-connection success at 97–99 % on G2, "
+        "Mimic, Spoof and Pulse, where most baselines fall to 11–41 %. The gap is widest on Mimic and Aware, "
+        "the low-rate attacks that use a pool of addresses and benign-size packets.",
+        "FTODefender holds G2, Pulse and EVX at about 0.2 % occupancy, lower than FEVER, and also keeps "
+        "100 % new-connection success on them. On Slow all eight bars are alike (about 20 % occupancy), so "
+        "no method defends it. On EVX FEVER is not better than the baselines (17.7 %, with a large spread), "
+        "and on Aware FEVER's new-connection success, 46 %, is far below its value on the other attacks.",
+        "FEVER harms fewer benign flows than every baseline and keeps new connections working, and it holds "
+        "occupancy lowest on five of the seven attacks. The exceptions are FTODefender on G2, Pulse and EVX, "
+        "and the two attacks no method stops well, Slow and EVX."),
+
+    figure("fig_timeline", "Fig. 2. Attack occupancy over time on T1B under Mimic and Aware (median over 5 "
+                           "seeds); the dotted line marks the attack's start.",
+           head=[P("3. Key plots", "h1"), P("3.1 Attack occupancy over time", "h2")]),
+    *explain(
+        "Fig. 1 gives averages over the run. This plot shows how FEVER gets them: when the attack takes "
+        "hold, when FEVER acts, and whether the table stays clean afterwards. Mimic and Aware are shown "
+        "because they are the attacks with the largest margins.",
+        "The x-axis is the controller's time in seconds (0 to 310 s); the attack starts at 50 s. The y-axis "
+        "is the attack occupancy (%), as in Fig. 1, at each second.",
+        "One line per method, each the median over the five seeds: no defense (grey dotted), FTMaster (blue "
+        "dashed), FTODefender (yellow dash-dot), DMS-BTT (purple dash-dot) and FEVER (orange, solid). FTOP, "
+        "FloRa and rDefender are left out for readability; their averages are in Fig. 1.",
+        "Every line rises together once the attack fills the table, from about 63 s. On Mimic, FEVER blocks "
+        "the attackers at about 130 s and the occupancy falls to zero by 140 s and stays there; the "
+        "baselines keep rising to 54–60 %. On Aware the attack fills faster; FEVER blocks the first attacker "
+        "at about 150 s and the second at about 205 s, after which the occupancy is zero. The baselines "
+        "climb to about 65 %, the most the two attackers can hold.",
+        "Before it blocks, FEVER's line lies on the no-defense line: eviction alone does not keep the "
+        "attackers out, and the gain comes from blocking them. DMS-BTT is the only baseline that brings "
+        "occupancy down on Aware, from about 64 to 52 % after 235 s. FTODefender stays close to no defense "
+        "on both attacks.",
+        "FEVER removes the attack from the table once it blocks the attacking hosts, about 80 s after the "
+        "attack starts on Mimic and 100–155 s on Aware, and the table stays clean. The baselines evict "
+        "attack entries but the attackers refill the table."),
+
+    figure("fig_fl_effect", "Fig. 3. Detector trained on C3's data only against the lossless federated "
+                            "detector: offline recall and the testbed outcome on T1B.",
+           head=[P("3.2 Effect of federated training", "h2")]),
+    *explain(
+        "Federated training is the paper's main contribution. This plot isolates it: the same FEVER with "
+        "two detectors, one trained on C3's data alone and one trained by lossless federation across C1 to "
+        "C3. Three attacks are shown: G2, which C2 trained on and C3's detector also catches because it is "
+        "close to C3's own G3; Mimic, which only C1 saw; and Aware, which no controller saw.",
+        "The x-axis gives the three attacks. The four panels give the detector's recall on the T1B test rows "
+        "(%, offline), and on the testbed the attack occupancy (%), the new-connection success (%) and the "
+        "time from the attack's start to the first block of an attacker (s).",
+        "Grey bars: detector trained on C3's data only. Orange bars: federated detector (FEVER). Testbed "
+        "bars are means over seeds (3 for G2, 5 for Mimic and Aware), with one standard deviation.",
+        "On G2 the two detectors agree in every panel. On Mimic the local detector catches 0.2 % of attack "
+        "rows and the federated one 60.9 %; on the testbed this blocks the attackers 64 s sooner (80 against "
+        "144 s), cuts occupancy from 15.7 to 4.9 % and raises new-connection success from 63 to 98 %. On "
+        "Aware recall rises from 0.1 to 25.4 %, occupancy falls from 18.2 to 14.1 % and new-connection "
+        "success rises from 35 to 46 %.",
+        "Aware's first block is about the same with either detector (92 and 91 s), and its spread is large; "
+        "the local detector never blocked in one of five runs, so its bar averages four. Over Mimic and "
+        "Aware together the preregistered test of this effect (H6) is not supported: FEVER won 8 of 10 "
+        "pairs, Holm p = 0.38.",
+        "Federation lets a controller detect an attack only another controller has seen, and on Mimic this "
+        "turns into earlier blocking, a cleaner table and working connections. On the attack no controller "
+        "saw, the gain is smaller and not significant."),
+
+    figure("fig_ablation", "Fig. 4. FEVER against its four ablations on T1B (mean and s.d. over seeds).",
+           head=[P("3.3 Ablation", "h2")]),
+    *explain(
+        "To show which part of FEVER produces the result, each part is removed in turn and the run "
+        "repeated. Reviewers ask whether the federated detector matters, or whether the blocking does all "
+        "the work.",
+        "The x-axis gives the three attacks used for the ablation (G2, Mimic, Aware). The panels give "
+        "benign flows harmed (%), attack occupancy (%) and new-connection success (%), as in Fig. 1.",
+        "Five bars per attack: full FEVER (orange) and FEVER without sharing (local detector), without the "
+        "volume rule, without the detector (volume rule only) and without ingress blocking (hatched). Means "
+        "over 3 seeds for G2 and 5 for Mimic and Aware, with one standard deviation.",
+        "Without ingress blocking, occupancy rises to 23–35 % on all three attacks and new-connection "
+        "success falls to 11–84 %. Without the volume rule, Aware's occupancy rises from 14.1 to 42.6 % and "
+        "its success falls from 46 to 11 %, while G2 and Mimic do not change. Without sharing, Mimic's "
+        "occupancy triples (4.9 to 15.7 %). Without the detector, occupancy doubles on G2 and almost triples "
+        "on Mimic, because blocks come 35–55 s later.",
+        "On Aware, FEVER without the detector does slightly better than full FEVER (occupancy 10.4 against "
+        "14.1 %, success 55 against 46 %). Harm is near zero for every variant except without sharing (about "
+        "3 % on Mimic and Aware) and without the volume rule (1.5 % on Aware), with large spreads across "
+        "seeds.",
+        "Every part is needed on at least one attack: ingress blocking everywhere, the volume rule on Aware, "
+        "the detector for early blocks on G2 and Mimic, and sharing on Mimic. Blocking gives the largest "
+        "single effect, which is why the paper puts its novelty in the federated detector rather than in "
+        "the response."),
+
+    P("4. Observations", "h1"),
     items([
         f"<b>The preregistered tests mostly favour FEVER.</b> {supported} of the 33 tests are supported "
         "(Table 2). The DMS-BTT correction of amendment 3 changed no test outcome.",
-        "<b>FEVER harms almost no benign flows.</b> On T1B, FEVER harmed 0.011 % of benign flows on average, "
+        "<b>FEVER harms almost no benign flows (Fig. 1).</b> On T1B, FEVER harmed 0.011 % of benign flows on average, "
         "against 1.0 % to 5.2 % for the six baselines. H1 is supported against all six. In the benign-only "
         "runs FEVER harmed no flow and blocked no benign host (H7 passes).",
         "<b>FEVER keeps new connections working.</b> Mean new-connection success during attacks on T1B was "
@@ -166,11 +281,11 @@ story = [
         "seen only by another controller rose from 75.8 % (C3 alone) to 90.5 %, and on Mimic from 0.2 % to "
         "60.9 %. This equals pooled XGBoost trained on the raw rows (F1 86.5 against 86.8), at 2.6 GB of "
         "exchanged histograms and 38 s of training (Table 4, Fig. 3).",
-        "<b>On the testbed, federation's benefit is clear on Mimic but not significant overall.</b> With the "
+        "<b>On the testbed, federation's benefit is clear on Mimic but not significant overall (Fig. 3).</b> With the "
         "federated detector, Mimic attackers were blocked at 80 s instead of 144 s and occupancy fell from "
         f"15.7 to 4.9 %. Over Mimic and Aware, H6 is not supported ({h6['wins']} of {h6['n']} pairs, Holm "
         "p = 0.38).",
-        "<b>Each part of FEVER contributes (Fig. 2).</b> Without ingress blocking, occupancy rises to "
+        "<b>Each part of FEVER contributes (Fig. 4).</b> Without ingress blocking, occupancy rises to "
         "23–35 % on all three attacks tested. Without the volume rule, Aware rises from 14.1 to 42.6 %. "
         "Without the detector, blocks on G2 and Mimic come 35–55 s later. Without sharing, Mimic rises from "
         "4.9 to 15.7 %.",
@@ -189,12 +304,6 @@ story = [
           "compares FEVER with each baseline trained on pooled data, on Mimic and Aware. H5 on UHt was "
           "preregistered against FTMaster, DMS-BTT and rDefender only. H6 (FEVER against FEVER without "
           f"sharing, Mimic and Aware): {h6['wins']}/{h6['n']}, not supported."),
-
-    figure("fig_t1b", "Fig. 1. Benign flows harmed, attack occupancy and new-connection success on T1B, "
-                      "per attack (mean and s.d. over seeds).", width=0.8 * W),
-    figure("fig_ablation", "Fig. 2. FEVER against its four ablations on T1B."),
-    figure("fig_fl_effect", "Fig. 3. Detector trained on C3's data only against the lossless federated "
-                            "detector: offline recall and the testbed outcome."),
 
     table([["Method", "Paper: Acc. / Prec. / Rec. / F1", "Ours, attacks seen in training",
             "Ours, all T1B attacks"],
@@ -220,7 +329,7 @@ story = [
           [52 * mm, 24 * mm, 20 * mm, 14 * mm, 14 * mm, 28 * mm, W - 152 * mm],
           "Table 4. Cost and accuracy of training the detector across the three controllers."),
 
-    KeepTogether([P("3. Where FEVER falls short", "h1"), bullets([
+    KeepTogether([P("5. Where FEVER falls short", "h1"), bullets([
         "Slow is undefended and EVX defeats FEVER; FTODefender holds G2, Pulse and EVX lower than FEVER.",
         "Federation's benefit on the testbed is not significant over Mimic and Aware (H6), only clear on "
         "Mimic.",
@@ -235,7 +344,7 @@ story = [
         "block rule), and three amendments were made to the preregistration.",
     ])]),
 
-    KeepTogether([P("4. Next steps", "h1"), bullets([
+    KeepTogether([P("6. Next steps", "h1"), bullets([
         "Secure aggregation of the exchanged histograms and a threshold set from all three controllers' "
         "benign data (plan drafted: docs/secagg_plan.md).",
         "A time-to-protection experiment: a federation round during an attack, after which the controller "
