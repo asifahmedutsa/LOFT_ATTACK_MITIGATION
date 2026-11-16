@@ -86,10 +86,14 @@ def main():
         f = "new_flow_rate" if hasattr(prof, "new_flow_rate") else "rate_pps"
         prof = dataclasses.replace(prof, **{f: a.benign_scale * getattr(prof, f)})
     if a.variant.startswith("F"):
-        # F2 / F4: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
-        # crowds per 300 s at 2x or 4x the domain's new-flow rate, from many external sources.
-        prof = dataclasses.replace(prof, flash_events=3, flash_rate=int(a.variant[1:]) * prof.new_flow_rate,
-                                   flash_len=12.0)
+        # F<k>: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
+        # crowds per 300 s at k times the domain's new-flow rate, from many external sources.
+        # Trace domains take k times the replay's own new-flow rate (loftbench.trace.flash_crowds).
+        if hasattr(prof, "new_flow_rate"):
+            prof = dataclasses.replace(prof, flash_events=3, flash_rate=int(a.variant[1:]) * prof.new_flow_rate,
+                                       flash_len=12.0)
+        else:
+            prof = dataclasses.replace(prof, flash_mult=float(a.variant[1:]))
     if a.mode == "benign":
         # Benign flows do not depend on the attack, so any variant gives the same schedule.
         tr = build_traffic(prof, didx, None, a.seed, a.duration, a.start)

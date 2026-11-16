@@ -478,3 +478,21 @@ def test_catboost_json_matches_catboost(tmp_path):
         mine = CatBoostJSON(str(p))
         assert np.abs(m.predict_proba(X) - mine.predict_proba(X)).max() < 1e-9
         assert (np.ravel(m.predict(X)).astype(int) == mine.predict(X)).all()
+
+
+def test_trace_flash_crowds():
+    """Flash crowds on a trace replay: exactly flash_events crowds of flash_len s, external sources,
+    at flash_mult times the base rate, flow ids after the replay's."""
+    import dataclasses
+    from loftbench.trace import TRACE_DOMAINS, flash_crowds
+    prof = dataclasses.replace(TRACE_DOMAINS["T1B"], rate_pps=600.0, flash_mult=4.0)
+    t, fid, size, src, kind = flash_crowds(prof, 60.0, 300.0, 1000, np.random.default_rng(0))
+    assert fid.min() == 1000 and len(src) == len(kind) == fid.max() - 999
+    assert ((src >> 20) == (0xC0000000 >> 20)).all()
+    first = np.full(len(src), np.inf)
+    np.minimum.at(first, fid - 1000, t)
+    # Three crowds of 12 s, each about 4 x 60 flows/s.
+    gaps = np.flatnonzero(np.diff(np.sort(first)) > 1.0)
+    assert len(gaps) <= 2 and abs(len(src) - 3 * 4 * 60 * 12) < 0.1 * 3 * 4 * 60 * 12
+    assert 20 <= first.min() and first.max() <= 300
+    assert (size >= 64).all() and (size <= 1400).all()

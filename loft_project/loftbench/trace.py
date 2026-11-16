@@ -31,6 +31,10 @@ class TraceProfile:
                                # "private" = the RFC 1918 endpoint, else the source
     window: tuple = (0.0, 1.0)  # fraction of the capture's span replayed (docs/v5_plan.md)
     loop: bool = False         # an episode longer than one pass replays further passes (fresh flows)
+    flash_mult: float = 0.0    # >0: benign flash crowds on top of the replay, at flash_mult times the
+                               # replay's own new-flow rate (testbed F<k> runs)
+    flash_events: int = 3      # crowds per 300 s
+    flash_len: float = 12.0    # length of one crowd (s)
 
 
 TRACE_DOMAINS = {
@@ -163,5 +167,34 @@ def generate_trace_benign(profile: TraceProfile, duration, rng):
     from .traffic import TRACE_KIND
     t, fid, size, src, anc = replay(window(load(profile.file), *profile.window), duration,
                                     profile.rate_pps, rng, profile.anchor, profile.loop)
+    kind = np.full(len(src), TRACE_KIND, np.int8)
+    if profile.flash_mult > 0:
+        # Drawn after the replay from the same stream, so the replayed packets are those of the
+        # seed's run without crowds.
+        ft, ff, fs, fsrc, fkind = flash_crowds(profile, len(src) / duration, duration, len(src), rng)
+        t, fid, size = np.concatenate([t, ft]), np.concatenate([fid, ff]), np.concatenate([size, fs])
+        src, anc, kind = np.concatenate([src, fsrc]), np.concatenate([anc, fsrc]), np.concatenate([kind, fkind])
     order = np.argsort(t, kind="stable")
-    return (t[order], fid[order], size[order], src, np.full(len(src), TRACE_KIND, np.int8), anc)
+    return (t[order], fid[order], size[order], src, kind, anc)
+
+
+def flash_crowds(profile: TraceProfile, base_rate, duration, fid_offset, rng):
+    """Benign flash crowds as in traffic.generate_benign, but exactly flash_events crowds per 300 s, each
+    flash_len s of new short flows at flash_mult * base_rate per second, from many external
+    sources (192.0.0.0/12), so that they spread over the user hosts by address."""
+    from .traffic import KIND_CODE, _group_times, _sizes
+    starts, srcs = [], []
+    for _ in range(int(round(profile.flash_events * duration / 300.0))):     # a fixed number per run
+        t0 = rng.uniform(20, max(21, duration - profile.flash_len - 5))
+        m = rng.poisson(profile.flash_mult * base_rate * profile.flash_len)
+        starts.append(np.sort(rng.uniform(t0, t0 + profile.flash_len, m)))
+        srcs.append(0xC0000000 + rng.integers(0, 1 << 20, m))
+    if not starts:
+        z = np.zeros(0, np.int64)
+        return np.zeros(0), z, z, z, np.zeros(0, np.int8)
+    st, src = np.concatenate(starts), np.concatenate(srcs).astype(np.int64)
+    npk = rng.geometric(1 / 5, len(st))
+    t = _group_times(st, npk, rng.exponential(0.05, int(npk.sum())))
+    fid = fid_offset + np.repeat(np.arange(len(st)), npk)
+    return (t, fid.astype(np.int64), _sizes("flash", len(t), rng).astype(np.int64), src,
+            np.full(len(st), KIND_CODE["flash"], np.int8))
