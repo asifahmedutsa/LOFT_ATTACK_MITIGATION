@@ -253,7 +253,23 @@ story = [
           [32 * mm] + [(W - 32 * mm) / 4] * 4,
           "Table 5. Controller overhead on T1B, mean (standard deviation) per run."),
 
-    P("6.7. Limitations", "h2"),
+    P("6.7. Summary of findings", "h2"),
+    P("The experiments support six findings. (i) FEVER protects benign traffic better than the six published "
+      "defenses: it harmed 0.011 % of benign flows against 1.0 % to 5.2 %, and kept 84.2 % of new connections "
+      "working against 21.0 % to 45.6 %; both results hold against every baseline. (ii) FEVER held the "
+      "attacker to the smallest share of the flow table against five of the six baselines (6.8 % against "
+      "24.2 % to 35.5 %); FTODefender held G2, Pulse and EVX lower. (iii) The gain is largest under the "
+      "low-rate attacks that imitate benign traffic, Mimic and Aware, and it holds against baselines trained "
+      "on the pooled data of all three controllers and on the UHt capture that no controller trained on. "
+      "(iv) Federated training lets a controller detect an attack that only another controller has seen: "
+      "under Mimic, recall rose from 0.2 % to 60.9 %, the attackers were blocked 64 s earlier and the "
+      "occupancy fell from 15.7 % to 4.9 %, without any rows or labels leaving a controller. Lossless "
+      "federated XGBoost matches training on pooled data, which FedAvg, FedProx and federated bagging do "
+      "not. (v) Every part of FEVER is needed on at least one attack, and blocking at the ingress port gives "
+      "the largest single effect. (vi) Two attacks remain open: no method defends against Slow, and EVX "
+      "evades FEVER's volume rule. FEVER is also the lightest of the eight methods in decision time and CPU, "
+      "at the price of the largest memory use."),
+    P("6.8. Limitations", "h2"),
     P("The testbed is small: one machine, three switches, two attackers and runs of 300 s. The baselines are "
       "reimplementations, and FTODefender's blocking rule and DMS-BTT's thresholds follow our reading of "
       "their papers. FEVER's false alarms on T1B (0.79 %) exceed the 0.1 % its threshold was set for, "
