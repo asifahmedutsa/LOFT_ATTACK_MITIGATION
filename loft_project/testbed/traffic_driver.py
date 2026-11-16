@@ -65,6 +65,7 @@ def main():
     ap.add_argument("--seed", type=int, default=4000)
     ap.add_argument("--share", default="0/4", help="i/4: benign host i sends access port i's flows")
     ap.add_argument("--attacker", type=int, default=0)
+    ap.add_argument("--n-attackers", type=int, default=2, help="attackers in the run (each sends its own share)")
     ap.add_argument("--iface", required=True)
     ap.add_argument("--dst", required=True)
     ap.add_argument("--dst-mac", default="00:00:00:00:00:64")
@@ -102,7 +103,10 @@ def main():
         # A trailing "M" (for example A2M): the same attack from a fresh source MAC per flow,
         # against per-host quotas keyed on MAC (T4, reviewer item R7).
         base = a.variant[:-1] if a.variant.endswith("M") else a.variant
-        tr = build_traffic(prof, didx, attack_variant(base), a.seed, a.duration, a.start)
+        v = attack_variant(base)
+        if a.n_attackers != v.n_attackers:
+            v = dataclasses.replace(v, n_attackers=a.n_attackers)
+        tr = build_traffic(prof, didx, v, a.seed, a.duration, a.start)
         port = 4 + a.attacker
     tr = assign_ports(tr, "dedicated")
     keep = tr.flow_port[tr.pkt_fid] == port
