@@ -18,6 +18,14 @@ import re
 import statistics as st
 
 
+def is_attacker(mac):
+    """Hosts 1-4 are benign, hosts 5 and up attackers (MAC ...:05, :06, ...; the server is :64)."""
+    try:
+        return 5 <= int(mac[-2:], 16) < 0x64
+    except ValueError:
+        return False
+
+
 def _rows(path):
     with open(path) as f:
         return [{k: float(v) for k, v in r.items()} for r in csv.DictReader(f)]
@@ -119,10 +127,10 @@ def summarize(d, attack_start, capacity=3500):
         if os.path.exists(ff):
             info["final_dump_flows_lines"] = open(ff).read().strip()
         # The papers' table columns, per monitored switch (one log in the dumbbell, one per
-        # switch in the tree): attack share Pa (entries of the attacker hosts 5 and 6 over the
+        # switch in the tree): attack share Pa (entries of the attacker hosts, 5 and up, over the
         # capacity), table usage, earliest overflow and seconds at the limit after the attack.
         k_dom = len(out) + 1
-        att = {f"00:00:00:00:{k_dom:02x}:05", f"00:00:00:00:{k_dom:02x}:06"}
+        pre = f"00:00:00:00:{k_dom:02x}:"
         sw_logs = sorted(glob.glob(os.path.join(d, f"switch_{dom}_s*.csv")))
         sw_logs = [x for x in sw_logs if not x.endswith(("_macs.csv", "_keys.csv"))] or [log]
         for sl in sw_logs:
@@ -133,7 +141,7 @@ def summarize(d, attack_start, capacity=3500):
             if os.path.exists(mf):
                 with open(mf) as f:
                     for x in csv.DictReader(f):
-                        if x["mac"] in att:
+                        if x["mac"].startswith(pre) and is_attacker(x["mac"]):
                             pa[float(x["t"])] = pa.get(float(x["t"]), 0) + int(x["entries"])
             post_r = [x for x in rr if x["t"] >= attack_start]
             cap = capacity
@@ -157,13 +165,12 @@ def summarize(d, attack_start, capacity=3500):
         if ingress:
             info["ingress_drops"] = len(ingress)
         # ensguard: hosts the evict-block layer blocked (a host counts once, on any switch).
-        # Attackers are the hosts ending :05 and :06 (h5, h6), benign hosts :01-:04.
+        # Attackers are the hosts from :05 up (h5, h6, ...), benign hosts :01-:04.
         hb = {e["src"] for e in ev if e["event"] == "host_block"}
         if hb:
-            info["hosts_blocked_attack"] = sum(m[-2:] in ("05", "06") for m in hb)
-            info["hosts_blocked_benign"] = sum(m[-2:] not in ("05", "06") for m in hb)
-            t_hb = [float(e["t"]) for e in ev if e["event"] == "host_block"
-                    and e["src"][-2:] in ("05", "06")]
+            info["hosts_blocked_attack"] = sum(is_attacker(m) for m in hb)
+            info["hosts_blocked_benign"] = sum(not is_attacker(m) for m in hb)
+            t_hb = [float(e["t"]) for e in ev if e["event"] == "host_block" and is_attacker(e["src"])]
             info["first_attack_block_s"] = round(min(t_hb) - attack_start, 1) if t_hb else "none"
         out[dom] = info
     hosts, benign, first = {}, {}, {}

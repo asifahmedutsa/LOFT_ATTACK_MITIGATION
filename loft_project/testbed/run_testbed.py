@@ -47,10 +47,11 @@ def build(net, k, dname, port):
                 limited=[s1], monitored=None, topo=None)
 
 
-def build_tree(net, k, dname, port):
+def build_tree(net, k, dname, port, n_att=2):
     """Three-switch tree (FloRa-style): core s{k}1 to the server, access switches s{k}2 (hosts
-    1, 2 and attacker 5) and s{k}3 (hosts 3, 4 and attacker 6). Every table is limited and
-    monitored; LOFT_TOPO tells the controller which port leads to which switch."""
+    1, 2 and attackers 5, 7, ...) and s{k}3 (hosts 3, 4 and attackers 6, 8, ...); n_att attackers
+    in all, alternating between the two. Every table is limited and monitored; LOFT_TOPO tells the
+    controller which port leads to which switch."""
     c = net.addController(f"c{k}", controller=RemoteController, ip="127.0.0.1", port=port)
     sw = [net.addSwitch(f"s{k}{j}", dpid=f"{k:x}{j}".zfill(16), protocols="OpenFlow13")
           for j in (1, 2, 3)]
@@ -63,10 +64,11 @@ def build_tree(net, k, dname, port):
         topo.setdefault(int(sw[0].dpid, 16), {})[p0] = [int(acc.dpid, 16), p1]
         topo.setdefault(int(acc.dpid, 16), {})[p1] = [int(sw[0].dpid, 16), p0]
     users = []
-    for i in range(6):
+    for i in range(4 + n_att):
         h = net.addHost(f"d{k}h{i + 1}", ip=f"10.{k}.1.{i + 1}/16",
                         mac=f"00:00:00:00:{k:02x}:{i + 1:02x}")
-        net.addLink(h, sw[1] if i in (0, 1, 4) else sw[2], bw=1000, delay="2ms")
+        on_s2 = i in (0, 1) if i < 4 else (i - 4) % 2 == 0
+        net.addLink(h, sw[1] if on_s2 else sw[2], bw=1000, delay="2ms")
         users.append(h)
     return dict(name=dname, c=c, s1=sw[0], s2=sw[1], srv=srv, users=users, port=port,
                 dpid=int(sw[0].dpid, 16), access_dpid=None, switches=sw, limited=sw,
@@ -79,6 +81,8 @@ def main():
     ap.add_argument("--topo", default="dumbbell", choices=["dumbbell", "tree3"],
                     help="dumbbell: monitored switch + access switch (DMS-BTT); tree3: core and "
                          "two access switches, all monitored (build_tree)")
+    ap.add_argument("--attackers", type=int, default=2,
+                    help="attacker hosts (tree3 only), alternating between the two access switches")
     ap.add_argument("--variant", default="A2", help="A1-A7, X<gap>, E9P (adaptive), EVX (volume-evading), benign (no attack) or F2/F4 (flash "
                          "crowd, no attack)")
     ap.add_argument("--seed", type=int, default=4000)
@@ -126,8 +130,12 @@ def main():
 
     setLogLevel("info")
     net = Mininet(switch=OVSSwitch, link=TCLink, controller=None, autoSetMacs=False)
-    mk = build_tree if a.topo == "tree3" else build
-    doms = [mk(net, k + 1, d, 6653 + k) for k, d in enumerate(a.domains.split(","))]
+    if a.attackers != 2 and a.topo != "tree3":
+        raise SystemExit("--attackers needs --topo tree3")
+    if a.topo == "tree3":
+        doms = [build_tree(net, k + 1, d, 6653 + k, a.attackers) for k, d in enumerate(a.domains.split(","))]
+    else:
+        doms = [build(net, k + 1, d, 6653 + k) for k, d in enumerate(a.domains.split(","))]
 
     ctrl = []
     for dm in doms:
@@ -224,7 +232,8 @@ def main():
             for j, h in enumerate(dm["users"][4:] if not silent else []):
                 procs.append(h.popen(
                     [a.python, drv, "--mode", "attack", "--domain", dm["name"], "--variant", a.variant,
-                     "--seed", str(a.seed), "--attacker", str(j), "--iface", f"{h.name}-eth0",
+                     "--seed", str(a.seed), "--attacker", str(j), "--n-attackers", str(a.attackers),
+                     "--iface", f"{h.name}-eth0",
                      "--dst", dst, "--dst-mac", dmac, "--start", str(a.attack_start),
                      "--duration", str(a.duration), "--benign-scale", str(a.benign_scale),
                      "--truth", os.path.join(a.out, f"truth_{h.name}.csv")]))
