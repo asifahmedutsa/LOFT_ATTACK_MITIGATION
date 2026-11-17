@@ -1,0 +1,397 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\begin{document}
+
+\title{FEVER: Federated Detection and Ingress Blocking\\against Low-Rate Flow Table Overflow in SDN}
+
+\author{\IEEEauthorblockN{Author Name}
+\IEEEauthorblockA{Affiliation\\
+City, Country\\
+email@example.com}}
+
+\maketitle
+
+\begin{abstract}
+A low-rate flow table overflow (LOFT) attack fills the flow table of an SDN switch with entries that the
+attacker keeps alive by sending one packet to each of them shortly before the idle timeout. New benign
+flows then find no room in the table, while the attack traffic stays far below the alarm level of
+rate-based detectors. Published defenses train a classifier on the traffic of a single network and fail
+when the attacker changes its pattern. We present FEVER, which trains one XGBoost detector across
+several SDN controllers without moving their data: the controllers exchange only per-bin gradient and
+hessian sums, so that the split search sees the same histograms as XGBoost on the pooled rows. At run time
+FEVER evicts the entries its detector flags and blocks a host at its ingress port when its evictions or
+its share of the table become outliers. We compare FEVER with six published defenses, reimplemented on a
+Mininet, Open vSwitch and Ryu testbed, over seven attacks, two real traffic captures and 532 runs, with
+hypotheses fixed before the runs. FEVER harmed 0.011\,\% of benign flows against 1.0\,\% to 5.2\,\% and
+kept 84\,\% of new connections working against 21\,\% to 46\,\%; 25 of 33 tests are supported.
+Federated training raised the recall on an attack that only another controller had seen from 0.2\,\% to
+61\,\%. Two attacks remain open: a slow attack with spoofed sources, which no method stops, and attackers
+that stay below FEVER's volume limit.
+\end{abstract}
+
+\begin{IEEEkeywords}
+software-defined networking, flow table overflow, federated learning, XGBoost, attack mitigation
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+An OpenFlow switch forwards a packet by matching it against the entries of its flow table
+\cite{mckeown2008openflow}. When no entry matches, the switch sends the packet to the controller, which
+installs a new entry. The table is small, often a few thousand entries in TCAM, and an entry is removed
+only when it has been idle for longer than its timeout. Cao et~al.\ showed that an attacker can exploit
+this with very little traffic \cite{cao2017loft}: it opens many flows, each with a different header, and
+sends one packet to each flow just before its idle timeout expires. The entries never expire, the table
+fills, and benign flows are refused or wait for an entry to free up. Because each attack flow carries only
+a packet every few seconds, the attack does not raise the packet rate or the bandwidth of the link.
+
+A series of defenses detect such attacks with a classifier on features of the flow table and of
+individual entries, then evict the entries they classify as malicious and, in some cases, block the
+source \cite{tang2023sftoguard,tang2023ftmaster,tang2024ftodefender,tang2024ftop,mudgal2024flora,tang2025dmsbtt,jain2025ftshield}.
+Each of them is trained and evaluated on the traffic of one network, with the same attack generator at
+training and test time, and reports detection rates near 99\,\%. Zeng et~al.\ found that how well
+FTMaster detects an attack depends on the eviction policy of the switch, and built an attack that adapts
+to it \cite{zeng2024alfo}.
+In practice the operators of different networks see different attacks: one controller may have recorded
+an attack that imitates benign packet sizes, another a pulsed attack. Pooling their recordings would
+give a better classifier, but flow records reveal the traffic of each network and are rarely shared.
+
+This paper asks whether controllers can train a common detector without sharing their recordings, and
+whether such a detector helps on a real testbed against attacks that the local training never saw. Our
+contributions are:
+\begin{itemize}
+\item FEVER, a defense that trains a gradient-boosted tree detector across controllers by exchanging only
+  histogram sums, so that it matches training on pooled data, and that responds by eviction
+  and by blocking the attacking host at its ingress port (Section~\ref{sec:design}).
+\item A comparison with six published defenses reimplemented on a Mininet, Open vSwitch and Ryu testbed
+  with two real traffic captures and seven attacks, three of which no controller trained on. The
+  hypotheses, measures and tests were fixed before the 532 runs (Sections~\ref{sec:setup}
+  and~\ref{sec:results}).
+\item Results that show where federation matters and where it does not, including two attacks against
+  which FEVER fails, and three further studies: benign flash crowds, up to eight colluding attackers, and
+  secure aggregation of the exchanged histograms.
+\end{itemize}
+
+\section{Related Work}
+\label{sec:related}
+
+\textit{Attacks.} The LOFT attack of Cao et~al.\ \cite{cao2017loft} first probes the switch for the
+match fields and the timeouts, then sends at the lowest rate that keeps its entries alive; on hardware
+switches it overflowed 1,800 TCAM entries at 46\,Kbps. Tang et~al.\ call the same pattern a slow-rate
+or low-rate flow table overflow \cite{tang2023sftoguard,tang2023ftmaster}. ALFO adapts the attack to
+the eviction policy of the switch \cite{zeng2024alfo}.
+
+\textit{Defenses.} FTGuard evicts entries by a priority computed from the rate of new flows and the
+packet count of each flow \cite{zhang2017ftguard}. SFTO-Guard predicts the number of rules and classifies entries with LightGBM
+\cite{tang2023sftoguard}. FTMaster uses XGBoost both to decide whether the table is under attack and to
+classify each entry, then evicts the malicious entries and blocks the source \cite{tang2023ftmaster}.
+FTODefender weights table features by the CRITIC method and classifies with LightGBM and logistic
+regression \cite{tang2024ftodefender}. FTOP adds a Kalman predictor of the flow count and also handles
+flash crowds \cite{tang2024ftop}. FloRa uses CatBoost with new features of the entries
+\cite{mudgal2024flora}, and DMS-BTT combines a table-state and a per-entry CatBoost model with two
+occupancy thresholds \cite{tang2025dmsbtt}. rDefender does without a classifier: it finds the ports
+whose share of the table is abnormal and deletes their entries at random \cite{kong2024rdefender}.
+FTShield runs a classifier in the P4 pipeline of a Tofino switch \cite{jain2025ftshield}. All of these
+train on one network. FEVER keeps the evict-then-block response of FTMaster and FTODefender and
+changes how the detector is trained.
+
+\textit{Federated learning.} FedAvg \cite{mcmahan2017fedavg} and FedProx \cite{li2020fedprox} average
+the weights of locally trained models. For gradient-boosted trees, SecureBoost showed that a federated
+model can be lossless, that is, identical to the centrally trained one, in the vertical setting
+\cite{cheng2021secureboost}. FEVER is horizontal: every controller holds the same features for
+different flows, and the sum of the controllers' gradient histograms is the histogram that XGBoost's
+algorithm \cite{chen2016xgboost} computes on the pooled rows. Pairwise masking \cite{bonawitz2017secagg} hides each
+controller's sums from the others.
+
+\section{Threat Model}
+\label{sec:threat}
+
+The attacker controls one or more hosts in the network. It knows the idle timeout and the table
+capacity, for example from the probing of \cite{cao2017loft}, and it can choose its sending pattern:
+the number of new flows per burst, the gap between bursts, the packet sizes, and whether it uses its own
+address, a pool of addresses or spoofed sources. One variant (EVX) also knows FEVER's volume limit.
+Switches and controllers are trusted. Each controller manages its own network and keeps its traffic
+recordings private; the controllers and the aggregator follow the training protocol but may inspect
+what they receive.
+
+\section{FEVER}
+\label{sec:design}
+
+Fig.~\ref{fig:arch} shows the two parts of FEVER: a detector trained offline across controllers, and a
+loop that each controller runs on each of its switches once per second.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/architecture.pdf}
+\caption{Architecture of FEVER.}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Features}
+
+For every entry the controller computes 17 features from the flow statistics it polls and from its own
+installation log, with no access to packet payloads. Eleven describe the entry: its packet and byte
+counts, duration, mean packet size, packet rate, the time between packets and the packets since the last
+poll, the number of polls in which it was idle, the share of polls in which it was active, and the mean
+and coefficient of variation of the gaps between its packets. Three describe the entry's source: the
+number of entries the source holds, the number it installed in the last interval, and the share of them
+that carry few packets. Three describe the table: its occupancy, the installation rate and the mean
+packet interval over all entries. Counts, durations and rates enter as logarithms.
+
+\subsection{Lossless federated training}
+
+Each controller $c$ holds labelled rows $(x_i, y_i)$ recorded on its own network, with benign traffic
+and the attacks it has seen. The model is a sum of regression trees trained on the logistic loss, as in
+XGBoost \cite{chen2016xgboost}. XGBoost's histogram method needs, for a node and for each bin $b$ of
+each feature, the sums $G_b = \sum_{i \in b} g_i$ and $H_b = \sum_{i \in b} h_i$ of the first and second
+derivatives of the loss over the rows in that node. These sums are additive over controllers, so the
+controllers compute them on their own rows and send them to an aggregator, which returns the totals.
+Every controller then evaluates the same split gains, chooses the same split, and computes the same leaf
+weights. The bin boundaries come from merging the controllers' quantile sketches. Apart from the
+approximation in this merge, the result is the model that XGBoost builds on the pooled rows, while no row
+or label leaves its controller; on our data the two differ by 0.3 points of F1 (Table~\ref{tab:fedcost}). We use 300 trees of depth 6, a learning
+rate of 0.1 and 256 bins per feature, and run the exchange through XGBoost's collective communication.
+
+The decision threshold $\tau$ is set so that 0.1\,\% of the benign rows of one controller's validation
+runs score above it. Section~\ref{sec:secagg} examines a threshold set on the benign scores of all
+controllers together.
+
+\subsection{Detection and response}
+
+The loop starts when the occupancy of a switch's table reaches $\rho = 70\,\%$. FEVER then scores every
+entry whose counters changed since the previous poll and evicts the entries that score at least $\tau$.
+Eviction alone does not stop an attacker who reinstalls its flows, so FEVER also blocks hosts, by two
+rules. The eviction rule blocks a host when, within the last 10\,s, at least 50 of its entries were
+evicted, at least 20\,\% of the entries it holds were evicted, and its evictions are at least three times
+those of the median host on the switch (with the median floored at 10). The volume rule acts when the
+table is at least 90\,\% full and needs no detector: it blocks a host that holds more than $X$ entries
+and at least three times as many as the median host. $X$ is set per switch to 1.5 times the largest
+number of entries that a benign host held in three benign calibration runs. A blocked host loses its
+entries, and the controller installs a drop rule for its MAC address at the ingress port of its access
+switch, so that its packets no longer reach the controller or the other switches. Blocks are
+permanent.
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Testbed}
+
+The testbed runs on one machine with Mininet \cite{lantz2010mininet}, Open vSwitch
+\cite{pfaff2015ovs} and the Ryu controller \cite{ryu}. The network is a tree of three switches: a core
+switch connected to a server and two access switches with three hosts each. Each table holds at most
+3,500 entries with an idle timeout of 10\,s, as in \cite{tang2024ftodefender,tang2024ftop,tang2025dmsbtt},
+and the controller polls the flow statistics every second. Four benign hosts replay real traffic. Two
+attackers, one on each access switch, start at 50\,s. One benign host also opens a new connection to
+the server every 0.5\,s, to measure the service that a new benign flow receives. Each run lasts 300\,s.
+
+\subsection{Traffic and training data}
+
+Benign traffic comes from two captures. T1B is a part of bigFlows \cite{bigflows}, the capture used by DMS-BTT \cite{tang2025dmsbtt},
+replayed at 600 packets/s, and UHt is part 6 of the univ2 data-centre trace
+\cite{benson2010imc} at 1,000 packets/s. Three controllers record their own training runs on the
+testbed: C1 on univ2 with the attacks G1 and Mimic, C2 on univ2 with G2 and Spoof, and C3 on bigFlows
+with G3 and Pulse. No controller trained on the part of univ2 used in UHt, and the training, validation
+and test runs use different seeds.
+
+\subsection{Attacks}
+
+Every attack follows the pattern used by DMS-BTT \cite{tang2025dmsbtt}. In each burst the attacker
+re-sends a packet on each of its live flows, refreshing them before the idle timeout, and opens $S$ new
+flows until it holds $M$ flows. Bursts are sent at 1,500 packets/s with a random gap $t_1$ between them.
+Table~\ref{tab:attacks} lists the attacks. Mimic and Aware draw their sources from a pool of 256
+addresses and copy the packet sizes of the benign traffic; Aware refreshes every 2 to 3\,s. Slow opens
+only 45 flows per burst from spoofed sources. EVX holds 628 flows per attacker, below FEVER's volume
+limit. Aware, Slow and EVX were seen by no controller in training. Two further attacks, G1 and G3,
+appear only in the training data and the offline tests.
+
+\input{tables/attacks}
+
+\subsection{Compared methods}
+
+We compare FEVER with no defense and with six published defenses that we reimplemented from their
+papers: FTMaster \cite{tang2023ftmaster}, FTOP \cite{tang2024ftop}, FTODefender
+\cite{tang2024ftodefender}, FloRa \cite{mudgal2024flora}, DMS-BTT \cite{tang2025dmsbtt} and rDefender
+\cite{kong2024rdefender}. The classifiers of the learning-based defenses are trained on C3's recordings,
+as each paper trains on one network. To compare at equal data, they are also trained on the pooled
+recordings of C1 to C3. Our DMS-BTT evicts whenever the occupancy exceeds its first threshold, as its
+paper describes. Four ablations of FEVER remove, in turn, the federated training (detector trained on
+C3 only), the volume rule, the detector, and ingress blocking.
+
+\subsection{Measures and procedure}
+
+\textit{Benign harm} is the share of benign flows that were refused at least once, never installed,
+dropped by a rule, or whose first packet was lost. \textit{Attack occupancy} is the share of the table
+held by attack entries, averaged over the polls after the attack starts and over the three switches.
+\textit{New-connection success} is the share of probe connections that succeed after the attack starts.
+We also report the controller's decision time, CPU and memory, and the Packet-In count, and score the
+detectors offline by accuracy, precision, recall, F1 and false alarms on the T1B test recordings.
+
+Each combination of trace, attack and method runs with three seeds (G2, Spoof, Pulse and all UHt
+cells) or five (Mimic, Aware, Slow and EVX). Six hypotheses were fixed before the runs. H1--H3 state that
+FEVER harms fewer benign flows, leaves a lower attack occupancy and keeps new-connection success no
+more than 5 points below each baseline on G2, Spoof, Pulse, Mimic and Aware (19 seed-paired runs per
+baseline). H4 compares FEVER with the baselines trained on pooled data, on Mimic and Aware. H5 tests
+the occupancy on the held-out attacks Slow and EVX, and on UHt. H6 compares FEVER with its own detector
+trained on C3 only. Each of the 33 tests is a one-sided exact sign test over seed-paired runs, with ties
+counted against FEVER and Holm's correction \cite{holm1979} at $\alpha = 0.05$. A pooled hypothesis is
+also rejected if FEVER is clearly worse on any single attack.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Comparison with published defenses}
+
+Table~\ref{tab:main} gives the results per attack and Table~\ref{tab:tests} the tests; 25 of the 33
+are supported. Over the T1B attacks FEVER harmed 0.011\,\% of benign flows, against 1.0\,\% to 5.2\,\%
+for the baselines, and harmed none in the runs without an attack. It kept 84.2\,\% of new connections
+working on average, and 97\,\% to 99\,\% under G2, Spoof, Pulse and Mimic, where most baselines fell
+to between 11\,\% and 41\,\%. The attackers held 6.8\,\% of the table under FEVER and 24.2\,\% to
+35.5\,\% under the baselines.
+
+The largest differences occur under Mimic and Aware, which draw on a pool of sources and copy benign
+packet sizes. FEVER held them to 4.9\,\% and 14.1\,\% of the table, against 33\,\% to 49\,\% for the
+baselines, and it also held a lower occupancy than every baseline trained on the pooled data (H4). On
+UHt, a capture no controller trained on, FEVER held the attackers to 7.7\,\% against 37.0\,\% to
+40.6\,\% for FTMaster, DMS-BTT and rDefender.
+
+FEVER is not better everywhere. FTODefender held G2, Pulse and EVX at about 0.2\,\%, below FEVER, so
+H2 fails against it; the price was a benign harm of 3.4\,\% and a new-connection success of
+45.6\,\%, against 0.011\,\% and 84.2\,\% for FEVER. Under Slow, every method left about 20\,\% of the table to the attackers, and
+FEVER's volume rule let the EVX attackers keep 17.7\,\%. H5 is therefore not supported on T1B.
+
+\input{tables/table_main}
+\input{tables/tests}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_timeline.pdf}
+\caption{Attack occupancy over time on T1B (median over five seeds). The dotted line marks the start of the attack.}
+\label{fig:timeline}
+\end{figure*}
+
+Fig.~\ref{fig:timeline} shows the occupancy over time under Mimic and Aware. The baselines keep
+evicting attack entries, but the attackers reinstall them, and the table reaches 54\,\% to 60\,\% under
+Mimic and about 65\,\% under Aware. Under FEVER the attack entries are gone by about 140\,s under
+Mimic and 210\,s under Aware, once the attackers are blocked. DMS-BTT is the
+only baseline that lowers the occupancy under Aware, to about 52\,\% after 235\,s.
+
+\subsection{Effect of federated training}
+
+Federated training matters on the attacks that the local controller has not seen. Offline, it raised
+the recall on attacks seen only by another controller from 75.8\,\% to 90.5\,\%, and on Mimic from
+0.2\,\% to 60.9\,\%. On the testbed, FEVER with the federated detector blocked the Mimic attackers 64\,s
+earlier than with C3's detector, lowered the occupancy from 15.7\,\% to 4.9\,\% and raised
+new-connection success from 63\,\% to 98\,\%. Under G2, which C3's detector already recognises, the two
+behave alike. Under Aware the gain was smaller (14.1\,\% against 18.2\,\%), so over Mimic and Aware
+together H6 is not supported (8 of 10 pairs, $p = 0.38$ after correction).
+
+Table~\ref{tab:fedcost} compares federated training schemes on the same data. FedAvg and FedProx, run
+with Flower \cite{beutel2020flower} on a small neural network, and federated bagging of XGBoost trees
+gain nothing over local training on the attacks a controller did not see. Lossless federated XGBoost
+matches XGBoost trained on the pooled rows, at the cost of 2.6\,GB of exchanged histograms and 38\,s of
+training for 300 trees.
+
+\input{tables/table_fedcost}
+
+\subsection{Ablation}
+
+Table~\ref{tab:ablation} removes one part of FEVER at a time. Without ingress blocking the occupancy
+rose to 23\,\% to 35\,\% under all three attacks, the largest single effect. Without the volume rule it
+rose from 14.1\,\% to 42.6\,\% under Aware, while G2 and Mimic were unaffected. Without the detector the
+first block came 35\,s to 55\,s later under G2 and Mimic and the occupancy doubled. Without federated
+training the occupancy under Mimic rose from 4.9\,\% to 15.7\,\%. Under Aware, FEVER without the
+detector did slightly better than the full system (10.4\,\% against 14.1\,\%).
+
+\input{tables/table_ablation}
+
+\subsection{Detection accuracy}
+
+Table~\ref{tab:detect} scores each classifier on the T1B test recordings. On the attacks the training
+controller saw, G3 and Pulse, every reimplemented classifier reaches about 99.8\,\% on all four
+measures, in line with the values reported in their papers. Over all attacks, the classifiers trained
+on C3 alone reach an F1 of 78.5\,\%, because they miss Mimic, Slow and Aware, while FEVER's federated
+detector reaches 86.8\,\%. Trained on the pooled rows, the baselines reach 90.3\,\% to 91.9\,\% at
+their papers' threshold of 0.5, with 2.6\,\% to 3.7\,\% false alarms. At FEVER's threshold rule their
+false alarms drop to 0.2\,\% to 0.3\,\% and their F1 to 81\,\% to 84\,\%; FTOP flags nothing at that
+rule. FEVER's false alarms on T1B,
+0.79\,\%, exceed the 0.1\,\% its threshold was set for, because the threshold was calibrated on another
+capture. Even so, FEVER blocked no benign host in any run.
+
+\input{tables/table_detect}
+
+\subsection{Overhead}
+
+Table~\ref{tab:overhead} gives the controller's cost over all T1B runs. FEVER took 20.8\,ms per
+decision, close to no defense and below every baseline. It used the least CPU and the most
+memory, 253\,MB, for its 300-tree model.
+
+\begingroup\renewcommand{\small}{\footnotesize}\input{tables/table_overhead}\endgroup
+
+\subsection{Flash crowds and more attackers}
+
+A defense that limits a host's share of the table could block a benign host whose traffic rises
+suddenly. We added three bursts of 12\,s to the T1B replay, each at eight times its rate of new flows,
+spread over the four benign hosts, with no attacker (three seeds). No method blocked a benign host.
+FEVER harmed no benign flow and kept 57.2\,\% of new connections working, against 57.9\,\% without a
+defense. FTODefender deleted 182 benign entries per minute and cut new-connection success to 20.6\,\%.
+
+We then repeated G2 and EVX with four and eight attackers, split between the two access switches
+(three seeds). Under G2, FEVER's occupancy stayed below FTMaster's and DMS-BTT's in all six paired
+runs ($p = 0.047$ after correction for each), but not below FTODefender's, and FEVER blocked every
+attacker without blocking a benign host. Under EVX, four or more attackers together push the core table
+past $\rho$, their entries are the ones the detector evicts, and the eviction rule blocked 32 of 36 of
+them. With eight attackers the controller ran at about 80\,\% CPU, blocks came 50\,s to 190\,s after the
+attack started, and FEVER's harm rose to 0.9\,\% under G2 and 2.0\,\% under EVX, against 16.3\,\% and
+12.1\,\% without a defense.
+
+\subsection{Secure aggregation and a federated threshold}
+\label{sec:secagg}
+
+The histogram sums that a controller sends describe its traffic. We added the pairwise additive masks of
+Bonawitz et~al.\ \cite{bonawitz2017secagg}: each pair of controllers agrees on a key by X25519
+\cite{rfc7748}, and for every message each controller adds a ChaCha20 \cite{rfc8439} keystream per pair
+to its sums, with opposite signs within a pair, so that the aggregator learns only the total. The sums
+are encoded in fixed point modulo $2^{64}$, so the masks cancel exactly. XGBoost's collective offers no
+hook for the masks, so we implemented the same histogram algorithm in a separate trainer. Masked and
+unmasked training, each repeated with fresh keys, gave the same model bit for bit, and the trainer
+agrees with lossless federated XGBoost on 99.0\,\% of the test rows (F1 86.76\,\% against 86.79\,\%).
+Masking added 2.1\,\% to the training time and no traffic. The same masked sum lets the controllers set
+$\tau$ on their pooled benign scores, counted over a public grid, without revealing them. This lowered
+FEVER's false alarms on T1B from 0.79\,\% to 0.69\,\% at a loss of 0.4 points of recall, still above the
+0.1\,\% target. The masks protect against curious but honest parties; two colluding controllers can
+recover the third's sums, and training stops if a controller drops out.
+
+\section{Discussion and Limitations}
+
+The results separate two effects. Ingress blocking is what keeps the table free: without it FEVER left
+the attackers 23\,\% to 35\,\% of the table, because evicted entries come back within seconds. The detector decides how early the block comes, and its
+quality depends on whether some controller has seen a similar attack. Federation helps exactly there,
+under Mimic, and adds little where the local detector already works, under G2, or where no controller
+has seen a similar attack, under Aware.
+
+The testbed is small: one machine, three switches, at most eight attackers and runs of 300\,s. At eight
+attackers the controller itself became the bottleneck, and the flash crowds did not fill the core table
+because the traffic generator could not send faster. The baselines are reimplementations, and some
+details, such as FTODefender's blocking rule and DMS-BTT's thresholds, follow our reading of their
+papers. Slow and EVX remain open. No method defends against Slow, whose spoofed sources spread its
+entries over many addresses, and EVX shows that two attackers who know the volume limit can evade it;
+with four or more, the eviction rule blocked most of them.
+
+\section{Conclusion}
+
+FEVER trains a flow-entry detector across SDN controllers without moving their recordings, and pairs it
+with eviction and ingress blocking. On a testbed with real traffic, seven attacks and six reimplemented
+defenses, it harmed fewer benign flows and kept more new connections working than every baseline, and
+federated training let a controller detect an attack it had never recorded. Detecting slow attacks with
+spoofed sources, and setting a threshold that transfers to a new network, are left for future work.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

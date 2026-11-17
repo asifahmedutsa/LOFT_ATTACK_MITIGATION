@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Attack parameters (per attacker).}
+\label{tab:attacks}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrlrll}
+\toprule
+Attack & Sources & $S$ & $t_1$ (s) & $M$ & Packets & Trained by \\
+\midrule
+G2 & own & 100 & 5.5--9.0 & 1{,}700 & 64 B & C2 \\
+Spoof & spoofed & 100 & 5.5--9.0 & 1{,}700 & 64 B & C2 \\
+Pulse & own & 300 & 5.0--8.0 & 1{,}700 & 64 B & C3 \\
+Mimic & pool of 256 & 100 & 6.0--9.5 & 1{,}700 & benign & C1 \\
+Aware & pool of 256 & 100 & 2.0--3.0 & 1{,}700 & benign & none \\
+Slow & spoofed & 45 & 8.0--9.8 & 1{,}700 & benign & none \\
+EVX & own & 100 & 5.5--9.0 & 628 & 64 B & none \\
+\bottomrule
+\end{tabular}
+\end{table}
