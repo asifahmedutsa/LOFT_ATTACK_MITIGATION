@@ -16,7 +16,7 @@ import numpy as np
 from .data import Dataset
 from .models import threshold_at_fpr
 from .realfl import ALL, BUDGET
-from .tbfl import TEST, VAL
+from .tbfl import GROUPS, TEST, VAL
 from .tbfl_baselines import metrics
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "fl"))
@@ -58,6 +58,7 @@ def main():
     ben_seed = {s: owner == keys.index((None, s)) for s in TEST}
     ben = np.any(list(ben_seed.values()), 0)
     per = {v: np.isin(owner, [i for i, (w, _) in enumerate(keys) if w == v]) & (test.y == 1) for v in ALL}
+    other = np.any([per[v] for v in GROUPS["T1B"]["seen only by another controller"]], 0)
     cal = {c: np.concatenate([runs[k].X[runs[k].y == 0] for k in ks]) for c, ks in CAL.items()}
     uht = runs[("UHt", None, 4190)]
     uht_X = uht.X[uht.y == 0]
@@ -99,6 +100,7 @@ def main():
                      **{f"false_alarms s{s}": 100 * float((pt[b] >= tau).mean()) for s, b in ben_seed.items()},
                      false_alarms_UHt=100 * float((1 / (1 + np.exp(-mu)) >= tau).mean()),
                      **metrics(pt, test.y, tau),
+                     recall_other_controllers=100 * float((pt[other] >= tau).mean()),
                      **{f"recall {NAME[v]}": 100 * float((pt[per[v]] >= tau).mean()) for v in ALL})
             rows.append(r)
     import pandas as pd

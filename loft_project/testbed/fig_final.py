@@ -6,6 +6,7 @@
   table_fedcost.tex       bytes, rounds and time to train the detector, with its T1B accuracy (page 3)
   table_ablation.tex      FEVER against its four ablations on G2, Mimic and Aware (page 4)
   table_detect.tex        accuracy, precision, recall, F1 of each classifier on T1B rows (page 5)
+  table_threshold.tex     the federated detector's alarm threshold: C3 only, federated, highest local (page 6)
   fig_t1b                 the same three measures on T1B, grouped bars per attack, mean and s.d.
   fig_uht                 the same on UHt (the three baselines run there)
   fig_pooled              FEVER against each baseline trained locally and on pooled data
@@ -289,6 +290,14 @@ def flower(name, up_key=None):
 
 
 LL = json.load(open(os.path.join(TB, "fedxgb_hist_log.json")))
+# Secure aggregation (results/secagg, docs/secagg_plan.md): the masked trainer's run, scored at the
+# same threshold rule as the others (0.1 % of C3's benign T1A rows).
+SA = os.path.join(HERE, "..", "results", "secagg")
+SAL = json.load(open(os.path.join(SA, "secagg_masked_log.json")))
+THS = list(csv.DictReader(open(os.path.join(SA, "thresholds.csv"))))
+_s = next(r for r in THS if r["model"] == "Secure-aggregation trainer" and r["threshold"] == "tau_C3")
+EXP["Secure-aggregation trainer"] = {"all: f1": _s["f1"], "recall A4": _s["recall Mimic"],
+                                     "seen only by another controller: recall": _s["recall_other_controllers"]}
 POOL_MB = sum(os.path.getsize(os.path.join(TB, "fl_data", f"{c}.npz")) for c in ("C1", "C2", "C3")) / 1e6
 FC = [("Local only", "Local only (C3)", "nothing", None),
       ("FedAvg", "FedAvg (Flower, reference)", "weights", flower("fedavg")),
@@ -296,6 +305,8 @@ FC = [("Local only", "Local only (C3)", "nothing", None),
       ("Federated XGBoost bagging", "Federated XGBoost bagging (Flower)", "trees", flower("fedxgb", "sent_bytes")),
       ("Lossless federated XGBoost (FEVER)", "Lossless federated XGBoost", "histograms",
        (LL["workers"][0]["trees"], LL["loopback_bytes"] / 1e6, LL["seconds"])),
+      ("Lossless federated XGBoost, secure aggregation", "Secure-aggregation trainer", "masked histograms",
+       (SAL["trees"], SAL["loopback_bytes"] / 1e6, SAL["seconds"])),
       ("Pooled XGBoost", "Pooled (XGBoost)", "rows and labels", (1, POOL_MB, None))]
 FH = ["Training", "Shared", "Rounds", "Data sent (MB)", "Time (s)", "F1 (\\%)",
       "Recall, other controllers (\\%)", "Recall, Mimic (\\%)"]
@@ -319,7 +330,7 @@ for x in FC:
     data3.append(c)
 tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
 open(os.path.join(OUT, "table_fedcost.tex"), "w").write("\n".join(tex))
-t3 = Table(data3, colWidths=[58 * mm, 28 * mm, 16 * mm, 28 * mm, 18 * mm, 16 * mm, 48 * mm, 30 * mm])
+t3 = Table(data3, colWidths=[74 * mm, 30 * mm, 16 * mm, 28 * mm, 18 * mm, 16 * mm, 48 * mm, 30 * mm])
 t3.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
                         ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
                         ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
@@ -426,6 +437,42 @@ t5.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (4, 0), (
                         ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]
                        + [("LINEABOVE", (0, 1 + i), (-1, 1 + i), 0.5, colors.black) for i in SEP]))
 story += [PageBreak(), Paragraph("Table 5. Detection performance on T1B.", CAP), t5]
+
+# Table: the federated detector's alarm threshold on the T1B test rows (results/secagg/thresholds.csv,
+# loftbench/secagg_eval.py), for the deployed model and the secure-aggregation trainer's. Each rule
+# targets 0.1 % false alarms: on C3's benign T1A rows (as deployed), on the three controllers' benign
+# rows pooled by a masked sum of score counts, or the highest of the three controllers' own thresholds.
+TRULE = [("tau_C3", "C3 only"), ("tau_fed", "Federated (masked sum)"), ("tau_max", "Highest local")]
+TMOD = [("Lossless federated XGBoost", "Lossless federated XGBoost"),
+        ("Secure-aggregation trainer", "Secure aggregation")]
+TK = [("false_alarms", 2), ("false_alarms_UHt", 2), ("recall", 2), ("f1", 2), ("recall Mimic", 1),
+      ("recall Aware", 1)]
+TH = ["Model", "Threshold rule", "Threshold", "False alarms, T1B (\\%)", "False alarms, UHt (\\%)",
+      "Recall (\\%)", "F1 (\\%)", "Recall, Mimic (\\%)", "Recall, Aware (\\%)"]
+trows = []
+for mk, mlab in TMOD:
+    for i, (rk, rlab) in enumerate(TRULE):
+        r = next(x for x in THS if x["model"] == mk and x["threshold"] == rk)
+        trows.append([mlab if i == 0 else "", rlab, f"{float(r['tau']):.3f}"]
+                     + [f"{float(r[k]):.{d}f}" for k, d in TK])
+tex = [r"\begin{table*}[t]", r"\centering", r"\caption{Alarm threshold of the federated detector.}",
+       r"\label{tab:threshold}", r"\small", r"\begin{tabular}{ll" + "r" * (len(TH) - 2) + "}", r"\toprule",
+       " & ".join(TH) + r" \\"]
+for i, r in enumerate(trows):
+    if i % len(TRULE) == 0:
+        tex.append(r"\midrule")
+    tex.append(" & ".join(r) + r" \\")
+tex += [r"\bottomrule", r"\end{tabular}", r"\end{table*}", ""]
+open(os.path.join(OUT, "table_threshold.tex"), "w").write("\n".join(tex))
+t6 = Table([[h.replace("\\%", "%") for h in TH]] + trows,
+           colWidths=[46 * mm, 40 * mm, 20 * mm, 30 * mm, 30 * mm, 20 * mm, 16 * mm, 28 * mm, 28 * mm])
+t6.setStyle(TableStyle([("FONT", (0, 0), (-1, -1), "LS", 9), ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
+                        ("LINEABOVE", (0, 0), (-1, 0), 0.9, colors.black),
+                        ("LINEBELOW", (0, 0), (-1, 0), 0.5, colors.black),
+                        ("LINEABOVE", (0, 1 + len(TRULE)), (-1, 1 + len(TRULE)), 0.5, colors.black),
+                        ("LINEBELOW", (0, -1), (-1, -1), 0.9, colors.black),
+                        ("TOPPADDING", (0, 0), (-1, -1), 1.6), ("BOTTOMPADDING", (0, 0), (-1, -1), 1.6)]))
+story += [PageBreak(), Paragraph("Table 6. Alarm threshold of the federated detector.", CAP), t6]
 doc.build(story)
 
 # Figure: the same, accuracy, precision, recall and F1, one panel per training of the baselines.

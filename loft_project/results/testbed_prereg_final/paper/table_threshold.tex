@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\centering
+\caption{Alarm threshold of the federated detector.}
+\label{tab:threshold}
+\small
+\begin{tabular}{llrrrrrrr}
+\toprule
+Model & Threshold rule & Threshold & False alarms, T1B (\%) & False alarms, UHt (\%) & Recall (\%) & F1 (\%) & Recall, Mimic (\%) & Recall, Aware (\%) \\
+\midrule
+Lossless federated XGBoost & C3 only & 0.495 & 0.79 & 0.15 & 76.82 & 86.79 & 60.9 & 25.4 \\
+ & Federated (masked sum) & 0.558 & 0.69 & 0.08 & 76.38 & 86.52 & 60.2 & 23.9 \\
+ & Highest local & 0.637 & 0.56 & 0.06 & 75.83 & 86.18 & 59.1 & 21.9 \\
+\midrule
+Secure aggregation & C3 only & 0.508 & 0.78 & 0.08 & 76.77 & 86.76 & 60.4 & 25.9 \\
+ & Federated (masked sum) & 0.570 & 0.69 & 0.08 & 76.29 & 86.46 & 59.7 & 24.1 \\
+ & Highest local & 0.656 & 0.55 & 0.06 & 75.59 & 86.03 & 58.5 & 21.3 \\
+\bottomrule
+\end{tabular}
+\end{table*}

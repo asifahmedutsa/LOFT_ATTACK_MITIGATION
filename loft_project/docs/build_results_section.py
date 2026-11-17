@@ -1,6 +1,7 @@
 """Builds docs/fever_experiments_results.pdf: the paper's experimental setup and results sections, in
 plain journal form. Numbers come from results/testbed_prereg_final (tests.csv, report.md, paper/*.tex)
-and results/tbfl; figures from results/testbed_prereg_final/paper.
+and results/tbfl; figures from results/testbed_prereg_final/paper. The follow-up studies come from
+results/testbed_flash, results/testbed_scale and results/secagg.
 
     ~/.venvs/loft/bin/python docs/build_results_section.py
 """
@@ -100,6 +101,10 @@ NSUP = sum(r["supported"] == "True" for r in T)
 ov = tex_rows("table_overhead.tex")
 fc = tex_rows("table_fedcost.tex")
 dt = tex_rows("table_detect.tex")
+th = tex_rows("table_threshold.tex")
+th[0] = ["Model", "Threshold rule", "Threshold", "FA, T1B", "FA, UHt", "Recall", "F1", "Recall, Mimic",
+         "Recall, Aware"]
+R8 = [i for i, r in enumerate(th) if i > 1 and r[0]]
 
 # Table 6: flash crowds (results/testbed_flash/runs.csv).
 FL = list(csv.DictReader(open("results/testbed_flash/runs.csv")))
@@ -254,7 +259,8 @@ story = [
     P("Table 3 compares federated training schemes on the same data. FedAvg, FedProx and federated bagging "
       "of XGBoost trees gain nothing over local training on the attacks a controller did not see. Lossless "
       "federated XGBoost matches XGBoost trained on the pooled rows, at the cost of 2.6 GB of exchanged "
-      "histograms and 38 s of training."),
+      "histograms and 38 s of training. Its version with secure aggregation (Section 6.9) gives the same "
+      "detector."),
     figure("fig_fl_effect", "Fig. 3. Detector trained on C3 only against the federated detector: offline "
                             "recall and testbed outcome on T1B."),
     table([["Training", "Shared", "Rounds", "Data (MB)", "Time (s)", "F1", "Recall, other ctrl.",
@@ -321,7 +327,38 @@ story = [
           "Table 7. G2 and EVX with n attackers on T1B, mean over seeds (n = 2 from the campaign).",
           rules=R7),
 
-    P("6.9. Summary of findings", "h2"),
+    P("6.9. Secure aggregation and a federated threshold", "h2"),
+    P("In FEVER's federated training each controller sends the gradient and hessian sums of its rows, per "
+      "histogram bin, in the clear, and these sums describe its traffic. We added the pairwise additive "
+      "masks of Bonawitz et al. (2017). Each pair of controllers agrees on a key by X25519 key exchange; for "
+      "every message, each controller adds a ChaCha20 stream per pair key to its sums, with opposite signs "
+      "within a pair, so that the masks cancel and the aggregator learns only the total. The sums are "
+      "encoded in fixed point (scale 2<super>40</super>, modulo 2<super>64</super>), so the cancellation is "
+      "exact. XGBoost's allreduce offers no hook for the masks, so we wrote a histogram gradient-boosting "
+      "trainer with the same settings (300 trees, depth 6, 256 bins), in which the bin cuts are also taken "
+      "from securely summed counts. Masked and unmasked training, each repeated with fresh keys, gave the "
+      "same model bit for bit, and the same scores on all 1.46 million T1B test rows. The trainer agrees "
+      "with lossless federated XGBoost on 99.0 % of the test rows, at an F1 of 86.76 % against 86.79 % "
+      "(Table 3). Masking added 2.1 % to the training time and no bytes. The trainer is slower than XGBoost "
+      "(796 s against 38 s) and sends 6.3 GB against 2.6 GB, because it is written in NumPy and sends the "
+      "histogram of every node where XGBoost subtracts one child's from its parent's."),
+    P("The same masked sum lets the controllers set the alarm threshold on their benign scores together "
+      "without revealing them: each counts its scores over a public grid of 10,000 cells in log-odds, and "
+      "the threshold is the lowest cell edge at which 0.1 % of the pooled rows lie above it. Table 8 "
+      "compares it with the deployed rule (C3's rows only) and with the highest of the three controllers' "
+      "own thresholds, which needs no masking but reveals each threshold. On the deployed model the "
+      "federated threshold lowered the false alarms on T1B from 0.79 % to 0.69 % at 0.44 points of recall, "
+      "and the highest local threshold to 0.56 % at 0.99 points. No rule reached the 0.1 % target, since "
+      "none of the calibration captures is T1B. This is one comparison and not a test. The masks protect "
+      "against honest-but-curious controllers and aggregator; the total is still revealed, two colluding "
+      "controllers can recover the third's sums, and training stops if a controller drops out."),
+    table(th, [36 * mm, 34 * mm, 16 * mm] + [(W - 86 * mm) / 6] * 6,
+          "Table 8. Alarm threshold of the federated detector on the T1B test recordings (%).",
+          "FA: false alarms on benign-only recordings. Each rule targets 0.1 %. UHt: a capture no controller "
+          "trained on.",
+          rules=R8),
+
+    P("6.10. Summary of findings", "h2"),
     P("The experiments support seven findings. (i) FEVER protects benign traffic better than the six published "
       "defenses: it harmed 0.011 % of benign flows against 1.0 % to 5.2 %, and kept 84.2 % of new connections "
       "working against 21.0 % to 45.6 %; both results hold against every baseline. (ii) FEVER held the "
@@ -333,19 +370,22 @@ story = [
       "under Mimic, recall rose from 0.2 % to 60.9 %, the attackers were blocked 64 s earlier and the "
       "occupancy fell from 15.7 % to 4.9 %, without any rows or labels leaving a controller. Lossless "
       "federated XGBoost matches training on pooled data, which FedAvg, FedProx and federated bagging do "
-      "not. (v) Every part of FEVER is needed on at least one attack, and blocking at the ingress port gives "
+      "not, and with pairwise masking the controllers' histograms stay hidden from one another at 2 % more "
+      "training time. (v) Every part of FEVER is needed on at least one attack, and blocking at the ingress port gives "
       "the largest single effect. (vi) FEVER blocked no benign host under flash crowds, and with "
       "four or eight colluding attackers it still blocked the attackers and kept a lower occupancy than "
       "FTMaster and DMS-BTT, though more slowly at eight. (vii) Two attacks remain open: no method defends "
       "against Slow, and two EVX attackers evade FEVER's volume rule. FEVER is also the lightest of the eight methods in decision time and CPU, "
       "at the price of the largest memory use."),
-    P("6.10. Limitations", "h2"),
+    P("6.11. Limitations", "h2"),
     P("The testbed is small: one machine, three switches, at most eight attackers and runs of "
       "300 s; at eight attackers the controller itself became the bottleneck. The flash crowds did not fill "
       "the core table, because the traffic generator could not send them faster. The baselines are "
       "reimplementations, and FTODefender's blocking rule and DMS-BTT's thresholds follow our reading of "
       "their papers. FEVER's false alarms on T1B (0.79 %) exceed the 0.1 % its threshold was set for, "
-      "because the threshold was calibrated on another capture. Slow and EVX remain open: no method defends "
+      "because the threshold was calibrated on another capture; setting it on the three controllers' benign "
+      "scores together lowered them only to 0.69 %. The secure aggregation assumes honest-but-curious "
+      "parties and does not recover from a controller that drops out. Slow and EVX remain open: no method defends "
       "against Slow, and EVX shows that a volume limit known to two attackers can be evaded."),
 ]
 
