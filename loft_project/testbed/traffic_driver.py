@@ -28,7 +28,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from loftbench.config import attack_variant  # noqa: E402
 from loftbench.data import profile_of  # noqa: E402
 from loftbench.ports import assign_ports  # noqa: E402
-from loftbench.traffic import build_traffic  # noqa: E402
+from loftbench.traffic import KIND_CODE, build_traffic  # noqa: E402
+
+CROWD_HOST = 2   # F<k>H: benign host 2 (d1h3, on s13) sends every crowd flow
 
 
 def int2ip(x):
@@ -86,15 +88,18 @@ def main():
         # which scales the trace's packets and new flows per second alike.
         f = "new_flow_rate" if hasattr(prof, "new_flow_rate") else "rate_pps"
         prof = dataclasses.replace(prof, **{f: a.benign_scale * getattr(prof, f)})
+    one_host = a.variant.startswith("F") and a.variant.endswith("H")
     if a.variant.startswith("F"):
         # F<k>: benign flash crowds without attack, as in loftbench.sweeps (E8): three 12 s
         # crowds per 300 s at k times the domain's new-flow rate, from many external sources.
         # Trace domains take k times the replay's own new-flow rate (loftbench.trace.flash_crowds).
+        # F<k>H (docs/flash2_prereg.md): the same crowds, all sent by benign host 2.
+        k = a.variant[1:].rstrip("H")
         if hasattr(prof, "new_flow_rate"):
-            prof = dataclasses.replace(prof, flash_events=3, flash_rate=int(a.variant[1:]) * prof.new_flow_rate,
+            prof = dataclasses.replace(prof, flash_events=3, flash_rate=int(k) * prof.new_flow_rate,
                                        flash_len=12.0)
         else:
-            prof = dataclasses.replace(prof, flash_mult=float(a.variant[1:]))
+            prof = dataclasses.replace(prof, flash_mult=float(k))
     if a.mode == "benign":
         # Benign flows do not depend on the attack, so any variant gives the same schedule.
         tr = build_traffic(prof, didx, None, a.seed, a.duration, a.start)
@@ -109,6 +114,8 @@ def main():
         tr = build_traffic(prof, didx, v, a.seed, a.duration, a.start)
         port = 4 + a.attacker
     tr = assign_ports(tr, "dedicated")
+    if one_host:
+        tr.flow_port[tr.flow_kind == KIND_CODE["flash"]] = CROWD_HOST
     keep = tr.flow_port[tr.pkt_fid] == port
     t, fid, size, src = tr.pkt_t[keep], tr.pkt_fid[keep].astype(np.int64), tr.pkt_size[keep], tr.flow_src
     order = np.argsort(t, kind="stable")
