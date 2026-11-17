@@ -159,7 +159,7 @@ dt[0] = ["Method", "Training", "Threshold", "Test attacks", "Acc.", "Prec.", "Re
 
 # Short tables: the columns the text uses.
 fc_s = [["Training", "Data sent (MB)", "Time (s)", "F1 (%)", "Recall, Mimic (%)"]] + \
-       [[r[0], r[3], r[4], r[5], r[7]] for r in fc[1:]]
+       [[r[0], r[3], r[4], r[5], r[7]] for r in fc[1:] if "secure" not in r[0]]
 t6_s = [[r[0], r[1], r[3], r[4]] for r in t6]
 t6_s[0] = ["Method", "Harm (%)", "New connections (%)", "Benign hosts blocked"]
 t7_s = [["Method", "Attackers", "G2 occupancy (%)", "EVX occupancy (%)", "Attackers blocked, G2", "Attackers blocked, EVX"]]
@@ -259,20 +259,36 @@ story = [
     table(t7_s, [27 * mm, 18 * mm] + [(W - 45 * mm) / 4] * 4,
           "Table 5. G2 and EVX with more attackers on T1B (mean over seeds).", rules=R7),
 
-    P("6.8. Secure aggregation", "h2"),
-    P("With pairwise masks, no controller sees another's histogram sums, only their total. The masked "
-      "training gave exactly the same model as unmasked training, and added 2.1 % to the training time. "
-      "Using the same masked sum to set the alarm threshold from all three controllers lowered FEVER's "
-      "false alarms on T1B from 0.79 % to 0.69 %."),
-
-    P("6.9. Summary", "h2"),
+    P("6.8. Summary of findings", "h2"),
     items([
-        "FEVER harms fewer benign flows and keeps more new connections working than six published defenses.",
-        "It holds the attackers to the smallest share of the table against five of the six.",
-        "Federated training lets a controller detect attacks it never saw, without sharing its data.",
-        "Ingress blocking gives the largest single effect.",
-        "FEVER blocked no benign host under flash crowds and still blocked attackers with four or eight of them.",
-        "Slow and two EVX attackers remain undefended.",
+        "<b>Benign traffic is protected best under FEVER.</b> FEVER harmed 0.011 % of benign flows, against "
+        "1.0 % to 5.2 % for the six published defenses, and kept 84 % of new connections working, against "
+        "21 % to 46 %. Both results are supported against every baseline.",
+        "<b>The attackers hold the smallest share of the table under FEVER against five of six "
+        "baselines.</b> They held 6.8 % of the table under FEVER and 24 % to 36 % under the baselines. "
+        "FTODefender held G2, Pulse and EVX lower (about 0.2 %), but harmed 3.4 % of benign flows.",
+        "<b>The gain is largest on attacks that imitate benign traffic.</b> Under Mimic and Aware FEVER held "
+        "the attackers to 4.9 % and 14.1 %, against 33 % to 49 %. It stayed ahead of baselines trained on "
+        "the pooled data of all three controllers (9.5 % against 21 % to 39 %) and on the UHt capture no "
+        "controller trained on (7.7 % against 37 % to 41 %).",
+        "<b>Federated training detects attacks that only another controller has seen.</b> Recall on such "
+        "attacks rose from 75.8 % to 90.5 %, and on Mimic from 0.2 % to 61 %, without any rows or labels "
+        "leaving a controller. On the testbed, Mimic attackers were blocked 64 s earlier and their share of "
+        "the table fell from 15.7 % to 4.9 %. FedAvg, FedProx and federated bagging gave no such gain; "
+        "lossless federated XGBoost matched pooled training for 2.6 GB of exchanged sums and 38 s.",
+        "<b>Ingress blocking is the most important part of FEVER.</b> Without it the attackers kept 23 % to "
+        "35 % of the table. The volume rule is needed against Aware, where the attackers' share rose from 14 % "
+        "to 43 % without it, and "
+        "the detector makes blocks come 35 s to 55 s earlier.",
+        "<b>FEVER does not block benign hosts and copes with more attackers.</b> Under benign flash crowds "
+        "no method blocked a benign host and FEVER harmed no benign flow. With four and eight attackers, "
+        "FEVER blocked every G2 attacker, held the table below FTMaster and DMS-BTT in all paired runs, and "
+        "caught 32 of 36 EVX attackers.",
+        "<b>FEVER is the lightest defense on the controller.</b> It took 20.8 ms per decision, close to no "
+        "defense (19.4 ms) and faster than every baseline, and used the least CPU (62 %), at the price of "
+        "the largest memory use (253 MB).",
+        "<b>Two attacks remain open.</b> No method stopped Slow, which left about 20 % of the table to the "
+        "attackers under every method, and two EVX attackers stayed below FEVER's volume limit (17.7 %).",
     ]),
 ]
 
