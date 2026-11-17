@@ -82,3 +82,13 @@ the attacks most likely to fail C2.
   mode); testbed/loft_ryu_app.py: method fever-fl-ll-guard; testbed/root/loft-testbed: accept it.
   Needs install.sh (run by the user) before any run.
 - testbed/campaign_crowdguard.sh, testbed/analyze_crowdguard.py: results/testbed_crowdguard.
+
+## Outcome (18 November 2026, recorded after the gate ran)
+
+G0 failed (results/crowd_signal/report.md), so the study stopped as fixed in section 3: no FEVER
+variant was built and no testbed run was made. The crowd host's largest refresh share was 0.17 (rule
+<= 0.3). The attackers' smallest shares were 0.50 to 0.67 for G2, Spoof, Mimic, Slow and EVX, all
+within the first 3 to 14 s of the checked span (70 to 83 s, while the attackers were still opening
+flows; 0.88 or more from 120 s on), 0.75 for Aware (pass), and 0.00 for Pulse, whose every on period
+starts with new flows (below 0.5 for 13 to 14 s per attacker). Any further attempt would be a new,
+separately preregistered study; the thresholds above must not be changed after this result.
