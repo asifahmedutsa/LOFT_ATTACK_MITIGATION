@@ -1,0 +1,229 @@
+=== [1/1] fl2sel_T1B_F2_none_s4187 20:50:50
+ decision_ms mean 10, max 40  probe_post_success_pct 92.07  probe_post_connect_ms_median 49.2  benign_harmed_pct 0.0
+matrix done 20:56:06
+selection F2: s11 largest poll 1885 entries (rule: >= 1800), controller messages dropped 0.0 % (rule: <= 10)
+## flash crowds round 2 at F2 and F2H
+## pass 1 start 2026-11-17 20:56:06
+=== [1/8] fc2_T1B_F2_none_s4187 20:56:07
+ decision_ms mean 9, max 28  probe_post_success_pct 92.1  probe_post_connect_ms_median 45.5  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2_ftmaster_s4187 21:01:22
+ decision_ms mean 17, max 110  probe_post_success_pct 88.82  probe_post_connect_ms_median 50.5  benign_harmed_pct 0.01
+=== [3/8] fc2_T1B_F2_ftop_s4187 21:06:38
+ decision_ms mean 13, max 235  probe_post_success_pct 93.06  probe_post_connect_ms_median 50.2  benign_harmed_pct 1.08
+=== [4/8] fc2_T1B_F2_ftodefender_s4187 21:11:54
+ decision_ms mean 28, max 87  probe_post_success_pct 85.93  probe_post_connect_ms_median 116.8  benign_harmed_pct 0.21
+=== [5/8] fc2_T1B_F2_flora_s4187 21:17:10
+ decision_ms mean 20, max 192  probe_post_success_pct 82.85  probe_post_connect_ms_median 66.3  benign_harmed_pct 0.15
+=== [6/8] fc2_T1B_F2_dms-btt-h1_s4187 21:22:26
+ decision_ms mean 17, max 463  probe_post_success_pct 90.75  probe_post_connect_ms_median 51.4  benign_harmed_pct 1.32
+=== [7/8] fc2_T1B_F2_rdefender_s4187 21:27:42
+ decision_ms mean 10, max 48  probe_post_success_pct 92.29  probe_post_connect_ms_median 120.1  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2_fever-fl-ll_s4187 21:32:58
+ decision_ms mean 13, max 188  probe_post_success_pct 91.14  probe_post_connect_ms_median 47.3  benign_harmed_pct 0.03
+matrix done 21:38:14
+=== [1/8] fc2_T1B_F2H_none_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4187.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4187.log
+=== [3/8] fc2_T1B_F2H_ftop_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4187.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4187.log
+=== [5/8] fc2_T1B_F2H_flora_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4187.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4187.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4187.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4187 21:38:14
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4187.log
+matrix done 21:38:14
+=== [1/8] fc2_T1B_F2_none_s4188 21:38:14
+ decision_ms mean 10, max 40  probe_post_success_pct 93.26  probe_post_connect_ms_median 155.8  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2_ftmaster_s4188 21:43:30
+ decision_ms mean 16, max 120  probe_post_success_pct 91.33  probe_post_connect_ms_median 49.7  benign_harmed_pct 0.0
+=== [3/8] fc2_T1B_F2_ftop_s4188 21:48:46
+ decision_ms mean 12, max 113  probe_post_success_pct 78.81  probe_post_connect_ms_median 126.2  benign_harmed_pct 0.18
+=== [4/8] fc2_T1B_F2_ftodefender_s4188 21:54:02
+ decision_ms mean 32, max 78  probe_post_success_pct 85.93  probe_post_connect_ms_median 44.6  benign_harmed_pct 0.2
+=== [5/8] fc2_T1B_F2_flora_s4188 21:59:19
+ decision_ms mean 21, max 140  probe_post_success_pct 83.04  probe_post_connect_ms_median 56.1  benign_harmed_pct 0.13
+=== [6/8] fc2_T1B_F2_dms-btt-h1_s4188 22:04:37
+ decision_ms mean 17, max 119  probe_post_success_pct 82.27  probe_post_connect_ms_median 121.9  benign_harmed_pct 0.06
+=== [7/8] fc2_T1B_F2_rdefender_s4188 22:09:56
+ decision_ms mean 11, max 49  probe_post_success_pct 76.49  probe_post_connect_ms_median 61.1  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2_fever-fl-ll_s4188 22:15:12
+ decision_ms mean 14, max 182  probe_post_success_pct 57.03  probe_post_connect_ms_median 61.3  benign_harmed_pct 0.0
+matrix done 22:20:29
+=== [1/8] fc2_T1B_F2H_none_s4188 22:20:29
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4188.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4188 22:20:29
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4188.log
+=== [3/8] fc2_T1B_F2H_ftop_s4188 22:20:29
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4188.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4188 22:20:29
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4188.log
+=== [5/8] fc2_T1B_F2H_flora_s4188 22:20:29
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4188.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4188 22:20:30
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4188.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4188 22:20:30
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4188.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4188 22:20:30
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4188.log
+matrix done 22:20:30
+=== [1/8] fc2_T1B_F2_none_s4189 22:20:30
+ decision_ms mean 11, max 32  probe_post_success_pct 81.12  probe_post_connect_ms_median 84.5  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2_ftmaster_s4189 22:25:46
+ decision_ms mean 17, max 106  probe_post_success_pct 89.21  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.03
+=== [3/8] fc2_T1B_F2_ftop_s4189 22:31:02
+ decision_ms mean 11, max 243  probe_post_success_pct 94.03  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.88
+=== [4/8] fc2_T1B_F2_ftodefender_s4189 22:36:17
+ decision_ms mean 36, max 224  probe_post_success_pct 73.22  probe_post_connect_ms_median 146.2  benign_harmed_pct 0.24
+=== [5/8] fc2_T1B_F2_flora_s4189 22:41:35
+ decision_ms mean 21, max 102  probe_post_success_pct 85.74  probe_post_connect_ms_median 48.7  benign_harmed_pct 0.14
+=== [6/8] fc2_T1B_F2_dms-btt-h1_s4189 22:46:51
+ decision_ms mean 18, max 550  probe_post_success_pct 89.4  probe_post_connect_ms_median 65.1  benign_harmed_pct 0.4
+=== [7/8] fc2_T1B_F2_rdefender_s4189 22:52:07
+ decision_ms mean 9, max 28  probe_post_success_pct 92.87  probe_post_connect_ms_median 45.3  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2_fever-fl-ll_s4189 22:57:23
+ decision_ms mean 13, max 170  probe_post_success_pct 91.52  probe_post_connect_ms_median 53.5  benign_harmed_pct 0.03
+matrix done 23:02:39
+=== [1/8] fc2_T1B_F2H_none_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4189.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4189.log
+=== [3/8] fc2_T1B_F2H_ftop_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4189.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4189.log
+=== [5/8] fc2_T1B_F2H_flora_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4189.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4189.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4189.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4189 23:02:39
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4189.log
+matrix done 23:02:39
+## pass 2 start 2026-11-17 23:02:39
+matrix done 23:02:39
+=== [1/8] fc2_T1B_F2H_none_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4187.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4187.log
+=== [3/8] fc2_T1B_F2H_ftop_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4187.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4187.log
+=== [5/8] fc2_T1B_F2H_flora_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4187.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4187.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4187.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4187 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4187.log
+matrix done 23:02:40
+matrix done 23:02:40
+=== [1/8] fc2_T1B_F2H_none_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4188.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4188.log
+=== [3/8] fc2_T1B_F2H_ftop_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4188.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4188.log
+=== [5/8] fc2_T1B_F2H_flora_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4188.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4188.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4188.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4188 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4188.log
+matrix done 23:02:40
+matrix done 23:02:40
+=== [1/8] fc2_T1B_F2H_none_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_none_s4189.log
+=== [2/8] fc2_T1B_F2H_ftmaster_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftmaster_s4189.log
+=== [3/8] fc2_T1B_F2H_ftop_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftop_s4189.log
+=== [4/8] fc2_T1B_F2H_ftodefender_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_ftodefender_s4189.log
+=== [5/8] fc2_T1B_F2H_flora_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_flora_s4189.log
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_dms-btt-h1_s4189.log
+=== [7/8] fc2_T1B_F2H_rdefender_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_rdefender_s4189.log
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4189 23:02:40
+    FAILED (exit 2); see /home/utsa/loft-runs/fc2_T1B_F2H_fever-fl-ll_s4189.log
+matrix done 23:02:40
+## flash crowds round 2 done 2026-11-17 23:02:40
+## restart for the one-host runs after the wrapper fix (89ba3b6) 2026-11-17 23:09:22
+## flash crowds round 2 at F2 and F2H
+## pass 1 start 2026-11-17 23:09:22
+matrix done 23:09:22
+=== [1/8] fc2_T1B_F2H_none_s4187 23:09:22
+ decision_ms mean 10, max 45  probe_post_success_pct 90.12  probe_post_connect_ms_median 49.4  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2H_ftmaster_s4187 23:14:41
+ decision_ms mean 19, max 123  probe_post_success_pct 96.72  probe_post_connect_ms_median 141.0  benign_harmed_pct 0.07
+=== [3/8] fc2_T1B_F2H_ftop_s4187 23:19:57
+ decision_ms mean 13, max 281  probe_post_success_pct 97.11  probe_post_connect_ms_median 148.0  benign_harmed_pct 1.12
+=== [4/8] fc2_T1B_F2H_ftodefender_s4187 23:25:13
+ decision_ms mean 29, max 85  probe_post_success_pct 95.95  probe_post_connect_ms_median 56.5  benign_harmed_pct 0.21
+=== [5/8] fc2_T1B_F2H_flora_s4187 23:30:29
+ decision_ms mean 19, max 74  probe_post_success_pct 96.34  probe_post_connect_ms_median 116.1  benign_harmed_pct 0.12
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4187 23:35:45
+ decision_ms mean 16, max 600  probe_post_success_pct 96.53  probe_post_connect_ms_median 50.5  benign_harmed_pct 1.22
+=== [7/8] fc2_T1B_F2H_rdefender_s4187 23:41:01
+ decision_ms mean 10, max 38  probe_post_success_pct 89.79  probe_post_connect_ms_median 79.7  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4187 23:46:19
+ decision_ms mean 15, max 774  probe_post_success_pct 97.49  probe_post_connect_ms_median 48.0  benign_harmed_pct 3.27
+matrix done 23:51:36
+matrix done 23:51:36
+=== [1/8] fc2_T1B_F2H_none_s4188 23:51:36
+ decision_ms mean 9, max 28  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.2  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2H_ftmaster_s4188 23:56:51
+ decision_ms mean 16, max 120  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.9  benign_harmed_pct 0.0
+=== [3/8] fc2_T1B_F2H_ftop_s4188 00:02:07
+ decision_ms mean 11, max 116  probe_post_success_pct 100.0  probe_post_connect_ms_median 68.8  benign_harmed_pct 0.67
+=== [4/8] fc2_T1B_F2H_ftodefender_s4188 00:07:23
+ decision_ms mean 31, max 105  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.7  benign_harmed_pct 0.21
+=== [5/8] fc2_T1B_F2H_flora_s4188 00:12:39
+ decision_ms mean 19, max 80  probe_post_success_pct 100.0  probe_post_connect_ms_median 136.8  benign_harmed_pct 0.12
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4188 00:17:55
+ decision_ms mean 17, max 451  probe_post_success_pct 100.0  probe_post_connect_ms_median 180.8  benign_harmed_pct 0.86
+=== [7/8] fc2_T1B_F2H_rdefender_s4188 00:23:11
+ decision_ms mean 9, max 29  probe_post_success_pct 100.0  probe_post_connect_ms_median 105.5  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4188 00:28:27
+ decision_ms mean 13, max 184  probe_post_success_pct 100.0  probe_post_connect_ms_median 200.5  benign_harmed_pct 0.0
+matrix done 00:33:43
+matrix done 00:33:43
+=== [1/8] fc2_T1B_F2H_none_s4189 00:33:43
+ decision_ms mean 10, max 31  probe_post_success_pct 96.53  probe_post_connect_ms_median 159.3  benign_harmed_pct 0.0
+=== [2/8] fc2_T1B_F2H_ftmaster_s4189 00:38:59
+ decision_ms mean 17, max 119  probe_post_success_pct 95.38  probe_post_connect_ms_median 51.1  benign_harmed_pct 0.06
+=== [3/8] fc2_T1B_F2H_ftop_s4189 00:44:16
+ decision_ms mean 12, max 266  probe_post_success_pct 96.53  probe_post_connect_ms_median 48.6  benign_harmed_pct 1.11
+=== [4/8] fc2_T1B_F2H_ftodefender_s4189 00:49:32
+ decision_ms mean 28, max 81  probe_post_success_pct 95.76  probe_post_connect_ms_median 96.1  benign_harmed_pct 0.22
+=== [5/8] fc2_T1B_F2H_flora_s4189 00:54:48
+ decision_ms mean 18, max 100  probe_post_success_pct 95.57  probe_post_connect_ms_median 46.9  benign_harmed_pct 0.16
+=== [6/8] fc2_T1B_F2H_dms-btt-h1_s4189 01:00:03
+ decision_ms mean 16, max 423  probe_post_success_pct 95.57  probe_post_connect_ms_median 50.3  benign_harmed_pct 0.46
+=== [7/8] fc2_T1B_F2H_rdefender_s4189 01:05:19
+ decision_ms mean 9, max 26  probe_post_success_pct 96.72  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.0
+=== [8/8] fc2_T1B_F2H_fever-fl-ll_s4189 01:10:35
+ decision_ms mean 12, max 601  probe_post_success_pct 100.0  probe_post_connect_ms_median 49.7  benign_harmed_pct 11.4
+matrix done 01:15:51
+## pass 2 start 2026-11-18 01:15:51
+matrix done 01:15:51
+matrix done 01:15:51
+matrix done 01:15:51
+matrix done 01:15:51
+matrix done 01:15:51
+matrix done 01:15:51
+## flash crowds round 2 done 2026-11-18 01:15:51

@@ -1,0 +1,1 @@
+selection F2: s11 largest poll 1885 entries (rule: >= 1800), controller messages dropped 0.0 % (rule: <= 10)
