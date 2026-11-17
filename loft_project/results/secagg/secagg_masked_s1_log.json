@@ -1,0 +1,53 @@
+{
+ "masked": true,
+ "seed": 1,
+ "trees": 300,
+ "seconds": 790.5,
+ "loopback_bytes": 6331068805,
+ "idle_bytes_per_s": 51,
+ "payload_bytes": 6319521888,
+ "model_sha256": "d2051e7d151f253ad085a9c20feb4efa98a9b521cd9eafefd5b94f249168633c",
+ "parties": [
+  {
+   "client": "C1",
+   "rank": 0,
+   "rows": 363447,
+   "seconds": 790.0,
+   "mask_seconds": 6.64,
+   "messages": 1802,
+   "payload_sent": 1053253648,
+   "payload_received": 1053253648
+  },
+  {
+   "client": "C2",
+   "rank": 1,
+   "rows": 390384,
+   "seconds": 790.0,
+   "mask_seconds": 6.1,
+   "messages": 1802,
+   "payload_sent": 1053253648,
+   "payload_received": 1053253648
+  },
+  {
+   "client": "C3",
+   "rank": 2,
+   "rows": 461811,
+   "seconds": 790.0,
+   "mask_seconds": 4.74,
+   "messages": 1802,
+   "payload_sent": 1053253648,
+   "payload_received": 1053253648
+  },
+  {
+   "client": "aggregator",
+   "messages": 1802,
+   "payload_sent": 3159760944
+  }
+ ],
+ "exit_codes": [
+  0,
+  0,
+  0,
+  0
+ ]
+}
