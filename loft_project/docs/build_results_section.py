@@ -349,9 +349,7 @@ story = [
       "own thresholds, which needs no masking but reveals each threshold. On the deployed model the "
       "federated threshold lowered the false alarms on T1B from 0.79 % to 0.69 % at 0.44 points of recall, "
       "and the highest local threshold to 0.56 % at 0.99 points. No rule reached the 0.1 % target, since "
-      "none of the calibration captures is T1B. This is one comparison and not a test. The masks protect "
-      "against honest-but-curious controllers and aggregator; the total is still revealed, two colluding "
-      "controllers can recover the third's sums, and training stops if a controller drops out."),
+      "none of the calibration captures is T1B. This is one comparison and not a test."),
     table(th, [36 * mm, 34 * mm, 16 * mm] + [(W - 86 * mm) / 6] * 6,
           "Table 8. Alarm threshold of the federated detector on the T1B test recordings (%).",
           "FA: false alarms on benign-only recordings. Each rule targets 0.1 %. UHt: a capture no controller "
@@ -377,16 +375,6 @@ story = [
       "FTMaster and DMS-BTT, though more slowly at eight. (vii) Two attacks remain open: no method defends "
       "against Slow, and two EVX attackers evade FEVER's volume rule. FEVER is also the lightest of the eight methods in decision time and CPU, "
       "at the price of the largest memory use."),
-    P("6.11. Limitations", "h2"),
-    P("The testbed is small: one machine, three switches, at most eight attackers and runs of "
-      "300 s; at eight attackers the controller itself became the bottleneck. The flash crowds did not fill "
-      "the core table, because the traffic generator could not send them faster. The baselines are "
-      "reimplementations, and FTODefender's blocking rule and DMS-BTT's thresholds follow our reading of "
-      "their papers. FEVER's false alarms on T1B (0.79 %) exceed the 0.1 % its threshold was set for, "
-      "because the threshold was calibrated on another capture; setting it on the three controllers' benign "
-      "scores together lowered them only to 0.69 %. The secure aggregation assumes honest-but-curious "
-      "parties and does not recover from a controller that drops out. Slow and EVX remain open: no method defends "
-      "against Slow, and EVX shows that a volume limit known to two attackers can be evaded."),
 ]
 
 SimpleDocTemplate(OUT, pagesize=A4, leftMargin=22 * mm, rightMargin=22 * mm, topMargin=20 * mm,
