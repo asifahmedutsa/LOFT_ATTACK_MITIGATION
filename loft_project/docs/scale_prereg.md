@@ -1,6 +1,6 @@
-# More colluding attackers on the testbed: preregistration (draft)
+# More colluding attackers on the testbed: preregistration
 
-Draft, 17 November 2026; fixed when the user approves it and it is committed, before any run. A
+Fixed 17 November 2026, approved by the user and committed before any run. A
 follow-up study after the final campaign (docs/final_campaign_prereg.md, section 5, held-out cells:
 "more colluding attackers are the scalability study's subject"). It changes none of the campaign's
 results.
