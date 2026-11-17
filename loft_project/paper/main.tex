@@ -267,13 +267,16 @@ FEVER's volume rule let the EVX attackers keep 17.7\,\%. H5 is therefore not sup
 
 \input{tables/table_main}
 \input{tables/tests}
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figs/fig_timeline.pdf}
 \caption{Attack occupancy over time on T1B (median over five seeds). The dotted line marks the start of the attack.}
 \label{fig:timeline}
 \end{figure*}
+\input{tables/table_fedcost}
+\input{tables/table_ablation}
+\input{tables/table_detect}
+
 
 Fig.~\ref{fig:timeline} shows the occupancy over time under Mimic and Aware. The baselines keep
 evicting attack entries, but the attackers reinstall them, and the table reaches 54\,\% to 60\,\% under
@@ -297,7 +300,6 @@ gain nothing over local training on the attacks a controller did not see. Lossle
 matches XGBoost trained on the pooled rows, at the cost of 2.6\,GB of exchanged histograms and 38\,s of
 training for 300 trees.
 
-\input{tables/table_fedcost}
 
 \subsection{Ablation}
 
@@ -308,7 +310,6 @@ first block came 35\,s to 55\,s later under G2 and Mimic and the occupancy doubl
 training the occupancy under Mimic rose from 4.9\,\% to 15.7\,\%. Under Aware, FEVER without the
 detector did slightly better than the full system (10.4\,\% against 14.1\,\%).
 
-\input{tables/table_ablation}
 
 \subsection{Detection accuracy}
 
@@ -323,7 +324,6 @@ rule. FEVER's false alarms on T1B,
 0.79\,\%, exceed the 0.1\,\% its threshold was set for, because the threshold was calibrated on another
 capture. Even so, FEVER blocked no benign host in any run.
 
-\input{tables/table_detect}
 
 \subsection{Overhead}
 
