@@ -1,0 +1,137 @@
+## pass 1 start 2026-11-17 07:36:19
+=== [1/4] sc4_T1B_A2_fever-fl-ll_s4184 07:36:19
+ decision_ms mean 16, max 1206  probe_post_success_pct 95.59  probe_post_connect_ms_median 102.6  benign_harmed_pct 0.0
+=== [2/4] sc4_T1B_A2_ftmaster_s4184 07:41:39
+ decision_ms mean 38, max 1799  probe_post_success_pct 38.74  probe_post_connect_ms_median 48.5  benign_harmed_pct 0.01
+=== [3/4] sc4_T1B_A2_ftodefender_s4184 07:46:59
+ decision_ms mean 27, max 320  probe_post_success_pct 100.0  probe_post_connect_ms_median 48.6  benign_harmed_pct 0.21
+=== [4/4] sc4_T1B_A2_dms-btt-h1_s4184 07:52:18
+ decision_ms mean 93, max 1087  probe_post_success_pct 23.66  probe_post_connect_ms_median 209.8  benign_harmed_pct 0.02
+matrix done 07:58:55
+=== [1/4] sc4_T1B_EVX_fever-fl-ll_s4184 07:58:55
+ decision_ms mean 14, max 1134  probe_post_success_pct 99.62  probe_post_connect_ms_median 46.2  benign_harmed_pct 0.0
+=== [2/4] sc4_T1B_EVX_ftmaster_s4184 08:04:14
+ decision_ms mean 29, max 1588  probe_post_success_pct 64.63  probe_post_connect_ms_median 309.9  benign_harmed_pct 0.0
+=== [3/4] sc4_T1B_EVX_ftodefender_s4184 08:09:50
+ decision_ms mean 23, max 208  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.8  benign_harmed_pct 0.21
+=== [4/4] sc4_T1B_EVX_dms-btt-h1_s4184 08:15:09
+ decision_ms mean 73, max 1397  probe_post_success_pct 22.9  probe_post_connect_ms_median 62.7  benign_harmed_pct 0.02
+matrix done 08:20:30
+=== [1/5] sc8_T1B_A2_none_s4184 08:20:30
+ decision_ms mean 20, max 50  probe_post_success_pct 16.23  probe_post_connect_ms_median 247.6  benign_harmed_pct 17.7
+=== [2/5] sc8_T1B_A2_fever-fl-ll_s4184 08:25:57
+ decision_ms mean 117, max 1374  probe_post_success_pct 40.49  probe_post_connect_ms_median 45.3  benign_harmed_pct 1.47
+=== [3/5] sc8_T1B_A2_ftmaster_s4184 08:31:25
+ decision_ms mean 48, max 1518  probe_post_success_pct 13.99  probe_post_connect_ms_median 126.2  benign_harmed_pct 1.28
+=== [4/5] sc8_T1B_A2_ftodefender_s4184 08:39:17
+ decision_ms mean 29, max 380  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.8  benign_harmed_pct 0.28
+=== [5/5] sc8_T1B_A2_dms-btt-h1_s4184 08:44:44
+ decision_ms mean 91, max 1028  probe_post_success_pct 16.6  probe_post_connect_ms_median 304.3  benign_harmed_pct 1.48
+matrix done 08:50:13
+=== [1/5] sc8_T1B_EVX_none_s4184 08:50:13
+ decision_ms mean 21, max 67  probe_post_success_pct 16.79  probe_post_connect_ms_median 191.0  benign_harmed_pct 11.88
+=== [2/5] sc8_T1B_EVX_fever-fl-ll_s4184 08:55:39
+ decision_ms mean 239, max 1758  probe_post_success_pct 14.18  probe_post_connect_ms_median 157.1  benign_harmed_pct 1.69
+=== [3/5] sc8_T1B_EVX_ftmaster_s4184 09:01:07
+ decision_ms mean 60, max 1701  probe_post_success_pct 14.93  probe_post_connect_ms_median 218.1  benign_harmed_pct 1.36
+=== [4/5] sc8_T1B_EVX_ftodefender_s4184 09:07:21
+ decision_ms mean 27, max 529  probe_post_success_pct 100.0  probe_post_connect_ms_median 56.7  benign_harmed_pct 0.22
+=== [5/5] sc8_T1B_EVX_dms-btt-h1_s4184 09:12:47
+ decision_ms mean 119, max 1433  probe_post_success_pct 16.98  probe_post_connect_ms_median 234.1  benign_harmed_pct 0.89
+matrix done 09:18:16
+=== [1/4] sc4_T1B_A2_fever-fl-ll_s4185 09:18:16
+ decision_ms mean 13, max 1320  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.7  benign_harmed_pct 0.0
+=== [2/4] sc4_T1B_A2_ftmaster_s4185 09:23:35
+ decision_ms mean 20, max 1202  probe_post_success_pct 57.82  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.0
+=== [3/4] sc4_T1B_A2_ftodefender_s4185 09:29:35
+ decision_ms mean 26, max 322  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.4  benign_harmed_pct 0.27
+=== [4/4] sc4_T1B_A2_dms-btt-h1_s4185 09:34:54
+ decision_ms mean 81, max 1199  probe_post_success_pct 23.09  probe_post_connect_ms_median 138.2  benign_harmed_pct 1.23
+matrix done 09:40:16
+=== [1/4] sc4_T1B_EVX_fever-fl-ll_s4185 09:40:16
+ decision_ms mean 12, max 1214  probe_post_success_pct 99.81  probe_post_connect_ms_median 46.5  benign_harmed_pct 0.0
+=== [2/4] sc4_T1B_EVX_ftmaster_s4185 09:45:35
+ decision_ms mean 38, max 1496  probe_post_success_pct 41.41  probe_post_connect_ms_median 148.8  benign_harmed_pct 0.01
+=== [3/4] sc4_T1B_EVX_ftodefender_s4185 09:50:54
+ decision_ms mean 27, max 307  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.6  benign_harmed_pct 0.27
+=== [4/4] sc4_T1B_EVX_dms-btt-h1_s4185 09:56:13
+ decision_ms mean 40, max 1044  probe_post_success_pct 31.49  probe_post_connect_ms_median 306.9  benign_harmed_pct 0.0
+matrix done 10:01:33
+=== [1/5] sc8_T1B_A2_none_s4185 10:01:33
+ decision_ms mean 20, max 69  probe_post_success_pct 15.3  probe_post_connect_ms_median 69.6  benign_harmed_pct 15.66
+=== [2/5] sc8_T1B_A2_fever-fl-ll_s4185 10:07:00
+ decision_ms mean 54, max 1668  probe_post_success_pct 73.13  probe_post_connect_ms_median 47.1  benign_harmed_pct 0.0
+=== [3/5] sc8_T1B_A2_ftmaster_s4185 10:12:27
+ decision_ms mean 61, max 1608  probe_post_success_pct 25.19  probe_post_connect_ms_median 231.3  benign_harmed_pct 0.07
+=== [4/5] sc8_T1B_A2_ftodefender_s4185 10:17:55
+ decision_ms mean 28, max 221  probe_post_success_pct 100.0  probe_post_connect_ms_median 48.0  benign_harmed_pct 0.25
+=== [5/5] sc8_T1B_A2_dms-btt-h1_s4185 10:23:22
+ decision_ms mean 79, max 1377  probe_post_success_pct 15.86  probe_post_connect_ms_median 87.0  benign_harmed_pct 0.52
+matrix done 10:28:50
+=== [1/5] sc8_T1B_EVX_none_s4185 10:28:50
+ decision_ms mean 21, max 53  probe_post_success_pct 15.49  probe_post_connect_ms_median 154.6  benign_harmed_pct 11.91
+=== [2/5] sc8_T1B_EVX_fever-fl-ll_s4185 10:34:21
+ decision_ms mean 85, max 1817  probe_post_success_pct 13.99  probe_post_connect_ms_median 104.7  benign_harmed_pct 1.34
+=== [3/5] sc8_T1B_EVX_ftmaster_s4185 10:40:32
+ decision_ms mean 76, max 1827  probe_post_success_pct 33.77  probe_post_connect_ms_median 70.5  benign_harmed_pct 0.01
+=== [4/5] sc8_T1B_EVX_ftodefender_s4185 10:45:59
+ decision_ms mean 28, max 367  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.1  benign_harmed_pct 0.29
+=== [5/5] sc8_T1B_EVX_dms-btt-h1_s4185 10:51:26
+ decision_ms mean 69, max 1046  probe_post_success_pct 16.6  probe_post_connect_ms_median 47.7  benign_harmed_pct 0.13
+matrix done 10:56:55
+=== [1/4] sc4_T1B_A2_fever-fl-ll_s4186 10:56:56
+ decision_ms mean 11, max 952  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 0.01
+=== [2/4] sc4_T1B_A2_ftmaster_s4186 11:02:14
+ decision_ms mean 30, max 1365  probe_post_success_pct 56.68  probe_post_connect_ms_median 47.8  benign_harmed_pct 0.01
+=== [3/4] sc4_T1B_A2_ftodefender_s4186 11:07:33
+ decision_ms mean 28, max 345  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.6  benign_harmed_pct 0.23
+=== [4/4] sc4_T1B_A2_dms-btt-h1_s4186 11:12:52
+ decision_ms mean 81, max 1340  probe_post_success_pct 25.76  probe_post_connect_ms_median 151.7  benign_harmed_pct 0.01
+matrix done 11:18:14
+=== [1/4] sc4_T1B_EVX_fever-fl-ll_s4186 11:18:14
+ decision_ms mean 12, max 1302  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.0
+=== [2/4] sc4_T1B_EVX_ftmaster_s4186 11:23:33
+ decision_ms mean 32, max 1318  probe_post_success_pct 64.63  probe_post_connect_ms_median 401.6  benign_harmed_pct 0.01
+=== [3/4] sc4_T1B_EVX_ftodefender_s4186 11:28:51
+ decision_ms mean 27, max 400  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.5  benign_harmed_pct 0.26
+=== [4/4] sc4_T1B_EVX_dms-btt-h1_s4186 11:34:10
+ decision_ms mean 35, max 1168  probe_post_success_pct 24.62  probe_post_connect_ms_median 283.9  benign_harmed_pct 0.01
+matrix done 11:40:30
+=== [1/5] sc8_T1B_A2_none_s4186 11:40:30
+ decision_ms mean 20, max 52  probe_post_success_pct 14.55  probe_post_connect_ms_median 180.0  benign_harmed_pct 15.67
+=== [2/5] sc8_T1B_A2_fever-fl-ll_s4186 11:45:57
+ decision_ms mean 99, max 1570  probe_post_success_pct 43.28  probe_post_connect_ms_median 141.5  benign_harmed_pct 1.31
+=== [3/5] sc8_T1B_A2_ftmaster_s4186 11:51:24
+ decision_ms mean 91, max 1705  probe_post_success_pct 14.55  probe_post_connect_ms_median 45.3  benign_harmed_pct 0.16
+=== [4/5] sc8_T1B_A2_ftodefender_s4186 11:56:53
+ decision_ms mean 29, max 410  probe_post_success_pct 96.83  probe_post_connect_ms_median 49.3  benign_harmed_pct 0.27
+=== [5/5] sc8_T1B_A2_dms-btt-h1_s4186 12:02:20
+    INVALID (controller log ends at 514 s, 520 s wall); moved to _failed
+matrix done 12:11:00
+=== [1/5] sc8_T1B_EVX_none_s4186 12:11:00
+ decision_ms mean 20, max 51  probe_post_success_pct 14.74  probe_post_connect_ms_median 202.9  benign_harmed_pct 12.51
+=== [2/5] sc8_T1B_EVX_fever-fl-ll_s4186 12:16:26
+ decision_ms mean 101, max 1562  probe_post_success_pct 13.06  probe_post_connect_ms_median 217.2  benign_harmed_pct 2.84
+=== [3/5] sc8_T1B_EVX_ftmaster_s4186 12:22:57
+ decision_ms mean 63, max 1569  probe_post_success_pct 13.81  probe_post_connect_ms_median 216.0  benign_harmed_pct 0.47
+=== [4/5] sc8_T1B_EVX_ftodefender_s4186 12:28:25
+ decision_ms mean 30, max 551  probe_post_success_pct 96.28  probe_post_connect_ms_median 51.1  benign_harmed_pct 0.26
+=== [5/5] sc8_T1B_EVX_dms-btt-h1_s4186 12:33:52
+ decision_ms mean 82, max 1086  probe_post_success_pct 14.37  probe_post_connect_ms_median 209.3  benign_harmed_pct 0.03
+matrix done 12:39:20
+## pass 2 start 2026-11-17 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+matrix done 12:39:20
+=== [5/5] sc8_T1B_A2_dms-btt-h1_s4186 12:39:20
+ decision_ms mean 149, max 1320  probe_post_success_pct 14.53  probe_post_connect_ms_median 234.0  benign_harmed_pct 0.18
+matrix done 12:44:49
+matrix done 12:44:49
+## scalability done 2026-11-17 12:44:49

@@ -112,7 +112,7 @@ camp = [x for x in csv.DictReader(open(CAMP)) if x["length"] == "300 s" and x["t
 
 def ms(v, m, k, n, d=2):
     if n == 2:
-        x = [float(r[k]) for r in camp if r["traffic"] == v and r["method"] == m and num(r.get(k))]
+        x = [float(r[k]) for r in camp if r["traffic"] == v and r["method"] == m and r.get(k) not in (None, "")]
     else:
         x = [float(r[k]) for r in rows if r["n"] == n and r["traffic"] == v and r["method"] == m and num(r[k])]
     if not x:
@@ -121,12 +121,16 @@ def ms(v, m, k, n, d=2):
 
 
 def blocked(v, m, n):
+    if n == 2:
+        x = [r for r in camp if r["traffic"] == v and r["method"] == m]
+        return f"{sum(int(float(r['hosts_blocked_attack'])) for r in x)} of {2 * len(x)}" if x else "–"
     x = [r for r in rows if r["n"] == n and r["traffic"] == v and r["method"] == m]
     return f"{sum(r['attackers_blocked'] for r in x)} of {n * len(x)}" if x else "–"
 
 
 L = ["# More colluding attackers on T1B", "",
-     "docs/scale_prereg.md. Mean (s.d.) over seeds; n = 2 is the final campaign (seeds 4160-4164).", ""]
+     "docs/scale_prereg.md. Mean (s.d.) over seeds; n = 4 and 8 are seeds 4184-4186; n = 2 is the final campaign's "
+     "300 s T1B runs (G2 seeds 4160-4162, EVX seeds 4160-4164).", ""]
 for v in ATTS:
     L += [f"## {ANAME[v]}", "",
           "| Method | n | Occupancy % | Harm % | New-connection success % | Lost first packets % | "
@@ -135,11 +139,12 @@ for v in ATTS:
         for n in (2,) + NS:
             if m == "none" and n == 4:
                 continue
-            ben = "–" if n == 2 else str(sum(r["benign_blocked"] for r in rows
-                                              if r["n"] == n and r["traffic"] == v and r["method"] == m))
+            ben = str(sum(int(float(r["hosts_blocked_benign"])) for r in camp if r["traffic"] == v and r["method"] == m)
+                      if n == 2 else sum(r["benign_blocked"] for r in rows
+                                         if r["n"] == n and r["traffic"] == v and r["method"] == m))
             L.append(f"| {LABEL[m]} | {n} | {ms(v, m, 'occupancy', n)} | {ms(v, m, 'benign_harmed_pct', n, 3)} | "
                      f"{ms(v, m, 'probe_post_success_pct', n, 1)} | {ms(v, m, 'benign_packet_in_lost_pct', n)} | "
-                     f"{'–' if n == 2 else blocked(v, m, n)} | {ben} |")
+                     f"{blocked(v, m, n)} | {ben} |")
     L.append("")
 
 # S1: G2, FEVER's occupancy below each baseline's, pairs over n = 4 and 8.
@@ -165,7 +170,10 @@ for (b, wins, tot, p), pa in zip(res, adj):
     L.append(f"| {LABEL[b]} | {wins} / {tot} | {p:.4f} | {pa:.4f} | {'yes' if pa < 0.05 and tot == 6 else 'no'} |")
 nb = sum(r["benign_blocked"] for r in rows if r["method"] == FEVER)
 L += ["", f"- S2 (EVX): reported above; FEVER blocked {sum(r['attackers_blocked'] for r in rows if r['method'] == FEVER and r['traffic'] == 'EVX')} "
-      f"EVX attackers over its {sum(1 for r in rows if r['method'] == FEVER and r['traffic'] == 'EVX')} EVX runs.",
+      f"EVX attackers over its {sum(1 for r in rows if r['method'] == FEVER and r['traffic'] == 'EVX')} EVX runs. "
+      "An EVX attacker holds at most 628 entries, below the volume limit, so these blocks are the eviction-share "
+      "rule's: with 4 or more attackers the core table passes the pressure level and the detector's evictions "
+      "fall on the attackers. Occupancy does not grow steadily with n (table above).",
       f"- S3: FEVER blocked {nb} benign hosts over its {sum(1 for r in rows if r['method'] == FEVER)} runs: "
       f"{'pass' if nb == 0 else 'fail'}."]
 if miss:
