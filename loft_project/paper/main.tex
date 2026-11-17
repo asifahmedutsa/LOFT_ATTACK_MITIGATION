@@ -336,10 +336,14 @@ memory, 253\,MB, for its 300-tree model.
 \subsection{Flash crowds and more attackers}
 
 A defense that limits a host's share of the table could block a benign host whose traffic rises
-suddenly. We added three bursts of 12\,s to the T1B replay, each at eight times its rate of new flows,
-spread over the four benign hosts, with no attacker (three seeds). No method blocked a benign host.
-FEVER harmed no benign flow and kept 57.2\,\% of new connections working, against 57.9\,\% without a
-defense. FTODefender deleted 182 benign entries per minute and cut new-connection success to 20.6\,\%.
+suddenly. We added three bursts of 12\,s to the T1B replay, each at twice its rate of new flows, with no
+attacker (three seeds), in tables of 2,000 entries so that the bursts filled the core table. With 3,500
+entries they did not: larger bursts overloaded the controller, and Open vSwitch dropped 18\,\% to 29\,\%
+of its messages to the controller. With the crowd spread over the four benign hosts, no method blocked a benign host and
+FEVER harmed 0.02\,\% of benign flows. With the whole crowd sent by one host, FEVER blocked that host in
+two of three runs, once by the eviction rule and once by the volume rule, and its harm rose to
+4.9\,\%. No other method blocked a host, although FTOP and DMS-BTT deleted about 140 to 250 benign
+entries per minute.
 
 We then repeated G2 and EVX with four and eight attackers, split between the two access switches
 (three seeds). Under G2, FEVER's occupancy stayed below FTMaster's and DMS-BTT's in all six paired
@@ -376,10 +380,13 @@ under Mimic, and adds little where the local detector already works, under G2, o
 has seen a similar attack, under Aware.
 
 The testbed is small: one machine, three switches, at most eight attackers and runs of 300\,s. At eight
-attackers the controller itself became the bottleneck, and the flash crowds did not fill the core table
-because the traffic generator could not send faster. The baselines are reimplementations, and some
+attackers the controller itself became the bottleneck, and it also limited the flash crowds, which we
+therefore ran with smaller tables. The baselines are reimplementations, and some
 details, such as FTODefender's blocking rule and DMS-BTT's thresholds, follow our reading of their
-papers. Slow and EVX remain open. No method defends against Slow, whose spoofed sources spread its
+papers. A crowd sent by a single host looks to FEVER like an attacker. In an offline check on the same
+schedules, the share of a host's flows that were refreshed before the idle timeout was at most 0.17 for
+the crowd host and 0.88 or more for most attackers once their attack was under way, but near zero at the
+start of every Pulse on period, so we did not adopt it as a guard. Slow and EVX remain open. No method defends against Slow, whose spoofed sources spread its
 entries over many addresses, and EVX shows that two attackers who know the volume limit can evade it;
 with four or more, the eviction rule blocked most of them.
 
@@ -389,7 +396,8 @@ FEVER trains a flow-entry detector across SDN controllers without moving their r
 with eviction and ingress blocking. On a testbed with real traffic, seven attacks and six reimplemented
 defenses, it harmed fewer benign flows and kept more new connections working than every baseline, and
 federated training let a controller detect an attack it had never recorded. Detecting slow attacks with
-spoofed sources, and setting a threshold that transfers to a new network, are left for future work.
+spoofed sources, telling a flash crowd from one host apart from an attack, and setting a threshold that
+transfers to a new network are left for future work.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

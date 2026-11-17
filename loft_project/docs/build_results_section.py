@@ -160,8 +160,19 @@ dt[0] = ["Method", "Training", "Threshold", "Test attacks", "Acc.", "Prec.", "Re
 # Short tables: the columns the text uses.
 fc_s = [["Training", "Data sent (MB)", "Time (s)", "F1 (%)", "Recall, Mimic (%)"]] + \
        [[r[0], r[3], r[4], r[5], r[7]] for r in fc[1:] if "secure" not in r[0]]
-t6_s = [[r[0], r[1], r[3], r[4]] for r in t6]
-t6_s[0] = ["Method", "Harm (%)", "New connections (%)", "Benign hosts blocked"]
+# Table 4: flash crowds, round 2 (results/testbed_flash2/runs.csv; tables of 2,000 entries).
+FL2 = list(csv.DictReader(open("results/testbed_flash2/runs.csv")))
+
+
+def f2(m, p, k, d=None):
+    x = [float(r[k]) for r in FL2 if r["method"] == m and r["placement"] == p]
+    return str(int(sum(x))) if d is None else f"{sum(x) / len(x):.{d}f}"
+
+
+t6_s = [["Method", "Harm, spread (%)", "Harm, one host (%)", "Benign hosts blocked, spread",
+         "Benign hosts blocked, one host"]]
+t6_s += [[n, f2(m, "spread", "benign_harmed_pct", 3), f2(m, "one host", "benign_harmed_pct", 3),
+          f2(m, "spread", "hosts_blocked_benign"), f2(m, "one host", "hosts_blocked_benign")] for m, n in FLM]
 t7_s = [["Method", "Attackers", "G2 occupancy (%)", "EVX occupancy (%)", "Attackers blocked, G2", "Attackers blocked, EVX"]]
 t7_s += [[r[0], r[1], r[2], r[5], r[4], r[7]] for r in t7[1:]]
 
@@ -245,11 +256,18 @@ story = [
       "controller CPU (62 %), but the most memory (253 MB)."),
 
     P("6.6. Benign flash crowds", "h2"),
-    P("We added three sudden crowds of new benign flows to each run, with no attacker. No method blocked a "
-      "benign host, and FEVER harmed no benign flow (Table 4). FTODefender deleted many benign entries and "
-      "cut new-connection success to 21 %."),
-    table(t6_s, [40 * mm] + [(W - 40 * mm) / 3] * 3,
-          "Table 4. Benign flash crowds on T1B (mean over three seeds; blocks are totals)."),
+    P("We added three sudden crowds of new benign flows to each run, with no attacker. Each crowd lasted "
+      "12 s at twice the replay's rate of new flows, and the tables held 2,000 entries so that the crowds "
+      "filled the core table. (A first round with 3,500 entries did not fill it, because the controller could "
+      "not take the extra Packet-Ins.) The crowd was either spread over the four normal hosts or sent by "
+      "one host."),
+    P("With the crowd spread over the hosts, no method blocked a normal host and FEVER harmed 0.02 % of "
+      "benign flows. With the crowd from one host, FEVER blocked that host in two of three runs, once by its "
+      "eviction rule and once by its volume rule, and its harm rose to 4.9 %. No other method blocked a host "
+      "(Table 4), although FTOP and DMS-BTT deleted about 140 to 250 benign entries per minute."),
+    table(t6_s, [30 * mm] + [(W - 30 * mm) / 4] * 4,
+          "Table 4. Benign flash crowds on T1B, crowd spread over the hosts or from one host (mean over three "
+          "seeds; blocks are totals)."),
 
     P("6.7. More colluding attackers", "h2"),
     P("With four and eight attackers, FEVER still blocked every G2 attacker and held the table below "
@@ -269,7 +287,9 @@ story = [
         "Federated training helped a controller detect attacks it had never seen. On Mimic, recall went up "
         "from 0.2 % to 61 %, and no traffic data was shared between controllers.",
         "Blocking the attacker at its access port was the most useful part of FEVER.",
-        "FEVER blocked no normal host during flash crowds, and it still worked with four and eight attackers.",
+        "When a flash crowd was spread over the normal hosts, no method blocked one. When one host sent the "
+        "whole crowd, FEVER blocked it in two of three runs; no other method did.",
+        "FEVER still worked with four and eight attackers.",
         "FEVER needed less decision time and CPU than the other defenses, but more memory.",
         "No method could stop the Slow attack, and two EVX attackers avoided FEVER's volume rule.",
     ]),

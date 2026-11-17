@@ -66,11 +66,13 @@ FINDINGS = [
      "Without the volume rule, the attackers' share under Aware rose from 14 % to 43 %. Without the "
      "detector, the attackers were blocked 35 s to 55 s later. Without federated training, the share under "
      "Mimic rose from 4.9 % to 15.7 %. So every part is needed for at least one attack."),
-    ("Normal hosts are not blocked during flash crowds",
+    ("A flash crowd from a single host can be mistaken for an attack",
      "A sudden rise in normal traffic should not be mistaken for an attack. We added three short bursts "
-     "of new benign flows to each run, with no attacker present. No defense blocked a normal host, and "
-     "FEVER did not harm any benign flow. FTODefender, in contrast, deleted about 180 benign entries per "
-     "minute and let only about 21 % of new connections through."),
+     "of new benign flows to each run, with no attacker present, in a table small enough for the bursts "
+     "to fill it. When the crowd was spread over the four normal hosts, no defense blocked a normal host, "
+     "and FEVER harmed only 0.02 % of benign flows. When one host sent the whole crowd, FEVER blocked "
+     "that host in two of the three runs, and its harm rose to 4.9 %. No other defense blocked a host, "
+     "although FTOP and DMS-BTT deleted about 140 to 250 benign entries per minute."),
     ("FEVER still works with more attackers",
      "We repeated G2 and EVX with four and eight attackers instead of two. FEVER blocked every G2 attacker "
      "and kept the attackers' share below that of FTMaster and DMS-BTT in every paired run. EVX attackers "

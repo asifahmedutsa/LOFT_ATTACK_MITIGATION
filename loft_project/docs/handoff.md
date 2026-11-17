@@ -1,4 +1,4 @@
-# FEVER project: state and handoff (17 November 2026, 23:45)
+# FEVER project: state and handoff (18 November 2026, 01:40)
 
 For an assistant picking up this work. Read this first, then the files it names.
 
@@ -70,38 +70,31 @@ for the same reason (tables are built before that). Backup of all fin_* runs: `~
 | Flash crowds, round 1 | docs/flash_prereg.md | results/testbed_flash (406e3a2) | F1, F2 pass, but **flawed**: Ryu could not take the Packet-Ins; OVS dropped 18-29 % of controller messages (rconn_overflow), s11 never passed 79 %, volume rule never exercised |
 | More attackers (4, 8), G2 and EVX, 54 runs | docs/scale_prereg.md (5195573) | results/testbed_scale (71b59d7) | S1 supported vs FTMaster, DMS-BTT, not FTODefender; S3 pass; FEVER caught 32/36 EVX attackers by the eviction rule |
 | Secure aggregation + federated threshold | docs/secagg_plan.md (181d57e) | results/secagg (4088e93) | Masked = unmasked bit for bit; +2.1 % time; false alarms 0.79 -> 0.69 % (still above 0.1 %). User asked to leave it out of the results PDF |
-| **Flash crowds, round 2 (running)** | docs/flash2_prereg.md (27489b6) | results/testbed_flash2 | see section 6 |
+| Flash crowds, round 2 | docs/flash2_prereg.md (27489b6) | results/testbed_flash2 (43e2218) | spread: pass; one host: FEVER blocked the crowd host in 2 of 3 runs (fail) |
+| Crowd guard | docs/crowdguard_prereg.md (71dc82f) | results/crowd_signal (fb403b1) | gate G0 failed; study stopped, nothing built |
 
 Headline numbers (T1B): FEVER harm 0.011 % vs 1.0-5.2 %; new-connection success 84.2 % vs 21-46 %;
 occupancy 6.8 % vs 24-36 %; Mimic/Aware 4.9/14.1 % vs 33-49 %; federated recall on attacks seen only
 elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 253 MB.
 
-## 6. Running now: flash crowds, round 2
+## 6. Flash crowds, round 2 (done) and the crowd guard (stopped)
 
-- Design (fixed): tables of 2,000 entries (E5_CAP=2000); crowd rate chosen by rule = **F2** (selection
-  run reached 1,885 entries with 0 % dropped, results/testbed_flash2/selection.txt); seeds 4187-4189;
-  8 methods; two placements: F2 (spread over the 4 benign hosts) and F2H (all crowd flows from d1h3 on
-  s13). Pass rules for FEVER per placement: F1 no benign host blocked; F2 mean harm <= no defense + 1.0.
-- Code: testbed/traffic_driver.py (F<k>H), testbed/campaign_flash2.sh, testbed/analyze_flash2.py
-  (fdcb204); wrapper fix to accept F<k>H (89ba3b6, installed 23:05).
-- Progress: all 24 spread runs done (23:02, none failed). The first launch's one-host runs failed with
-  "bad --variant" before the wrapper fix (no data affected). Relaunched 23:09 as user service
-  `loft-flash2`; at 23:45, 6 of 24 one-host runs done; expected end about 01:30.
-- Early look: spread seed 4187 - no benign host blocked by any method, FEVER harm 0.03 %, s11 peak
-  1,856. One-host seed 4187 no defense - d1h3 sent all 4,426 crowd flows and held 1,028 entries on
-  s11, but s11 peaked at 1,675 (< 1,800), so the volume rule may not be exercised in one-host runs.
-  Report as it is; the preregistration does not allow changing k.
-
-**When it finishes:**
-1. Check `results/testbed_flash2/campaign.log` (look for FAILED/INVALID; `reruns.md`).
-2. `python3 testbed/analyze_flash2.py` -> runs.csv and report.md; check F1/F2 per placement, the drop
-   share, s11/s13 peaks and the inferred rule of any d1h3 block.
-3. Commit results (not run folders) and push.
-4. Update the write-ups: replace round 1's flash-crowd section in docs/build_results_section.py
-   (Section 6.6 and Table 4) and in paper/main.tex (Flash crowds paragraph) with round 2, stating that
-   round 1's table did not fill because the controller dropped Packet-Ins; update finding 6 in
-   docs/build_findings_summary.py. Rebuild the PDFs (~/.venvs/loft/bin/python docs/build_*.py; make
-   in paper/).
+- Round 2 (docs/flash2_prereg.md 27489b6; results/testbed_flash2, 43e2218): tables of 2,000 entries,
+  crowds at F2 (selection: s11 1,885 entries, 0 % controller messages dropped), seeds 4187-4189,
+  48 runs, none invalid. **Spread:** FEVER passes F1, F2 (no benign host blocked, harm 0.020 %).
+  **One host (d1h3):** FEVER fails both: blocked d1h3 in seeds 4187 (eviction rule, table 87 %) and
+  4189 (volume rule, table 91 %); harm 4.89 % vs 0 %. No other method blocked a host. In report.md
+  "benign hosts blocked" counts each block twice (host block + ingress drop); runs.csv
+  hosts_blocked_benign counts once.
+- Crowd guard (docs/crowdguard_prereg.md, fixed 71dc82f): idea = block only hosts whose flows are
+  refreshed (seen again 2-10 s after the previous packet). **Gate G0 failed** (fb403b1,
+  results/crowd_signal/report.md): crowd host share <= 0.17 (pass) but attackers 0.50-0.67 in the first
+  3-14 s of the check (fill phase) and Pulse 0.00 at each on period. Per the preregistration the study
+  stopped; no FEVER variant was built and the thresholds must not be changed. Any new attempt needs a
+  new, separate preregistration and the user's approval.
+- Write-ups updated with round 2: results PDF Section 6.6 / Table 4 / summary, findings summary
+  finding 6, paper (Flash crowds paragraph, Discussion, Conclusion; the wrong "traffic generator"
+  sentence is gone).
 
 ## 7. Documents
 
@@ -115,10 +108,9 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
 - **paper/** (NetSoft draft, IEEEtran): main.tex, refs.bib (details from the PDFs in
   "Other Paper/M Sc Paper"), tables/ (`make sync` copies them from results/testbed_prereg_final/paper
   in a smaller font), figs/make_architecture.py (architecture figure of the tested design),
-  main.pdf 8 pages, no overfull boxes (63c9d21). Still open in the paper: author block placeholder;
-  FEVER has no name expansion; the Limitations paragraph still says the flash crowds failed because
-  "the traffic generator could not send faster", which is wrong (fix with round 2); the federated model
-  is not identical to pooled XGBoost (sketch merge; F1 86.8 vs 86.5) and must not be called identical.
+  main.pdf 8 pages, no overfull boxes. Still open in the paper: author block placeholder; FEVER has no
+  name expansion. The federated model is not identical to pooled XGBoost (sketch merge; F1 86.8 vs
+  86.5) and must not be called identical.
 
 ## 8. Facts that are easy to get wrong
 
