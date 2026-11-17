@@ -100,6 +100,43 @@ NSUP = sum(r["supported"] == "True" for r in T)
 ov = tex_rows("table_overhead.tex")
 fc = tex_rows("table_fedcost.tex")
 dt = tex_rows("table_detect.tex")
+
+# Table 6: flash crowds (results/testbed_flash/runs.csv).
+FL = list(csv.DictReader(open("results/testbed_flash/runs.csv")))
+FLM = [("none", "No defense"), ("fever-fl-ll", "FEVER")] + COMP
+
+
+def fmean(m, k, d):
+    x = [float(r[k]) for r in FL if r["method"] == m]
+    return f"{sum(x) / len(x):.{d}f}"
+
+
+t6 = [["Method", "Harm (%)", "Lost first packets (%)", "New connections (%)", "Benign hosts blocked",
+       "Benign deletes/min"]]
+t6 += [[n, fmean(m, "benign_harmed_pct", 3), fmean(m, "benign_packet_in_lost_pct", 1),
+        fmean(m, "probe_post_success_pct", 1),
+        str(int(sum(float(r["hosts_blocked_benign"]) + float(r["ingress_drops"]) for r in FL if r["method"] == m))),
+        fmean(m, "benign_deleted_per_min", 1)] for m, n in FLM]
+
+# Table 7: more attackers (results/testbed_scale/report.md, means only).
+SC, sec = {}, None
+for line in open("results/testbed_scale/report.md"):
+    if line.startswith("## "):
+        sec = line[3:].strip()
+    elif sec in ("G2", "EVX") and line.startswith("| ") and not line.startswith("| Method"):
+        c = [x.strip() for x in line.strip().strip("|").split("|")]
+        SC[(sec, c[0], c[1])] = [x.split(" (")[0] for x in c[2:]]
+t7 = [["Method", "n", "G2 occupancy (%)", "G2 harm (%)", "G2 attackers blocked", "EVX occupancy (%)",
+       "EVX harm (%)", "EVX attackers blocked"]]
+for lab in ("No defense", "FEVER", "FTMaster", "FTODefender", "DMS-BTT"):
+    first = True
+    for n in ("2", "4", "8"):
+        if ("G2", lab, n) in SC:
+            g, e = SC[("G2", lab, n)], SC[("EVX", lab, n)]
+            t7.append([lab if first else "", n, g[0], g[1], g[4], e[0], e[1], e[4]])
+            first = False
+R7 = [i for i, r in enumerate(t7) if i > 1 and r[0]]
+
 keep = [0] + [i for i, r in enumerate(dt) if i and (r[2].startswith("0.5") or r[0] == "FEVER")]
 dt = [dt[i] for i in keep]
 dt[0] = ["Method", "Training", "Threshold", "Test attacks", "Acc.", "Prec.", "Rec.", "F1", "FA"]
@@ -167,7 +204,9 @@ story = [
     P("Each combination of trace, attack and method runs with three seeds (G2, Spoof, Pulse and all UHt "
       "cells) or five seeds (Mimic, Aware, Slow and EVX), 532 runs in total. The hypotheses, measures and "
       "tests were fixed before the runs. Each hypothesis is tested by a one-sided sign test over seed-paired "
-      "runs, with Holm's correction over the 33 tests at a level of 0.05."),
+      "runs, with Holm's correction over the 33 tests at a level of 0.05. Two further studies, each fixed "
+      "in advance in the same way, were run afterwards on T1B: benign flash crowds without an attacker (24 "
+      "runs, seeds 4165 to 4167) and four or eight colluding attackers (54 runs, seeds 4184 to 4186)."),
 
     P("6. Results", "h1"),
 
@@ -253,8 +292,37 @@ story = [
           [32 * mm] + [(W - 32 * mm) / 4] * 4,
           "Table 5. Controller overhead on T1B, mean (standard deviation) per run."),
 
-    P("6.7. Summary of findings", "h2"),
-    P("The experiments support six findings. (i) FEVER protects benign traffic better than the six published "
+    P("6.7. Benign flash crowds", "h2"),
+    P("A defense that limits each host's share of the table may block a benign host whose traffic rises "
+      "suddenly. We added to the T1B replay three crowds of 12 s per run, each at eight times the replay's "
+      "own rate of new flows, with sources spread over the four benign hosts and no attacker. The burst "
+      "size was chosen before the runs as the smallest of four, six and eight times that filled 90 % of the "
+      "core switch's table; none did, and the largest crowd reached 2,625 entries, so the study ran at eight "
+      "times. Table 6 gives the results. No method blocked a benign host. FEVER harmed no benign flow and "
+      "kept 57.2 % of new connections working, against 57.9 % without a defense; in every method about "
+      "a fifth of the first packets were lost, which comes from the load on the controller and not from the "
+      "defense. FTODefender deleted 182 benign entries a minute and cut new-connection success to 20.6 %."),
+    table(t6, [30 * mm] + [(W - 30 * mm) / 5] * 5,
+          "Table 6. Benign flash crowds on T1B, mean over three seeds (blocks are totals)."),
+
+    P("6.8. More colluding attackers", "h2"),
+    P("Table 7 repeats G2 and EVX with four and eight attackers, each on its own host and split between the "
+      "two access switches, beside the campaign's two. Under G2, FEVER's occupancy stayed below FTMaster's and "
+      "DMS-BTT's in all six seed-paired runs (p = 0.047 after Holm's correction for each), but not below "
+      "FTODefender's, which stayed near 0.3 % at every n at a harm of about 0.25 %. FEVER blocked every "
+      "attacker in all twelve G2 runs and no benign host in any run. Under EVX each attacker keeps below "
+      "FEVER's volume limit, which let two attackers pass in the campaign. With four or more, the attackers "
+      "together fill the core table beyond the level at which FEVER starts to evict, its detector's "
+      "evictions fall on the attackers, and the eviction rule blocked 32 of the 36 EVX attackers. At eight "
+      "attackers the controller ran at about 80 % CPU, blocks came 50 s to 190 s after the attack started, "
+      "and FEVER's harm rose to 0.9 % under G2 and 2.0 % under EVX, against 16.3 % and 12.1 % without a "
+      "defense."),
+    table(t7, [27 * mm, 8 * mm] + [(W - 35 * mm) / 6] * 6,
+          "Table 7. G2 and EVX with n attackers on T1B, mean over seeds (n = 2 from the campaign).",
+          rules=R7),
+
+    P("6.9. Summary of findings", "h2"),
+    P("The experiments support seven findings. (i) FEVER protects benign traffic better than the six published "
       "defenses: it harmed 0.011 % of benign flows against 1.0 % to 5.2 %, and kept 84.2 % of new connections "
       "working against 21.0 % to 45.6 %; both results hold against every baseline. (ii) FEVER held the "
       "attacker to the smallest share of the flow table against five of the six baselines (6.8 % against "
@@ -266,15 +334,19 @@ story = [
       "occupancy fell from 15.7 % to 4.9 %, without any rows or labels leaving a controller. Lossless "
       "federated XGBoost matches training on pooled data, which FedAvg, FedProx and federated bagging do "
       "not. (v) Every part of FEVER is needed on at least one attack, and blocking at the ingress port gives "
-      "the largest single effect. (vi) Two attacks remain open: no method defends against Slow, and EVX "
-      "evades FEVER's volume rule. FEVER is also the lightest of the eight methods in decision time and CPU, "
+      "the largest single effect. (vi) FEVER blocked no benign host under flash crowds, and with "
+      "four or eight colluding attackers it still blocked the attackers and kept a lower occupancy than "
+      "FTMaster and DMS-BTT, though more slowly at eight. (vii) Two attacks remain open: no method defends "
+      "against Slow, and two EVX attackers evade FEVER's volume rule. FEVER is also the lightest of the eight methods in decision time and CPU, "
       "at the price of the largest memory use."),
-    P("6.8. Limitations", "h2"),
-    P("The testbed is small: one machine, three switches, two attackers and runs of 300 s. The baselines are "
+    P("6.10. Limitations", "h2"),
+    P("The testbed is small: one machine, three switches, at most eight attackers and runs of "
+      "300 s; at eight attackers the controller itself became the bottleneck. The flash crowds did not fill "
+      "the core table, because the traffic generator could not send them faster. The baselines are "
       "reimplementations, and FTODefender's blocking rule and DMS-BTT's thresholds follow our reading of "
       "their papers. FEVER's false alarms on T1B (0.79 %) exceed the 0.1 % its threshold was set for, "
       "because the threshold was calibrated on another capture. Slow and EVX remain open: no method defends "
-      "against Slow, and EVX shows that a volume limit known to the attacker can be evaded."),
+      "against Slow, and EVX shows that a volume limit known to two attackers can be evaded."),
 ]
 
 SimpleDocTemplate(OUT, pagesize=A4, leftMargin=22 * mm, rightMargin=22 * mm, topMargin=20 * mm,
