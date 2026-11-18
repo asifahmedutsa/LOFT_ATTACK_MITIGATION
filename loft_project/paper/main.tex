@@ -74,8 +74,8 @@ contributions are:
   hypotheses, measures and tests were fixed before the 532 runs (Sections~\ref{sec:setup}
   and~\ref{sec:results}).
 \item Results that show where federation matters and where it does not, including two attacks against
-  which FEVER fails, and three further studies: benign flash crowds, up to eight colluding attackers, and
-  secure aggregation of the exchanged histograms.
+  which FEVER fails, and four further studies: benign flash crowds, up to eight colluding attackers,
+  the sensitivity to FEVER's settings, and secure aggregation of the exchanged histograms.
 \end{itemize}
 
 \section{Related Work}
@@ -353,6 +353,22 @@ past $\rho$, their entries are the ones the detector evicts, and the eviction ru
 them. With eight attackers the controller ran at about 80\,\% CPU, blocks came 50\,s to 190\,s after the
 attack started, and FEVER's harm rose to 0.9\,\% under G2 and 2.0\,\% under EVX, against 16.3\,\% and
 12.1\,\% without a defense.
+
+\subsection{Sensitivity to the settings}
+\input{tables/sens}
+
+$\rho$, the ratio $k$ of the eviction rule (three times the median host) and the factor of 1.5 in $X$ were
+fixed before the campaign. In a further preregistered study we set each lower and higher, one at a time,
+and ran G2, Mimic and Aware, the benign replay without attack (seeds 4160 to 4162) and the one-host crowd
+(seeds 4187 to 4189), 90 runs, against FEVER's runs on the same seeds (Table~\ref{tab:sens}). Seventeen of
+the 18 setting and attack pairs stayed within 0.5 points of FEVER's harm and 5 points of its occupancy.
+The exception is $\rho = 0.8$ under Mimic: eviction started later, the attackers were blocked 27\,s
+later and held 15.0\,\% of the table, and new-connection success fell from 97\,\% to 65\,\%. $\rho = 0.6$
+blocked G2 and Mimic about 25\,s earlier but raised the harm under Aware from 0.003\,\% to 0.36\,\%. No
+setting blocked a benign host without an attack. Under the one-host crowd every setting blocked the
+crowd host in all three runs, by either rule, between 49\,s and 163\,s, with 23\,\% to 30\,\% harm, so the
+failure in the flash-crowd study does not come from these settings. In the run in which FEVER did not
+block it, its table filled more slowly than under any other method.
 
 \subsection{Secure aggregation and a federated threshold}
 \label{sec:secagg}

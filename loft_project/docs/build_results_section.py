@@ -176,6 +176,31 @@ t6_s += [[n, f2(m, "spread", "benign_harmed_pct", 3), f2(m, "one host", "benign_
 t7_s = [["Method", "Attackers", "G2 occupancy (%)", "EVX occupancy (%)", "Attackers blocked, G2", "Attackers blocked, EVX"]]
 t7_s += [[r[0], r[1], r[2], r[5], r[4], r[7]] for r in t7[1:]]
 
+# Table 6: sensitivity to FEVER's settings (results/testbed_sens/runs.csv; FEVER's runs on the same seeds
+# from results/testbed_prereg_final and results/testbed_flash2).
+SN = list(csv.DictReader(open("results/testbed_sens/runs.csv")))
+FIN = [r for r in csv.DictReader(open(f"{RES}/runs.csv"))
+       if r["length"] == "300 s" and r["trace"] == "T1B" and r["method"] == "fever-fl-ll"
+       and int(r["seed"]) <= 4162]
+
+
+def sm(rs, k, d=1):
+    x = [float(r[k]) for r in rs]
+    return f"{sum(x) / len(x):.{d}f}"
+
+
+t8 = [["Setting", "G2 occupancy (%)", "Mimic occupancy (%)", "Aware occupancy (%)",
+       "Benign hosts blocked, no attack", "Runs with the crowd host blocked"]]
+t8.append(["FEVER (ρ 0.7, k 3, X at 1.5 times)"] + [sm([r for r in FIN if r["traffic"] == v], "occupancy")
+                                                     for v in ("A2", "A4", "E9P")]
+          + ["0", f"{sum(float(r['hosts_blocked_benign']) > 0 for r in FL2 if r['method'] == 'fever-fl-ll' and r['placement'] == 'one host')} of 3"])
+for m, lab in (("fever-s-r60", "ρ 0.6"), ("fever-s-r80", "ρ 0.8"), ("fever-s-k2", "k 2"), ("fever-s-k4", "k 4"),
+               ("fever-s-v125", "X at 1.25 times"), ("fever-s-v200", "X at 2.0 times")):
+    rs = [r for r in SN if r["method"] == m]
+    t8.append([lab] + [sm([r for r in rs if r["traffic"] == v], "occupancy") for v in ("A2", "A4", "E9P")]
+              + [str(int(sum(float(r["host_blocks"]) for r in rs if r["traffic"] == "benign"))),
+                 f"{sum(float(r['host_blocks']) > 0 for r in rs if r['traffic'] == 'F2H')} of 3"])
+
 story = [
     P("5. Experimental setup", "h1"),
     P("We use a Mininet testbed with Open vSwitch and a Ryu controller. The network is a tree of three "
@@ -277,7 +302,19 @@ story = [
     table(t7_s, [27 * mm, 18 * mm] + [(W - 45 * mm) / 4] * 4,
           "Table 5. G2 and EVX with more attackers on T1B (mean over seeds).", rules=R7),
 
-    P("6.8. Summary of findings", "h2"),
+    P("6.8. Sensitivity to FEVER's settings", "h2"),
+    P("We changed FEVER's three fixed settings one at a time: the occupancy at which eviction starts (ρ), "
+      "the ratio k of the eviction rule and the factor of 1.5 in the volume limit X. Each setting was run "
+      "under G2, Mimic and Aware, without an attack, and under the one-host crowd, three seeds each (90 runs, "
+      "Table 6). In 17 of the 18 setting and attack pairs, harm and occupancy stayed close to FEVER's. The "
+      "exception is ρ 0.8 under Mimic: the attackers were blocked 27 s later, held 15.0 % of the table and "
+      "new-connection success fell from 97 % to 65 %. No setting blocked a host without an attack. Under the "
+      "one-host crowd, every setting blocked the crowd host in all three runs, so a different setting does "
+      "not remove that problem."),
+    table(t8, [44 * mm] + [(W - 44 * mm) / 5] * 5,
+          "Table 6. FEVER with one setting changed, on T1B (mean over three seeds)."),
+
+    P("6.9. Summary of findings", "h2"),
     items([
         "FEVER harmed only 0.011 % of benign flows, while the other defenses harmed 1.0 % to 5.2 %. It also "
         "kept 84 % of new connections working, compared with 21 % to 46 %.",
@@ -290,6 +327,8 @@ story = [
         "When a flash crowd was spread over the normal hosts, no method blocked one. When one host sent the "
         "whole crowd, FEVER blocked it in two of three runs; no other method did.",
         "FEVER still worked with four and eight attackers.",
+        "Changing FEVER's settings one at a time changed little, except a later start of eviction (ρ 0.8) "
+        "under Mimic. No setting stopped FEVER from blocking a host that sent a whole flash crowd.",
         "FEVER needed less decision time and CPU than the other defenses, but more memory.",
         "No method could stop the Slow attack, and two EVX attackers avoided FEVER's volume rule.",
     ]),

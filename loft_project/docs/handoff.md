@@ -72,6 +72,7 @@ for the same reason (tables are built before that). Backup of all fin_* runs: `~
 | Secure aggregation + federated threshold | docs/secagg_plan.md (181d57e) | results/secagg (4088e93) | Masked = unmasked bit for bit; +2.1 % time; false alarms 0.79 -> 0.69 % (still above 0.1 %). User asked to leave it out of the results PDF |
 | Flash crowds, round 2 | docs/flash2_prereg.md (27489b6) | results/testbed_flash2 (43e2218) | spread: pass; one host: FEVER blocked the crowd host in 2 of 3 runs (fail) |
 | Crowd guard | docs/crowdguard_prereg.md (71dc82f) | results/crowd_signal (fb403b1) | gate G0 failed; study stopped, nothing built |
+| Sensitivity of FEVER's settings (rho 0.6/0.8, k 2/4, X at 1.25/2.0 times), 90 runs | docs/sensitivity_prereg.md (58eddf1) | results/testbed_sens (e5299f9) | R1 17 of 18 pass (rho 0.8 on Mimic fails: 15.0 vs 4.9 % occupancy); R2 pass; R3: every setting blocked the one-host crowd host in 3 of 3 runs |
 
 Headline numbers (T1B): FEVER harm 0.011 % vs 1.0-5.2 %; new-connection success 84.2 % vs 21-46 %;
 occupancy 6.8 % vs 24-36 %; Mimic/Aware 4.9/14.1 % vs 33-49 %; federated recall on attacks seen only
@@ -100,15 +101,15 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
 
 - **docs/fever_experiments_results.pdf** (docs/build_results_section.py): paper-style setup and results,
   shortened to 5 pages at the user's request; no limitations, no future work, no secure aggregation;
-  summary of findings in eight short plain sentences (84c7dce).
-- **docs/fever_findings_summary.pdf** (docs/build_findings_summary.py): two pages, nine findings in
-  plain words with their numbers (9edd1fe).
+  Section 6.8 and Table 6 on the sensitivity study; summary of findings in ten short plain items; 6 pages.
+- **docs/fever_findings_summary.pdf** (docs/build_findings_summary.py): two pages, ten findings in
+  plain words with their numbers (finding 8: settings).
 - **docs/fever_observations.pdf** (docs/build_observations.py): older supervisor summary of the final
   campaign (16 Nov), unchanged.
 - **paper/** (NetSoft draft, IEEEtran): main.tex, refs.bib (details from the PDFs in
   "Other Paper/M Sc Paper"), tables/ (`make sync` copies them from results/testbed_prereg_final/paper
   in a smaller font), figs/make_architecture.py (architecture figure of the tested design),
-  main.pdf 8 pages, no overfull boxes. Still open in the paper: author block placeholder; FEVER has no
+  main.pdf 8 pages, no overfull boxes; Results has a subsection and Table VIII (tables/sens.tex, hand-written) on the sensitivity study. Still open in the paper: author block placeholder; FEVER has no
   name expansion. The federated model is not identical to pooled XGBoost (sketch merge; F1 86.8 vs
   86.5) and must not be called identical.
 
@@ -120,6 +121,7 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
 - Truth files' t_first is the scheduled send time, not the actual one.
 - The controller's per-poll counters (packet_in, installs) are cumulative; use differences.
 - `pgrep -f <pattern>` from a shell whose command line contains the pattern matches itself.
-- Run names: fin_<trace>_<attack>_<method>_s<seed> (campaign), sc<n>_ (more attackers), fc_ / flsel_
+- In the one-host crowd, round 2's FEVER run on seed 4188 filled s11 more slowly (1,601 entries in the first crowd, every other method and setting 1,730 or more), which is likely why it was not blocked there (exploratory).
+- Run names: sens_ (sensitivity), fin_<trace>_<attack>_<method>_s<seed> (campaign), sc<n>_ (more attackers), fc_ / flsel_
   (flash round 1), fc2_ / fl2sel_ (flash round 2). FEVER's method name is fever-fl-ll; DMS-BTT as
   compared is dms-btt-h1.

@@ -1,6 +1,6 @@
 """Builds docs/fever_findings_summary.pdf: the findings of the testbed experiments in plain words, a
 few sentences each. Numbers from results/testbed_prereg_final (report.md, tests.csv, paper/*.tex),
-results/tbfl, results/testbed_flash and results/testbed_scale.
+results/tbfl, results/testbed_flash2, results/testbed_scale and results/testbed_sens.
 
     ~/.venvs/loft/bin/python docs/build_findings_summary.py
 """
@@ -80,6 +80,15 @@ FINDINGS = [
      "the table and FEVER caught 32 of the 36. With eight attackers the controller was close to its limit, "
      "so blocks came later, but FEVER still harmed only 0.9 % (G2) and 2.0 % (EVX) of benign flows, against "
      "16.3 % and 12.1 % without any defense."),
+    ("FEVER does not depend on fine tuning",
+     "FEVER has three fixed settings: how full the table must be before it starts evicting, how far above "
+     "the other hosts a host's evictions must be before it is blocked, and the volume limit. We made each "
+     "one lower and higher, one at a time, in 90 more runs. In 17 of 18 cases the attackers' share of the "
+     "table and the harm to benign flows stayed close to FEVER's, and no setting blocked a normal host when "
+     "there was no attack. The one exception was starting eviction later (at 80 % instead of 70 %): under "
+     "Mimic the attackers were blocked 27 s later and held 15 % of the table instead of 5 %. No setting "
+     "stopped FEVER from blocking a host that sent a whole flash crowd; every setting blocked it in all three "
+     "runs."),
     ("FEVER is light on the controller",
      "FEVER needed 20.8 ms per decision, almost the same as running without a defense (19.4 ms) and less "
      "than every other defense (35 ms to 103 ms). It also used the least controller CPU, 62 % against "
@@ -98,8 +107,9 @@ story = [
       "one shared detector without sharing their traffic, and each controller uses it to evict attack "
       "entries and to block attacking hosts at their access port. We compared FEVER with six published "
       "defenses (FTMaster, FTOP, FTODefender, FloRa, DMS-BTT and rDefender) on a Mininet testbed with real "
-      "traffic and seven attacks, in 532 runs whose tests were fixed in advance. We then ran two more "
-      "studies: benign flash crowds, and four or eight attackers instead of two. The findings are below."),
+      "traffic and seven attacks, in 532 runs whose tests were fixed in advance. We then ran three more "
+      "studies: benign flash crowds, four or eight attackers instead of two, and FEVER with its settings "
+      "changed. The findings are below."),
 ]
 for i, (head, text) in enumerate(FINDINGS, 1):
     story += [P(f"{i}. {head}", "h"), P(text)]
