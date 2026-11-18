@@ -113,8 +113,14 @@ with open(os.path.join(OUT, "runs.csv"), "w", newline="") as fh:
 
 
 def mv(xs):
-    xs = [float(x) for x in xs if num(x)]
-    return mean(xs) if xs else None
+    """Mean of the numbers among xs; the source studies' runs.csv give them as text."""
+    out = []
+    for x in xs:
+        try:
+            out.append(float(x))
+        except (TypeError, ValueError):
+            pass
+    return mean(out) if out else None
 
 
 def f(x, d=2):

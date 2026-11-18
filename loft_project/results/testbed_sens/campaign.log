@@ -1,0 +1,218 @@
+## smoke 2026-11-18 07:56:36
+=== [1/1] senssmoke_T1B_A2_fever-s-k2_s4183 07:56:36
+ decision_ms mean 14, max 1227  probe_post_success_pct 100.0  probe_post_connect_ms_median 56.4  benign_harmed_pct 0.03
+matrix done 08:01:52
+smoke ok
+## pass 1 start 2026-11-18 08:01:53
+=== [1/6] sens_T1B_A2_fever-s-r60_s4160 08:01:53
+ decision_ms mean 11, max 866  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.01
+=== [2/6] sens_T1B_A2_fever-s-r80_s4160 08:07:09
+ decision_ms mean 14, max 1262  probe_post_success_pct 94.61  probe_post_connect_ms_median 88.4  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_A2_fever-s-k2_s4160 08:12:25
+ decision_ms mean 14, max 1360  probe_post_success_pct 98.84  probe_post_connect_ms_median 70.1  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_A2_fever-s-k4_s4160 08:17:41
+ decision_ms mean 13, max 1184  probe_post_success_pct 98.84  probe_post_connect_ms_median 46.1  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_A2_fever-s-v125_s4160 08:22:58
+ decision_ms mean 14, max 1486  probe_post_success_pct 98.84  probe_post_connect_ms_median 46.5  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_A2_fever-s-v200_s4160 08:28:14
+ decision_ms mean 13, max 1124  probe_post_success_pct 97.69  probe_post_connect_ms_median 46.8  benign_harmed_pct 0.0
+matrix done 08:33:30
+=== [1/6] sens_T1B_A4_fever-s-r60_s4160 08:33:30
+ decision_ms mean 12, max 1080  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.6  benign_harmed_pct 0.02
+=== [2/6] sens_T1B_A4_fever-s-r80_s4160 08:38:46
+ decision_ms mean 26, max 919  probe_post_success_pct 31.02  probe_post_connect_ms_median 237.9  benign_harmed_pct 0.03
+=== [3/6] sens_T1B_A4_fever-s-k2_s4160 08:44:04
+ decision_ms mean 14, max 1369  probe_post_success_pct 98.46  probe_post_connect_ms_median 47.8  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_A4_fever-s-k4_s4160 08:49:20
+ decision_ms mean 14, max 1451  probe_post_success_pct 97.69  probe_post_connect_ms_median 46.3  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_A4_fever-s-v125_s4160 08:54:36
+ decision_ms mean 14, max 1428  probe_post_success_pct 98.27  probe_post_connect_ms_median 45.8  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_A4_fever-s-v200_s4160 08:59:52
+ decision_ms mean 13, max 1188  probe_post_success_pct 99.04  probe_post_connect_ms_median 69.0  benign_harmed_pct 0.0
+matrix done 09:05:08
+=== [1/6] sens_T1B_E9P_fever-s-r60_s4160 09:05:08
+ decision_ms mean 111, max 2336  probe_post_success_pct 17.73  probe_post_connect_ms_median 150.4  benign_harmed_pct 1.08
+=== [2/6] sens_T1B_E9P_fever-s-r80_s4160 09:11:42
+ decision_ms mean 32, max 1704  probe_post_success_pct 57.42  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_E9P_fever-s-k2_s4160 09:17:49
+ decision_ms mean 43, max 1644  probe_post_success_pct 55.88  probe_post_connect_ms_median 53.5  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_E9P_fever-s-k4_s4160 09:23:06
+ decision_ms mean 37, max 1739  probe_post_success_pct 54.53  probe_post_connect_ms_median 151.0  benign_harmed_pct 0.01
+=== [5/6] sens_T1B_E9P_fever-s-v125_s4160 09:29:15
+ decision_ms mean 39, max 1798  probe_post_success_pct 53.56  probe_post_connect_ms_median 47.7  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_E9P_fever-s-v200_s4160 09:34:54
+ decision_ms mean 46, max 1917  probe_post_success_pct 50.67  probe_post_connect_ms_median 54.5  benign_harmed_pct 0.0
+matrix done 09:41:01
+=== [1/6] sens_T1B_benign_fever-s-r60_s4160 09:41:01
+ decision_ms mean 7, max 12  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.0  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_benign_fever-s-r80_s4160 09:46:16
+ decision_ms mean 7, max 14  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_benign_fever-s-k2_s4160 09:51:32
+ decision_ms mean 7, max 49  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.4  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_benign_fever-s-k4_s4160 09:56:48
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.4  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_benign_fever-s-v125_s4160 10:02:03
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.3  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_benign_fever-s-v200_s4160 10:07:19
+ decision_ms mean 7, max 18  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.0  benign_harmed_pct 0.0
+matrix done 10:12:35
+=== [1/6] sens_T1B_F2H_fever-s-r60_s4187 10:12:35
+ decision_ms mean 9, max 665  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.6  benign_harmed_pct 27.95
+=== [2/6] sens_T1B_F2H_fever-s-r80_s4187 10:17:50
+ decision_ms mean 9, max 563  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.8  benign_harmed_pct 27.5
+=== [3/6] sens_T1B_F2H_fever-s-k2_s4187 10:23:06
+ decision_ms mean 9, max 590  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.2  benign_harmed_pct 27.43
+=== [4/6] sens_T1B_F2H_fever-s-k4_s4187 10:28:22
+ decision_ms mean 9, max 543  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.2  benign_harmed_pct 27.45
+=== [5/6] sens_T1B_F2H_fever-s-v125_s4187 10:33:37
+ decision_ms mean 9, max 656  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.2  benign_harmed_pct 27.97
+=== [6/6] sens_T1B_F2H_fever-s-v200_s4187 10:38:53
+ decision_ms mean 9, max 506  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.3  benign_harmed_pct 28.01
+matrix done 10:44:08
+=== [1/6] sens_T1B_A2_fever-s-r60_s4161 10:44:09
+ decision_ms mean 11, max 1053  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_A2_fever-s-r80_s4161 10:49:25
+ decision_ms mean 14, max 1269  probe_post_success_pct 95.38  probe_post_connect_ms_median 126.7  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_A2_fever-s-k2_s4161 10:54:41
+ decision_ms mean 14, max 1441  probe_post_success_pct 98.65  probe_post_connect_ms_median 47.5  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_A2_fever-s-k4_s4161 10:59:57
+ decision_ms mean 14, max 1446  probe_post_success_pct 98.27  probe_post_connect_ms_median 55.5  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_A2_fever-s-v125_s4161 11:05:13
+ decision_ms mean 13, max 1374  probe_post_success_pct 98.46  probe_post_connect_ms_median 51.3  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_A2_fever-s-v200_s4161 11:10:29
+ decision_ms mean 14, max 1394  probe_post_success_pct 98.65  probe_post_connect_ms_median 46.7  benign_harmed_pct 0.0
+matrix done 11:15:45
+=== [1/6] sens_T1B_A4_fever-s-r60_s4161 11:15:45
+ decision_ms mean 11, max 1052  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.9  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_A4_fever-s-r80_s4161 11:21:01
+ decision_ms mean 17, max 1375  probe_post_success_pct 85.74  probe_post_connect_ms_median 131.5  benign_harmed_pct 0.02
+=== [3/6] sens_T1B_A4_fever-s-k2_s4161 11:26:17
+ decision_ms mean 14, max 1241  probe_post_success_pct 96.72  probe_post_connect_ms_median 45.7  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_A4_fever-s-k4_s4161 11:31:34
+ decision_ms mean 13, max 1149  probe_post_success_pct 96.72  probe_post_connect_ms_median 48.0  benign_harmed_pct 0.01
+=== [5/6] sens_T1B_A4_fever-s-v125_s4161 11:36:50
+ decision_ms mean 13, max 1127  probe_post_success_pct 96.72  probe_post_connect_ms_median 47.4  benign_harmed_pct 0.01
+=== [6/6] sens_T1B_A4_fever-s-v200_s4161 11:42:06
+ decision_ms mean 13, max 1254  probe_post_success_pct 96.53  probe_post_connect_ms_median 68.1  benign_harmed_pct 0.01
+matrix done 11:47:22
+=== [1/6] sens_T1B_E9P_fever-s-r60_s4161 11:47:22
+ decision_ms mean 57, max 1599  probe_post_success_pct 50.67  probe_post_connect_ms_median 126.6  benign_harmed_pct 0.01
+=== [2/6] sens_T1B_E9P_fever-s-r80_s4161 11:52:52
+ decision_ms mean 37, max 1550  probe_post_success_pct 57.03  probe_post_connect_ms_median 46.0  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_E9P_fever-s-k2_s4161 11:58:09
+ decision_ms mean 57, max 1725  probe_post_success_pct 47.78  probe_post_connect_ms_median 147.9  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_E9P_fever-s-k4_s4161 12:03:48
+ decision_ms mean 52, max 1703  probe_post_success_pct 52.6  probe_post_connect_ms_median 47.7  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_E9P_fever-s-v125_s4161 12:09:05
+ decision_ms mean 46, max 1682  probe_post_success_pct 54.72  probe_post_connect_ms_median 46.4  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_E9P_fever-s-v200_s4161 12:14:21
+ decision_ms mean 50, max 1771  probe_post_success_pct 48.94  probe_post_connect_ms_median 213.2  benign_harmed_pct 0.01
+matrix done 12:19:38
+=== [1/6] sens_T1B_benign_fever-s-r60_s4161 12:19:38
+ decision_ms mean 7, max 14  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_benign_fever-s-r80_s4161 12:24:54
+ decision_ms mean 7, max 46  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_benign_fever-s-k2_s4161 12:30:09
+ decision_ms mean 7, max 23  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.7  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_benign_fever-s-k4_s4161 12:35:25
+ decision_ms mean 7, max 11  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_benign_fever-s-v125_s4161 12:40:40
+ decision_ms mean 7, max 14  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_benign_fever-s-v200_s4161 12:45:56
+ decision_ms mean 7, max 15  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.0
+matrix done 12:51:12
+=== [1/6] sens_T1B_F2H_fever-s-r60_s4188 12:51:12
+ decision_ms mean 10, max 848  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.0  benign_harmed_pct 29.72
+=== [2/6] sens_T1B_F2H_fever-s-r80_s4188 12:56:27
+ decision_ms mean 9, max 771  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.0  benign_harmed_pct 30.03
+=== [3/6] sens_T1B_F2H_fever-s-k2_s4188 13:01:43
+ decision_ms mean 9, max 729  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 29.99
+=== [4/6] sens_T1B_F2H_fever-s-k4_s4188 13:06:59
+ decision_ms mean 11, max 697  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.3  benign_harmed_pct 16.21
+=== [5/6] sens_T1B_F2H_fever-s-v125_s4188 13:12:14
+ decision_ms mean 10, max 825  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.5  benign_harmed_pct 29.76
+=== [6/6] sens_T1B_F2H_fever-s-v200_s4188 13:17:30
+ decision_ms mean 9, max 740  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 29.65
+matrix done 13:22:46
+=== [1/6] sens_T1B_A2_fever-s-r60_s4162 13:22:46
+ decision_ms mean 11, max 1048  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.1  benign_harmed_pct 0.01
+=== [2/6] sens_T1B_A2_fever-s-r80_s4162 13:28:02
+ decision_ms mean 14, max 1285  probe_post_success_pct 95.38  probe_post_connect_ms_median 97.8  benign_harmed_pct 0.01
+=== [3/6] sens_T1B_A2_fever-s-k2_s4162 13:33:18
+ decision_ms mean 11, max 901  probe_post_success_pct 100.0  probe_post_connect_ms_median 49.3  benign_harmed_pct 0.03
+=== [4/6] sens_T1B_A2_fever-s-k4_s4162 13:38:34
+ decision_ms mean 11, max 842  probe_post_success_pct 100.0  probe_post_connect_ms_median 49.9  benign_harmed_pct 0.02
+=== [5/6] sens_T1B_A2_fever-s-v125_s4162 13:43:50
+ decision_ms mean 11, max 808  probe_post_success_pct 100.0  probe_post_connect_ms_median 69.4  benign_harmed_pct 0.01
+=== [6/6] sens_T1B_A2_fever-s-v200_s4162 13:49:06
+ decision_ms mean 11, max 912  probe_post_success_pct 99.81  probe_post_connect_ms_median 55.9  benign_harmed_pct 0.01
+matrix done 13:54:22
+=== [1/6] sens_T1B_A4_fever-s-r60_s4162 13:54:22
+ decision_ms mean 12, max 948  probe_post_success_pct 96.92  probe_post_connect_ms_median 49.6  benign_harmed_pct 0.01
+=== [2/6] sens_T1B_A4_fever-s-r80_s4162 13:59:39
+ decision_ms mean 17, max 1461  probe_post_success_pct 77.65  probe_post_connect_ms_median 48.0  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_A4_fever-s-k2_s4162 14:04:55
+ decision_ms mean 13, max 1194  probe_post_success_pct 95.76  probe_post_connect_ms_median 45.6  benign_harmed_pct 0.01
+=== [4/6] sens_T1B_A4_fever-s-k4_s4162 14:10:11
+ decision_ms mean 12, max 1039  probe_post_success_pct 97.88  probe_post_connect_ms_median 50.5  benign_harmed_pct 0.04
+=== [5/6] sens_T1B_A4_fever-s-v125_s4162 14:15:27
+ decision_ms mean 12, max 911  probe_post_success_pct 100.0  probe_post_connect_ms_median 49.3  benign_harmed_pct 0.01
+=== [6/6] sens_T1B_A4_fever-s-v200_s4162 14:20:43
+ decision_ms mean 12, max 1171  probe_post_success_pct 100.0  probe_post_connect_ms_median 48.4  benign_harmed_pct 0.01
+matrix done 14:25:59
+=== [1/6] sens_T1B_E9P_fever-s-r60_s4162 14:25:59
+ decision_ms mean 56, max 1769  probe_post_success_pct 56.65  probe_post_connect_ms_median 63.3  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_E9P_fever-s-r80_s4162 14:31:16
+ decision_ms mean 37, max 1759  probe_post_success_pct 58.57  probe_post_connect_ms_median 146.6  benign_harmed_pct 0.02
+=== [3/6] sens_T1B_E9P_fever-s-k2_s4162 14:36:34
+ decision_ms mean 34, max 1588  probe_post_success_pct 58.57  probe_post_connect_ms_median 45.2  benign_harmed_pct 0.02
+=== [4/6] sens_T1B_E9P_fever-s-k4_s4162 14:42:45
+ decision_ms mean 41, max 1681  probe_post_success_pct 61.08  probe_post_connect_ms_median 44.5  benign_harmed_pct 0.02
+=== [5/6] sens_T1B_E9P_fever-s-v125_s4162 14:48:01
+ decision_ms mean 41, max 1634  probe_post_success_pct 59.54  probe_post_connect_ms_median 46.4  benign_harmed_pct 0.02
+=== [6/6] sens_T1B_E9P_fever-s-v200_s4162 14:53:18
+ decision_ms mean 42, max 1755  probe_post_success_pct 58.0  probe_post_connect_ms_median 46.6  benign_harmed_pct 0.0
+matrix done 14:58:42
+=== [1/6] sens_T1B_benign_fever-s-r60_s4162 14:58:42
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+=== [2/6] sens_T1B_benign_fever-s-r80_s4162 15:03:58
+ decision_ms mean 7, max 14  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 0.0
+=== [3/6] sens_T1B_benign_fever-s-k2_s4162 15:09:13
+ decision_ms mean 7, max 13  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 0.0
+=== [4/6] sens_T1B_benign_fever-s-k4_s4162 15:14:29
+ decision_ms mean 7, max 44  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.9  benign_harmed_pct 0.0
+=== [5/6] sens_T1B_benign_fever-s-v125_s4162 15:19:45
+ decision_ms mean 7, max 12  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.0  benign_harmed_pct 0.0
+=== [6/6] sens_T1B_benign_fever-s-v200_s4162 15:25:00
+ decision_ms mean 7, max 16  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.1  benign_harmed_pct 0.0
+matrix done 15:30:16
+=== [1/6] sens_T1B_F2H_fever-s-r60_s4189 15:30:16
+ decision_ms mean 12, max 540  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.6  benign_harmed_pct 11.27
+=== [2/6] sens_T1B_F2H_fever-s-r80_s4189 15:35:32
+ decision_ms mean 11, max 639  probe_post_success_pct 100.0  probe_post_connect_ms_median 48.4  benign_harmed_pct 11.1
+=== [3/6] sens_T1B_F2H_fever-s-k2_s4189 15:40:47
+ decision_ms mean 9, max 612  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.7  benign_harmed_pct 30.85
+=== [4/6] sens_T1B_F2H_fever-s-k4_s4189 15:46:03
+ decision_ms mean 9, max 605  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 30.91
+=== [5/6] sens_T1B_F2H_fever-s-v125_s4189 15:51:18
+ decision_ms mean 10, max 771  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.8  benign_harmed_pct 30.38
+=== [6/6] sens_T1B_F2H_fever-s-v200_s4189 15:56:34
+ decision_ms mean 9, max 577  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.5  benign_harmed_pct 30.94
+matrix done 16:01:50
+## pass 2 start 2026-11-18 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+matrix done 16:01:50
+## sensitivity study done 2026-11-18 16:01:50
