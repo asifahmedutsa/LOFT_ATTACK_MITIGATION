@@ -65,7 +65,7 @@ FINDINGS = [
      "We removed each part of FEVER in turn. Without blocking the attacker at its access port, the attackers "
      "kept 23 % to 35 % of the table, because the entries FEVER evicted were simply installed again. "
      "Without the volume rule, the attackers' share under Aware rose from 14 % to 43 %. Without the "
-     "detector, the attackers were blocked 35 s to 55 s later. Without federated training, the share under "
+     "detector, the attackers were blocked 37 s to 55 s later. Without federated training, the share under "
      "Mimic rose from 4.9 % to 15.7 %. So every part is needed for at least one attack."),
     ("A flash crowd from a single host can be mistaken for an attack",
      "A sudden rise in normal traffic should not be mistaken for an attack. We added three short bursts "

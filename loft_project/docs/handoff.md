@@ -15,7 +15,7 @@ FEVER defends SDN switches against low-rate flow table overflow (LOFT) attacks.
   volume rule at >= 90 % occupancy: host holds > X (1.5x the busiest benign host in calibration; T1B
   s11/s12/s13 = 799.5/784.5/796.5) and >= 3x the median host. Blocks are permanent, installed as a
   drop rule for the host's MAC at its access-switch ingress.
-- **Target venue:** IEEE NetSoft 2027 (2025/2026 full papers: 9 pages including references).
+- **Target venue:** IEEE/IFIP NOMS 2027 (chosen 23 Nov 2026): firm deadline 30 Nov 2026; full papers at most 8 pages of main text plus references and an optional appendix (12 pages total).
 - Repository: `~/LOFT_ATTACK_MITIGATION/loft_project`, branch `loft-v2`, remote origin.
 
 ## 2. Standing rules (the user's)
@@ -107,7 +107,7 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
   plain words with their numbers (finding 8: settings).
 - **docs/fever_observations.pdf** (docs/build_observations.py): older supervisor summary of the final
   campaign (16 Nov), unchanged.
-- **paper/** (NetSoft draft, IEEEtran): main.tex, refs.bib (details from the PDFs in
+- **paper/** (NOMS 2027 draft, IEEEtran): main.tex, refs.bib (details from the PDFs in
   "Other Paper/M Sc Paper"), tables/ (`make sync` copies them from results/testbed_prereg_final/paper
   in a smaller font), figs/make_architecture.py (architecture figure of the tested design),
   main.pdf 8 pages, no overfull boxes; Results has a subsection and Table VIII (tables/sens.tex, hand-written) on the sensitivity study. Still open in the paper: author block placeholder; FEVER has no

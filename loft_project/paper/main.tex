@@ -248,7 +248,7 @@ also rejected if FEVER is clearly worse on any single attack.
 \subsection{Comparison with published defenses}
 
 Table~\ref{tab:main} gives the results per attack and Table~\ref{tab:tests} the tests; 25 of the 33
-are supported. Over the T1B attacks FEVER harmed 0.011\,\% of benign flows, against 1.0\,\% to 5.2\,\%
+are supported. Over the 19 seed-paired runs of G2, Spoof, Pulse, Mimic and Aware on T1B, FEVER harmed 0.011\,\% of benign flows, against 1.0\,\% to 5.2\,\%
 for the baselines, and harmed none in the runs without an attack. It kept 84.2\,\% of new connections
 working on average, and 97\,\% to 99\,\% under G2, Spoof, Pulse and Mimic, where most baselines fell
 to between 11\,\% and 41\,\%. The attackers held 6.8\,\% of the table under FEVER and 24.2\,\% to
@@ -306,7 +306,7 @@ training for 300 trees.
 Table~\ref{tab:ablation} removes one part of FEVER at a time. Without ingress blocking the occupancy
 rose to 23\,\% to 35\,\% under all three attacks, the largest single effect. Without the volume rule it
 rose from 14.1\,\% to 42.6\,\% under Aware, while G2 and Mimic were unaffected. Without the detector the
-first block came 35\,s to 55\,s later under G2 and Mimic and the occupancy doubled. Without federated
+first block came 37\,s to 55\,s later under G2 and Mimic and the occupancy more than doubled. Without federated
 training the occupancy under Mimic rose from 4.9\,\% to 15.7\,\%. Under Aware, FEVER without the
 detector did slightly better than the full system (10.4\,\% against 14.1\,\%).
 
@@ -384,7 +384,7 @@ are encoded in fixed point modulo $2^{64}$, so the masks cancel exactly. XGBoost
 hook for the masks, so we implemented the same histogram algorithm in a separate trainer. Masked and
 unmasked training, each repeated with fresh keys, gave the same model bit for bit, and the trainer
 agrees with lossless federated XGBoost on 99.0\,\% of the test rows (F1 86.76\,\% against 86.79\,\%).
-Masking added 2.1\,\% to the training time and no traffic. The same masked sum lets the controllers set
+In that trainer, masking added 2.1\,\% to the training time and no traffic. The same masked sum lets the controllers set
 $\tau$ on their pooled benign scores, counted over a public grid, without revealing them. This lowered
 FEVER's false alarms on T1B from 0.79\,\% to 0.69\,\% at a loss of 0.4 points of recall, still above the
 0.1\,\% target. The masks protect against curious but honest parties; two colluding controllers can

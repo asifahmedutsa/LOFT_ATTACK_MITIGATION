@@ -274,7 +274,7 @@ story = [
     P("6.4. Ablation", "h2"),
     P("Each part of FEVER matters on at least one attack (Fig. 4). Ingress blocking matters most: without "
       "it the occupancy rose to 23 % to 35 %. Without the volume rule, Aware rose from 14 % to 43 %. "
-      "Without the detector, blocks came 35 s to 55 s later. Without federated training, Mimic rose from "
+      "Without the detector, blocks came 37 s to 55 s later. Without federated training, Mimic rose from "
       "4.9 % to 15.7 %."),
     figure("fig_ablation", "Fig. 4. FEVER with each part removed, on T1B."),
 
