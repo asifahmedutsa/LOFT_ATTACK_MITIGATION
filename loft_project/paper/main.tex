@@ -41,8 +41,8 @@ rate-based detectors. Published defenses train a classifier on the traffic of a 
 when the attacker changes its pattern. In this paper, we propose FEVER, which trains one XGBoost detector
 across several SDN controllers without moving their data. The controllers exchange only per-bin gradient
 and hessian sums, so that the split search sees the same histograms as XGBoost on the pooled rows. At run
-time FEVER evicts the entries its detector flags and blocks a host at its ingress port when its evictions
-or its share of the table become outliers. We compare FEVER with six published defenses, reimplemented on
+time the detector also drives the mitigation. FEVER evicts the entries it flags and blocks a host at its
+ingress port when these evictions or the host's share of the table become outliers. We compare FEVER with six published defenses, reimplemented on
 a Mininet, Open vSwitch and Ryu testbed, over seven attacks, two real traffic captures and 532 runs, with
 hypotheses fixed before the runs. FEVER harmed 0.011\,\% of benign flows against 1.0\,\% to 5.2\,\% and
 kept 84\,\% of new connections working against 21\,\% to 46\,\%; 25 of 33 tests are supported.
@@ -98,8 +98,9 @@ defenses, and federate them by exchanging histogram sums instead of model weight
 contributions of this paper are as follows:
 \begin{itemize}
 \item FEVER, a defense that trains an XGBoost detector across controllers by exchanging only gradient and
-  hessian histograms, so that every split is chosen as on the pooled data, and that responds by evicting
-  flagged entries and by blocking the attacking host at its ingress port (Section~\ref{sec:design}).
+  hessian histograms, so that every split is chosen as on the pooled data, and that uses the scores of this detector to
+  decide which entries to evict and which hosts to block at their ingress port
+  (Section~\ref{sec:design}).
 \item A comparison with six published defenses reimplemented on a Mininet, Open vSwitch and Ryu testbed
   with two real traffic captures and seven attacks, three of which no controller trained on. The
   hypotheses, measures and tests were fixed before the 532 runs (Sections~\ref{sec:setup}
@@ -267,7 +268,9 @@ switch every second and keeps, for every entry, the history of its counters and 
 its installation. The \textit{feature extractor} computes the features of each entry whose counters
 changed since the previous poll. The \textit{detector} scores these entries with the federated model.
 The \textit{mitigator} evicts flagged entries and blocks hosts by the two rules of
-Section~\ref{sec:response}. No change to the switches is needed: the controller uses only flow
+Section~\ref{sec:response}. The detector therefore drives the mitigation. Its scores decide which
+entries are evicted, and the eviction rule blocks a host on the number of its evicted entries, so only
+the volume rule acts without the model. No change to the switches is needed: the controller uses only flow
 statistics, flow deletion and flow installation messages of OpenFlow.
 
 \subsection{Features}
@@ -460,9 +463,12 @@ XGBoost trees, gained nothing over local training on these attacks, while the lo
 
 Table~\ref{tab:ablation} removes one part of FEVER at a time. Without ingress blocking the occupancy rose
 to 23\,\% to 35\,\% under all three attacks, the largest single effect. Without the volume rule it rose
-from 14.1\,\% to 42.6\,\% under Aware. Without the detector the first block came 37\,s to 55\,s later
-under G2 and Mimic and the occupancy more than doubled. Without federated training the occupancy under
-Mimic rose from 4.9\,\% to 15.7\,\%. FEVER took 20.8\,ms per decision, close to no defense (19.4\,ms) and
+from 14.1\,\% to 42.6\,\% under Aware. Without the detector only the volume rule blocks. The first block then came
+37\,s to 55\,s later under G2 and Mimic and the occupancy more than doubled, from 4.8\,\% to 10.9\,\%
+and from 4.9\,\% to 14.1\,\%. Under Aware the detector did not help, as the volume rule alone
+blocked earlier (76\,s against 91\,s). Without federated training the occupancy under Mimic rose from
+4.9\,\% to 15.7\,\% and the first block came 64\,s later, so the mitigation depends on what the
+federated model learned and not only on having a detector. FEVER took 20.8\,ms per decision, close to no defense (19.4\,ms) and
 below every baseline, used the least controller CPU (62\,\%) and the most memory (253\,MB), for its
 300-tree model (Table~\ref{tab:overhead}).
 
@@ -522,8 +528,8 @@ know the volume limit can evade it; with four or more, the eviction rule blocked
 \section{Conclusion}
 \label{sec:conclusion}
 
-FEVER trains a flow-entry detector across SDN controllers without moving their recordings, and pairs it
-with eviction and ingress blocking. On a testbed with real traffic, seven attacks and six reimplemented
+FEVER trains a flow-entry detector across SDN controllers without moving their recordings, and uses its
+scores to drive eviction and ingress blocking. On a testbed with real traffic, seven attacks and six reimplemented
 defenses, it harmed fewer benign flows and kept more new connections working than every baseline, and
 federated training let a controller detect an attack it had never recorded. Detecting slow attacks with
 spoofed sources, telling a flash crowd from one host apart from an attack, and setting a threshold that
