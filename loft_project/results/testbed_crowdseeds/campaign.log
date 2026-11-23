@@ -1,0 +1,64 @@
+bash: testbed/campaign_crowdseeds.sh: No such file or directory
+## pass 1 start 2026-11-23 17:29:11
+=== [1/2] fc3_T1B_F2H_none_s4200 17:29:11
+ decision_ms mean 10, max 29  probe_post_success_pct 100.0  probe_post_connect_ms_median 63.8  benign_harmed_pct 0.22
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4200 17:34:28
+ decision_ms mean 9, max 631  probe_post_success_pct 100.0  probe_post_connect_ms_median 44.7  benign_harmed_pct 31.22
+matrix done 17:39:44
+=== [1/2] fc3_T1B_F2H_none_s4201 17:39:44
+ decision_ms mean 9, max 25  probe_post_success_pct 98.46  probe_post_connect_ms_median 160.0  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4201 17:45:00
+ decision_ms mean 12, max 156  probe_post_success_pct 98.27  probe_post_connect_ms_median 69.6  benign_harmed_pct 0.04
+matrix done 17:50:16
+=== [1/2] fc3_T1B_F2H_none_s4202 17:50:16
+ decision_ms mean 9, max 33  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.4  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4202 17:55:31
+ decision_ms mean 14, max 569  probe_post_success_pct 100.0  probe_post_connect_ms_median 54.4  benign_harmed_pct 3.55
+matrix done 18:00:47
+=== [1/2] fc3_T1B_F2H_none_s4203 18:00:47
+ decision_ms mean 9, max 27  probe_post_success_pct 97.3  probe_post_connect_ms_median 73.0  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4203 18:06:03
+ decision_ms mean 9, max 601  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.5  benign_harmed_pct 28.76
+matrix done 18:11:19
+=== [1/2] fc3_T1B_F2H_none_s4204 18:11:19
+ decision_ms mean 9, max 54  probe_post_success_pct 100.0  probe_post_connect_ms_median 49.1  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4204 18:16:35
+ decision_ms mean 10, max 583  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.2  benign_harmed_pct 20.86
+matrix done 18:21:51
+=== [1/2] fc3_T1B_F2H_none_s4205 18:21:51
+ decision_ms mean 9, max 29  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.4  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4205 18:27:07
+ decision_ms mean 9, max 627  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.1  benign_harmed_pct 29.34
+matrix done 18:32:22
+=== [1/2] fc3_T1B_F2H_none_s4206 18:32:22
+ decision_ms mean 9, max 29  probe_post_success_pct 100.0  probe_post_connect_ms_median 47.2  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4206 18:37:38
+ decision_ms mean 9, max 625  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.3  benign_harmed_pct 30.41
+matrix done 18:42:54
+=== [1/2] fc3_T1B_F2H_none_s4207 18:42:54
+ decision_ms mean 9, max 26  probe_post_success_pct 100.0  probe_post_connect_ms_median 46.1  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4207 18:48:09
+ decision_ms mean 12, max 763  probe_post_success_pct 100.0  probe_post_connect_ms_median 79.9  benign_harmed_pct 20.73
+matrix done 18:53:25
+=== [1/2] fc3_T1B_F2H_none_s4208 18:53:25
+ decision_ms mean 9, max 26  probe_post_success_pct 100.0  probe_post_connect_ms_median 118.2  benign_harmed_pct 0.0
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4208 18:58:41
+ decision_ms mean 10, max 818  probe_post_success_pct 100.0  probe_post_connect_ms_median 45.4  benign_harmed_pct 27.38
+matrix done 19:03:56
+=== [1/2] fc3_T1B_F2H_none_s4209 19:03:57
+ decision_ms mean 9, max 33  probe_post_success_pct 96.53  probe_post_connect_ms_median 48.3  benign_harmed_pct 0.36
+=== [2/2] fc3_T1B_F2H_fever-fl-ll_s4209 19:09:12
+ decision_ms mean 11, max 594  probe_post_success_pct 96.53  probe_post_connect_ms_median 47.5  benign_harmed_pct 15.32
+matrix done 19:14:28
+## pass 2 start 2026-11-23 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+matrix done 19:14:28
+## one-host crowd seeds done 2026-11-23 19:14:28
