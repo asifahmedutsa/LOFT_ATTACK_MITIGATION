@@ -13,7 +13,7 @@ sync:
 	    -e 's/Data sent (MB)/Data (MB)/' -e 's/Recall, Mimic/Rec., Mimic/' -e 's/Recall, other ctrl./Rec., other ctrl./' \
 	    -e 's/^\\footnotesize$$/\\footnotesize\\setlength{\\tabcolsep}{4pt}/' tables/table_fedcost.tex
 	sed -i 's/tabcolsep}{3pt}/tabcolsep}{2pt}/' tables/table_overhead.tex
-	cp $(RES)/fig_timeline.pdf figs/
+	cp $(RES)/fig_timeline.pdf $(RES)/fig_fl_effect.pdf figs/
 	~/.venvs/loft/bin/python figs/make_architecture.py
 
 clean:

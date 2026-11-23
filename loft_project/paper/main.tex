@@ -6,6 +6,7 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+\usepackage{placeins}
 
 \begin{document}
 
@@ -273,6 +274,12 @@ FEVER's volume rule let the EVX attackers keep 17.7\,\%. H5 is therefore not sup
 \caption{Attack occupancy over time on T1B (median over five seeds). The dotted line marks the start of the attack.}
 \label{fig:timeline}
 \end{figure*}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/fig_fl_effect.pdf}
+\caption{Local against federated training on T1B: offline recall and testbed outcome (mean and s.d. over seeds).}
+\label{fig:fleffect}
+\end{figure*}
 \input{tables/table_fedcost}
 \input{tables/table_ablation}
 \input{tables/table_detect}
@@ -286,7 +293,7 @@ only baseline that lowers the occupancy under Aware, to about 52\,\% after 235\,
 
 \subsection{Effect of federated training}
 
-Federated training matters on the attacks that the local controller has not seen. Offline, it raised
+Federated training matters on the attacks that the local controller has not seen (Fig.~\ref{fig:fleffect}). Offline, it raised
 the recall on attacks seen only by another controller from 75.8\,\% to 90.5\,\%, and on Mimic from
 0.2\,\% to 60.9\,\%. On the testbed, FEVER with the federated detector blocked the Mimic attackers 64\,s
 earlier than with C3's detector, lowered the occupancy from 15.7\,\% to 4.9\,\% and raised
@@ -390,6 +397,7 @@ FEVER's false alarms on T1B from 0.79\,\% to 0.69\,\% at a loss of 0.4 points of
 0.1\,\% target. The masks protect against curious but honest parties; two colluding controllers can
 recover the third's sums, and training stops if a controller drops out.
 
+\FloatBarrier
 \section{Discussion and Limitations}
 
 The results separate two effects. Ingress blocking is what keeps the table free: without it FEVER left
