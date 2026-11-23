@@ -1,12 +1,14 @@
 \begin{table}[t]
 \centering
-\caption{One setting changed (T1B): attack occupancy (\%), benign blocks without attack, runs with the crowd host blocked.}
+\caption{Sensitivity of FEVER to its settings on T1B.}
 \label{tab:sens}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrrrrr}
 \toprule
-Setting & G2 & Mimic & Aware & No attack & One-host crowd \\
+& \multicolumn{3}{c}{Attack occupancy (\%)} & Benign blocks, & Crowd host \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+Setting & G2 & Mimic & Aware & no attack & blocked \\
 \midrule
 FEVER & 4.8 & 4.9 & 14.3 & 0 & 2 of 3 \\
 $\rho = 0.6$ & 2.2 & 2.2 & 15.8 & 0 & 3 of 3 \\

@@ -6,7 +6,9 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
-\usepackage{placeins}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.85}
 
 \begin{document}
 
@@ -24,8 +26,8 @@ A low-rate flow table overflow (LOFT) attack fills the flow table of an SDN swit
 attacker keeps alive by sending one packet to each of them shortly before the idle timeout. New benign
 flows then find no room in the table, while the attack traffic stays far below the alarm level of
 rate-based detectors. Published defenses train a classifier on the traffic of a single network and fail
-when the attacker changes its pattern. We present FEVER, which trains one XGBoost detector across
-several SDN controllers without moving their data: the controllers exchange only per-bin gradient and
+when the attacker changes its pattern. In this paper, we propose FEVER, which trains one XGBoost detector across
+several SDN controllers without moving their data. The controllers exchange only per-bin gradient and
 hessian sums, so that the split search sees the same histograms as XGBoost on the pooled rows. At run time
 FEVER evicts the entries its detector flags and blocks a host at its ingress port when its evictions or
 its share of the table become outliers. We compare FEVER with six published defenses, reimplemented on a
@@ -33,8 +35,8 @@ Mininet, Open vSwitch and Ryu testbed, over seven attacks, two real traffic capt
 hypotheses fixed before the runs. FEVER harmed 0.011\,\% of benign flows against 1.0\,\% to 5.2\,\% and
 kept 84\,\% of new connections working against 21\,\% to 46\,\%; 25 of 33 tests are supported.
 Federated training raised the recall on an attack that only another controller had seen from 0.2\,\% to
-61\,\%. Two attacks remain open: a slow attack with spoofed sources, which no method stops, and attackers
-that stay below FEVER's volume limit.
+61\,\%. However, no method stopped a slow attack with spoofed sources, and attackers that stay below
+FEVER's volume limit were not blocked.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -59,13 +61,13 @@ Each of them is trained and evaluated on the traffic of one network, with the sa
 training and test time, and reports detection rates near 99\,\%. Zeng et~al.\ found that how well
 FTMaster detects an attack depends on the eviction policy of the switch, and built an attack that adapts
 to it \cite{zeng2024alfo}.
-In practice the operators of different networks see different attacks: one controller may have recorded
-an attack that imitates benign packet sizes, another a pulsed attack. Pooling their recordings would
+Moreover, the operators of different networks usually observe different attacks. For example, one
+controller may have recorded an attack that imitates benign packet sizes, and another a pulsed attack. Pooling their recordings would
 give a better classifier, but flow records reveal the traffic of each network and are rarely shared.
 
-This paper asks whether controllers can train a common detector without sharing their recordings, and
-whether such a detector helps on a real testbed against attacks that the local training never saw. Our
-contributions are:
+In this paper, we study whether controllers can train a common detector without sharing their
+recordings, and whether such a detector helps on a real testbed against attacks that the local training
+never saw. The main contributions of this paper are as follows:
 \begin{itemize}
 \item FEVER, a defense that trains a gradient-boosted tree detector across controllers by exchanging only
   histogram sums, so that it matches training on pooled data, and that responds by eviction
@@ -74,8 +76,8 @@ contributions are:
   with two real traffic captures and seven attacks, three of which no controller trained on. The
   hypotheses, measures and tests were fixed before the 532 runs (Sections~\ref{sec:setup}
   and~\ref{sec:results}).
-\item Results that show where federation matters and where it does not, including two attacks against
-  which FEVER fails, and four further studies: benign flash crowds, up to eight colluding attackers,
+\item An analysis of the cases in which federated training improves the defense, including two attacks
+  that FEVER does not stop, and four further studies: benign flash crowds, up to eight colluding attackers,
   the sensitivity to FEVER's settings, and secure aggregation of the exchanged histograms.
 \end{itemize}
 
@@ -96,7 +98,7 @@ FTODefender weights table features by the CRITIC method and classifies with Ligh
 regression \cite{tang2024ftodefender}. FTOP adds a Kalman predictor of the flow count and also handles
 flash crowds \cite{tang2024ftop}. FloRa uses CatBoost with new features of the entries
 \cite{mudgal2024flora}, and DMS-BTT combines a table-state and a per-entry CatBoost model with two
-occupancy thresholds \cite{tang2025dmsbtt}. rDefender does without a classifier: it finds the ports
+occupancy thresholds \cite{tang2025dmsbtt}. rDefender does not use a classifier; instead, it finds the ports
 whose share of the table is abnormal and deletes their entries at random \cite{kong2024rdefender}.
 FTShield runs a classifier in the P4 pipeline of a Tofino switch \cite{jain2025ftshield}. All of these
 train on one network. FEVER keeps the evict-then-block response of FTMaster and FTODefender and
@@ -105,7 +107,7 @@ changes how the detector is trained.
 \textit{Federated learning.} FedAvg \cite{mcmahan2017fedavg} and FedProx \cite{li2020fedprox} average
 the weights of locally trained models. For gradient-boosted trees, SecureBoost showed that a federated
 model can be lossless, that is, identical to the centrally trained one, in the vertical setting
-\cite{cheng2021secureboost}. FEVER is horizontal: every controller holds the same features for
+\cite{cheng2021secureboost}. FEVER uses the horizontal setting, in which every controller holds the same features for
 different flows, and the sum of the controllers' gradient histograms is the histogram that XGBoost's
 algorithm \cite{chen2016xgboost} computes on the pooled rows. Pairwise masking \cite{bonawitz2017secagg} hides each
 controller's sums from the others.
@@ -171,7 +173,7 @@ Eviction alone does not stop an attacker who reinstalls its flows, so FEVER also
 rules. The eviction rule blocks a host when, within the last 10\,s, at least 50 of its entries were
 evicted, at least 20\,\% of the entries it holds were evicted, and its evictions are at least three times
 those of the median host on the switch (with the median floored at 10). The volume rule acts when the
-table is at least 90\,\% full and needs no detector: it blocks a host that holds more than $X$ entries
+table is at least 90\,\% full and does not use the detector. It blocks a host that holds more than $X$ entries
 and at least three times as many as the median host. $X$ is set per switch to 1.5 times the largest
 number of entries that a benign host held in three benign calibration runs. A blocked host loses its
 entries, and the controller installs a drop rule for its MAC address at the ingress port of its access
@@ -261,7 +263,7 @@ baselines, and it also held a lower occupancy than every baseline trained on the
 UHt, a capture no controller trained on, FEVER held the attackers to 7.7\,\% against 37.0\,\% to
 40.6\,\% for FTMaster, DMS-BTT and rDefender.
 
-FEVER is not better everywhere. FTODefender held G2, Pulse and EVX at about 0.2\,\%, below FEVER, so
+However, FEVER did not outperform every baseline on every attack. FTODefender held G2, Pulse and EVX at about 0.2\,\%, below FEVER, so
 H2 fails against it; the price was a benign harm of 3.4\,\% and a new-connection success of
 45.6\,\%, against 0.011\,\% and 84.2\,\% for FEVER. Under Slow, every method left about 20\,\% of the table to the attackers, and
 FEVER's volume rule let the EVX attackers keep 17.7\,\%. H5 is therefore not supported on T1B.
@@ -277,11 +279,13 @@ FEVER's volume rule let the EVX attackers keep 17.7\,\%. H5 is therefore not sup
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figs/fig_fl_effect.pdf}
-\caption{Local against federated training on T1B: offline recall and testbed outcome (mean and s.d. over seeds).}
+\caption{Effect of federated training on T1B (mean and s.d. over seeds).}
 \label{fig:fleffect}
 \end{figure*}
 \input{tables/table_fedcost}
 \input{tables/table_ablation}
+\begingroup\renewcommand{\small}{\footnotesize}\input{tables/table_overhead}\endgroup
+\input{tables/sens}
 \input{tables/table_detect}
 
 
@@ -293,7 +297,8 @@ only baseline that lowers the occupancy under Aware, to about 52\,\% after 235\,
 
 \subsection{Effect of federated training}
 
-Federated training matters on the attacks that the local controller has not seen (Fig.~\ref{fig:fleffect}). Offline, it raised
+Federated training improves detection mainly on the attacks that the local controller has not seen
+(Fig.~\ref{fig:fleffect}). Offline, it raised
 the recall on attacks seen only by another controller from 75.8\,\% to 90.5\,\%, and on Mimic from
 0.2\,\% to 60.9\,\%. On the testbed, FEVER with the federated detector blocked the Mimic attackers 64\,s
 earlier than with C3's detector, lowered the occupancy from 15.7\,\% to 4.9\,\% and raised
@@ -318,34 +323,19 @@ training the occupancy under Mimic rose from 4.9\,\% to 15.7\,\%. Under Aware, F
 detector did slightly better than the full system (10.4\,\% against 14.1\,\%).
 
 
-\subsection{Detection accuracy}
-
-Table~\ref{tab:detect} scores each classifier on the T1B test recordings. On the attacks the training
-controller saw, G3 and Pulse, every reimplemented classifier reaches about 99.8\,\% on all four
-measures, in line with the values reported in their papers. Over all attacks, the classifiers trained
-on C3 alone reach an F1 of 78.5\,\%, because they miss Mimic, Slow and Aware, while FEVER's federated
-detector reaches 86.8\,\%. Trained on the pooled rows, the baselines reach 90.3\,\% to 91.9\,\% at
-their papers' threshold of 0.5, with 2.6\,\% to 3.7\,\% false alarms. At FEVER's threshold rule their
-false alarms drop to 0.2\,\% to 0.3\,\% and their F1 to 81\,\% to 84\,\%; FTOP flags nothing at that
-rule. FEVER's false alarms on T1B,
-0.79\,\%, exceed the 0.1\,\% its threshold was set for, because the threshold was calibrated on another
-capture. Even so, FEVER blocked no benign host in any run.
-
-
 \subsection{Overhead}
 
 Table~\ref{tab:overhead} gives the controller's cost over all T1B runs. FEVER took 20.8\,ms per
 decision, close to no defense and below every baseline. It used the least CPU and the most
 memory, 253\,MB, for its 300-tree model.
 
-\begingroup\renewcommand{\small}{\footnotesize}\input{tables/table_overhead}\endgroup
 
 \subsection{Flash crowds and more attackers}
 
 A defense that limits a host's share of the table could block a benign host whose traffic rises
 suddenly. We added three bursts of 12\,s to the T1B replay, each at twice its rate of new flows, with no
 attacker (three seeds), in tables of 2,000 entries so that the bursts filled the core table. With 3,500
-entries they did not: larger bursts overloaded the controller, and Open vSwitch dropped 18\,\% to 29\,\%
+entries they did not, because larger bursts overloaded the controller, and Open vSwitch dropped 18\,\% to 29\,\%
 of its messages to the controller. With the crowd spread over the four benign hosts, no method blocked a benign host and
 FEVER harmed 0.02\,\% of benign flows. With the whole crowd sent by one host, FEVER blocked that host in
 two of three runs, once by the eviction rule and once by the volume rule, and its harm rose to
@@ -366,19 +356,32 @@ attack started, and FEVER's harm rose to 0.9\,\% under G2 and 2.0\,\% under EVX,
 12.1\,\% without a defense.
 
 \subsection{Sensitivity to the settings}
-\input{tables/sens}
 
-$\rho$, the ratio $k$ of the eviction rule (three times the median host) and the factor of 1.5 in $X$ were
+The values of $\rho$, the ratio $k$ of the eviction rule (three times the median host) and the factor of 1.5 in $X$ were
 fixed before the campaign. In a further preregistered study we set each lower and higher, one at a time,
 and ran G2, Mimic and Aware, the benign replay without attack (seeds 4160 to 4162) and the one-host crowd
 (seeds 4187 to 4189), 90 runs, against FEVER's runs on the same seeds (Table~\ref{tab:sens}). Seventeen of
 the 18 setting and attack pairs stayed within 0.5 points of FEVER's harm and 5 points of its occupancy.
-The exception is $\rho = 0.8$ under Mimic: eviction started later, the attackers were blocked 27\,s
-later and held 15.0\,\% of the table, and new-connection success fell from 97\,\% to 65\,\%. $\rho = 0.6$
-blocked G2 and Mimic about 25\,s earlier but raised the harm under Aware from 0.003\,\% to 0.36\,\%. No
+The exception is $\rho = 0.8$ under Mimic. Eviction started later, so the attackers were blocked 27\,s
+later and held 15.0\,\% of the table, and new-connection success fell from 97\,\% to 65\,\%. With
+$\rho = 0.6$, G2 and Mimic were blocked about 25\,s earlier, but the harm under Aware rose from
+0.003\,\% to 0.36\,\%. No
 setting blocked a benign host without an attack. Under the one-host crowd every setting blocked the
 crowd host in all three runs, by either rule, between 49\,s and 163\,s, with 23\,\% to 30\,\% harm, so the
 failure in the flash-crowd study does not come from these settings.
+
+\subsection{Detection accuracy}
+
+Table~\ref{tab:detect} scores each classifier on the T1B test recordings. On the attacks the training
+controller saw, G3 and Pulse, every reimplemented classifier reaches about 99.8\,\% on all four
+measures, in line with the values reported in their papers. Over all attacks, the classifiers trained
+on C3 alone reach an F1 of 78.5\,\%, because they miss Mimic, Slow and Aware, while FEVER's federated
+detector reaches 86.8\,\%. Trained on the pooled rows, the baselines reach 90.3\,\% to 91.9\,\% at
+their papers' threshold of 0.5, with 2.6\,\% to 3.7\,\% false alarms. At FEVER's threshold rule their
+false alarms drop to 0.2\,\% to 0.3\,\% and their F1 to 81\,\% to 84\,\%; FTOP flags nothing at that
+rule. FEVER's false alarms on T1B,
+0.79\,\%, exceed the 0.1\,\% its threshold was set for, because the threshold was calibrated on another
+capture. Nevertheless, FEVER did not block any benign host in these runs.
 
 \subsection{Secure aggregation and a federated threshold}
 \label{sec:secagg}
@@ -397,24 +400,24 @@ FEVER's false alarms on T1B from 0.79\,\% to 0.69\,\% at a loss of 0.4 points of
 0.1\,\% target. The masks protect against curious but honest parties; two colluding controllers can
 recover the third's sums, and training stops if a controller drops out.
 
-\FloatBarrier
 \section{Discussion and Limitations}
 
-The results separate two effects. Ingress blocking is what keeps the table free: without it FEVER left
-the attackers 23\,\% to 35\,\% of the table, because evicted entries come back within seconds. The detector decides how early the block comes, and its
-quality depends on whether some controller has seen a similar attack. Federation helps exactly there,
-under Mimic, and adds little where the local detector already works, under G2, or where no controller
-has seen a similar attack, under Aware.
+The results indicate that ingress blocking and the detector play different roles. Ingress blocking keeps
+the table free; without it, FEVER left the attackers 23\,\% to 35\,\% of the table, because evicted
+entries were installed again within seconds. The detector determines how early the block comes, and its
+quality depends on whether some controller has seen a similar attack. Federated training therefore
+improved the results under Mimic, but added little under G2, which the local detector already
+recognises, and under Aware, which no controller had seen.
 
-The testbed is small: one machine, three switches, at most eight attackers and runs of 300\,s. At eight
+The testbed is small, with one machine, three switches, at most eight attackers and runs of 300\,s. At eight
 attackers the controller itself became the bottleneck, and it also limited the flash crowds, which we
 therefore ran with smaller tables. The baselines are reimplementations, and some
 details, such as FTODefender's blocking rule and DMS-BTT's thresholds, follow our reading of their
 papers. A crowd sent by a single host looks to FEVER like an attacker. In an offline check on the same
 schedules, the share of a host's flows that were refreshed before the idle timeout was at most 0.17 for
 the crowd host and 0.88 or more for most attackers once their attack was under way, but near zero at the
-start of every Pulse on period, so we did not adopt it as a guard. Slow and EVX remain open. No method defends against Slow, whose spoofed sources spread its
-entries over many addresses, and EVX shows that two attackers who know the volume limit can evade it;
+start of every Pulse on period, so we did not adopt it as a guard. Finally, no method defends against Slow, whose spoofed sources spread
+its entries over many addresses, and EVX shows that two attackers who know the volume limit can evade it;
 with four or more, the eviction rule blocked most of them.
 
 \section{Conclusion}
