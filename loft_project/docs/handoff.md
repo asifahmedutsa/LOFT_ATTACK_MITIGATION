@@ -110,7 +110,7 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
 - **paper/** (NOMS 2027 draft, IEEEtran): main.tex, refs.bib (details from the PDFs in
   "Other Paper/M Sc Paper"), tables/ (`make sync` copies them from results/testbed_prereg_final/paper
   in a smaller font), figs/make_architecture.py (architecture figure of the tested design),
-  main.pdf 8 pages, no overfull boxes; Results has a subsection and Table VIII (tables/sens.tex, hand-written) on the sensitivity study. Still open in the paper: author block placeholder; FEVER has no
+  restructured 23 Nov 2026 after the related papers' balance (Introduction, Background, Related work with a defense table, FEVER design with two algorithm boxes, shorter Setup and Results); main text ends on page 8, references and an appendix (federation cost, detection, overhead, sensitivity tables) on pages 8-10; six verified federated-learning references added to refs.bib. Still open in the paper: author block placeholder; FEVER has no
   name expansion. The federated model is not identical to pooled XGBoost (sketch merge; F1 86.8 vs
   86.5) and must not be called identical.
 
