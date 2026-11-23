@@ -343,7 +343,11 @@ of its messages to the controller. With the crowd spread over the four benign ho
 FEVER harmed 0.02\,\% of benign flows. With the whole crowd sent by one host, FEVER blocked that host in
 two of three runs, once by the eviction rule and once by the volume rule, and its harm rose to
 4.9\,\%. No other method blocked a host, although FTOP and DMS-BTT deleted about 140 to 250 benign
-entries per minute.
+entries per minute. In a further preregistered study of the one-host crowd with ten more seeds (4200 to
+4209), FEVER blocked the crowd host in nine of ten runs, five times by the volume rule and four times by
+the eviction rule (11 of 13 runs in all; 95\,\% interval 55\,\% to 98\,\%). Seven of the nine blocks
+came in the first crowd, so the host was cut off for most of the run, and FEVER's harm was 20.8\,\%
+against 0.06\,\% without a defense.
 
 We then repeated G2 and EVX with four and eight attackers, split between the two access switches
 (three seeds). Under G2, FEVER's occupancy stayed below FTMaster's and DMS-BTT's in all six paired
@@ -367,8 +371,7 @@ later and held 15.0\,\% of the table, and new-connection success fell from 97\,\
 blocked G2 and Mimic about 25\,s earlier but raised the harm under Aware from 0.003\,\% to 0.36\,\%. No
 setting blocked a benign host without an attack. Under the one-host crowd every setting blocked the
 crowd host in all three runs, by either rule, between 49\,s and 163\,s, with 23\,\% to 30\,\% harm, so the
-failure in the flash-crowd study does not come from these settings. In the run in which FEVER did not
-block it, its table filled more slowly than under any other method.
+failure in the flash-crowd study does not come from these settings.
 
 \subsection{Secure aggregation and a federated threshold}
 \label{sec:secagg}

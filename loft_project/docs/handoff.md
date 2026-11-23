@@ -1,4 +1,4 @@
-# FEVER project: state and handoff (18 November 2026, 01:40)
+# FEVER project: state and handoff (23 November 2026)
 
 For an assistant picking up this work. Read this first, then the files it names.
 
@@ -72,6 +72,7 @@ for the same reason (tables are built before that). Backup of all fin_* runs: `~
 | Secure aggregation + federated threshold | docs/secagg_plan.md (181d57e) | results/secagg (4088e93) | Masked = unmasked bit for bit; +2.1 % time; false alarms 0.79 -> 0.69 % (still above 0.1 %). User asked to leave it out of the results PDF |
 | Flash crowds, round 2 | docs/flash2_prereg.md (27489b6) | results/testbed_flash2 (43e2218) | spread: pass; one host: FEVER blocked the crowd host in 2 of 3 runs (fail) |
 | Crowd guard | docs/crowdguard_prereg.md (71dc82f) | results/crowd_signal (fb403b1) | gate G0 failed; study stopped, nothing built |
+| One-host crowd on ten more seeds (none, FEVER), 20 runs | docs/crowdseeds_prereg.md (abab5b1) | results/testbed_crowdseeds (9e70b34) | FEVER blocked d1h3 in 9 of 10 (11 of 13 with round 2, 95 % interval 55-98 %); harm 20.8 vs 0.06 %; the seed-4188 slower-fill reading not supported |
 | Sensitivity of FEVER's settings (rho 0.6/0.8, k 2/4, X at 1.25/2.0 times), 90 runs | docs/sensitivity_prereg.md (58eddf1) | results/testbed_sens (e5299f9) | R1 17 of 18 pass (rho 0.8 on Mimic fails: 15.0 vs 4.9 % occupancy); R2 pass; R3: every setting blocked the one-host crowd host in 3 of 3 runs |
 
 Headline numbers (T1B): FEVER harm 0.011 % vs 1.0-5.2 %; new-connection success 84.2 % vs 21-46 %;
@@ -121,7 +122,7 @@ elsewhere 75.8 -> 90.5 %, Mimic 0.2 -> 61 %; decision 20.8 ms, CPU 62 %, memory 
 - Truth files' t_first is the scheduled send time, not the actual one.
 - The controller's per-poll counters (packet_in, installs) are cumulative; use differences.
 - `pgrep -f <pattern>` from a shell whose command line contains the pattern matches itself.
-- In the one-host crowd, round 2's FEVER run on seed 4188 filled s11 more slowly (1,601 entries in the first crowd, every other method and setting 1,730 or more), which is likely why it was not blocked there (exploratory).
-- Run names: sens_ (sensitivity), fin_<trace>_<attack>_<method>_s<seed> (campaign), sc<n>_ (more attackers), fc_ / flsel_
+- In the one-host crowd, why FEVER sometimes does not block the crowd host is unknown: the slower-fill reading of round 2's seed 4188 failed C3 of docs/crowdseeds_prereg.md (unblocked seed 4201 peaked at 1,776 entries in the first crowd, inside the blocked runs' 1,769-1,882). Do not repeat it.
+- Run names: fc3_ (one-host crowd seeds), sens_ (sensitivity), fin_<trace>_<attack>_<method>_s<seed> (campaign), sc<n>_ (more attackers), fc_ / flsel_
   (flash round 1), fc2_ / fl2sel_ (flash round 2). FEVER's method name is fever-fl-ll; DMS-BTT as
   compared is dms-btt-h1.

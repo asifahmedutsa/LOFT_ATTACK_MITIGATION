@@ -1,7 +1,7 @@
 """Builds docs/fever_experiments_results.pdf: the paper's experimental setup and results sections, in
 plain journal form. Numbers come from results/testbed_prereg_final (tests.csv, report.md, paper/*.tex)
 and results/tbfl; figures from results/testbed_prereg_final/paper. The follow-up studies come from
-results/testbed_flash, results/testbed_scale and results/secagg.
+results/testbed_flash, results/testbed_scale, results/testbed_crowdseeds and results/secagg.
 
     ~/.venvs/loft/bin/python docs/build_results_section.py
 """
@@ -162,6 +162,10 @@ fc_s = [["Training", "Data sent (MB)", "Time (s)", "F1 (%)", "Recall, Mimic (%)"
        [[r[0], r[3], r[4], r[5], r[7]] for r in fc[1:] if "secure" not in r[0]]
 # Table 4: flash crowds, round 2 (results/testbed_flash2/runs.csv; tables of 2,000 entries).
 FL2 = list(csv.DictReader(open("results/testbed_flash2/runs.csv")))
+# The one-host crowd on ten more seeds (results/testbed_crowdseeds/runs.csv).
+CS = list(csv.DictReader(open("results/testbed_crowdseeds/runs.csv")))
+cs_n = sum(int(r["crowd_host_blocked"]) for r in CS if r["method"] == "fever-fl-ll")
+cs_h = {m: sum(float(r["benign_harmed_pct"]) for r in CS if r["method"] == m) / 10 for m in ("none", "fever-fl-ll")}
 
 
 def f2(m, p, k, d=None):
@@ -289,7 +293,9 @@ story = [
     P("With the crowd spread over the hosts, no method blocked a normal host and FEVER harmed 0.02 % of "
       "benign flows. With the crowd from one host, FEVER blocked that host in two of three runs, once by its "
       "eviction rule and once by its volume rule, and its harm rose to 4.9 %. No other method blocked a host "
-      "(Table 4), although FTOP and DMS-BTT deleted about 140 to 250 benign entries per minute."),
+      "(Table 4), although FTOP and DMS-BTT deleted about 140 to 250 benign entries per minute. On ten more "
+      f"seeds of the one-host crowd, FEVER blocked the crowd host in {cs_n} of 10 runs, most often in the "
+      f"first crowd, and its harm was {cs_h['fever-fl-ll']:.1f} % against {cs_h['none']:.2f} % without a defense."),
     table(t6_s, [30 * mm] + [(W - 30 * mm) / 4] * 4,
           "Table 4. Benign flash crowds on T1B, crowd spread over the hosts or from one host (mean over three "
           "seeds; blocks are totals)."),
@@ -325,7 +331,7 @@ story = [
         "from 0.2 % to 61 %, and no traffic data was shared between controllers.",
         "Blocking the attacker at its access port was the most useful part of FEVER.",
         "When a flash crowd was spread over the normal hosts, no method blocked one. When one host sent the "
-        "whole crowd, FEVER blocked it in two of three runs; no other method did.",
+        "whole crowd, FEVER blocked it in 11 of 13 runs; no other method did.",
         "FEVER still worked with four and eight attackers.",
         "Changing FEVER's settings one at a time changed little, except a later start of eviction (ρ 0.8) "
         "under Mimic. No setting stopped FEVER from blocking a host that sent a whole flash crowd.",

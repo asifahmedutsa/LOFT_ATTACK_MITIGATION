@@ -1,6 +1,7 @@
 """Builds docs/fever_findings_summary.pdf: the findings of the testbed experiments in plain words, a
 few sentences each. Numbers from results/testbed_prereg_final (report.md, tests.csv, paper/*.tex),
-results/tbfl, results/testbed_flash2, results/testbed_scale and results/testbed_sens.
+results/tbfl, results/testbed_flash2, results/testbed_crowdseeds, results/testbed_scale and
+results/testbed_sens.
 
     ~/.venvs/loft/bin/python docs/build_findings_summary.py
 """
@@ -71,7 +72,9 @@ FINDINGS = [
      "of new benign flows to each run, with no attacker present, in a table small enough for the bursts "
      "to fill it. When the crowd was spread over the four normal hosts, no defense blocked a normal host, "
      "and FEVER harmed only 0.02 % of benign flows. When one host sent the whole crowd, FEVER blocked "
-     "that host in two of the three runs, and its harm rose to 4.9 %. No other defense blocked a host, "
+     "that host in two of the three runs, and its harm rose to 4.9 %. In ten more runs with one host sending "
+     "the crowd, FEVER blocked it in nine, mostly during the first crowd, so that host was cut off for most "
+     "of the run and FEVER's harm was 20.8 %, against 0.06 % without a defense. No other defense blocked a host, "
      "although FTOP and DMS-BTT deleted about 140 to 250 benign entries per minute."),
     ("FEVER still works with more attackers",
      "We repeated G2 and EVX with four and eight attackers instead of two. FEVER blocked every G2 attacker "
